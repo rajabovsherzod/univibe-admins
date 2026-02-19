@@ -8,7 +8,6 @@ import { FolderX } from "@untitledui/icons";
 import { cx } from "@/utils/cx";
 import { Table, TableCard } from "@/components/application/table/table";
 import { PaginationPageMinimalCenter } from "@/components/application/pagination/pagination";
-import { PremiumTableSkeleton } from "@/components/application/skeleton/premium-table-skeleton";
 
 type Primitive = string | number | boolean | null | undefined | Date;
 
@@ -95,12 +94,12 @@ function compareValues(a: Primitive, b: Primitive) {
 // --------------- Row Skeleton ---------------
 function RowSkeleton({ columns }: { columns: number }) {
   return (
-    <div className="flex gap-4 border-b border-200 px-4 py-4 md:px-6">
+    <div className="flex gap-4 border-b border-secondary px-4 py-4 md:px-6">
       {Array.from({ length: columns }).map((_, colIdx) => (
         <div
           key={colIdx}
           className={cx(
-            "h-4 animate-pulse rounded bg-200",
+            "h-4 animate-pulse rounded bg-quaternary",
             colIdx === 0 ? "w-10" : "flex-1"
           )}
           style={{ animationDelay: `${colIdx * 100}ms` }}
@@ -180,9 +179,8 @@ export function DataTable<T extends object>({
   }, [data, columns, sortDescriptor]);
 
   // Table header component (reusable)
-  // MODIFICATION: Using bg-brand-solid for header background and white text for brand look
   const TableHeader = () => (
-    <Table.Header className="bg-brand-solid text-white sticky top-0 z-10">
+    <Table.Header>
       {columns.map((col) => (
         <Table.Head
           key={col.id}
@@ -191,7 +189,7 @@ export function DataTable<T extends object>({
           allowsSorting={Boolean(col.allowsSorting)}
           isRowHeader={Boolean(col.isRowHeader)}
           tooltip={col.tooltip}
-          className={cx("text-white hover:text-white/90 font-medium", col.headClassName)}
+          className={col.headClassName}
         />
       ))}
     </Table.Header>
@@ -200,11 +198,24 @@ export function DataTable<T extends object>({
   // Loading state - shows premium skeleton
   if (isLoading) {
     return (
-      <PremiumTableSkeleton
-        columns={columns.length}
-        rows={5}
-        showPagination={!!pagination}
-      />
+      <TableCard.Root className={cx("overflow-hidden", className)} size={size}>
+        <Table
+          aria-label={ariaLabel}
+          selectionMode="none"
+          size={size}
+        >
+          <TableHeader />
+          <Table.Body items={[]}>
+            {() => null}
+          </Table.Body>
+        </Table>
+        {/* Skeleton rows */}
+        <div>
+          {Array.from({ length: 5 }).map((_, idx) => (
+            <RowSkeleton key={idx} columns={columns.length} />
+          ))}
+        </div>
+      </TableCard.Root>
     );
   }
 
@@ -270,7 +281,7 @@ export function DataTable<T extends object>({
           page={pagination.page}
           total={pagination.total}
           onPageChange={pagination.onPageChange}
-          className={cx("border-t border-200 px-4 py-3 md:px-6", pagination.className)}
+          className={cx("border-t border-secondary px-4 py-3 md:px-6", pagination.className)}
         />
       )}
     </TableCard.Root>

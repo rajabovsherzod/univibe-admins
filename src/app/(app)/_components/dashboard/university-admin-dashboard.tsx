@@ -1,11 +1,12 @@
 "use client";
 
 import React from "react";
-import { PageHeader } from "@/components/application/headers/page-header";
+import { PageHeaderPro } from "@/components/application/page-header/page-header-pro";
 import { DashboardSectionCard } from "@/components/application/dashboard/dashboard-section-card";
 import { DashboardActivityFeed } from "@/components/application/dashboard/dashboard-activity-feed";
 import { DashboardUpcomingEvents } from "@/components/application/dashboard/dashboard-upcoming-events";
 import { KpiStatCard } from "@/components/application/dashboard/kpi-stst-card";
+import { BarChart01 } from "@untitledui/icons";
 
 const demo = {
   students: [10, 12, 14, 18, 22, 20, 26, 25, 28, 32, 34, 36].map((v) => ({ value: v })),
@@ -15,13 +16,12 @@ const demo = {
 };
 
 export function UniversityAdminDashboard() {
-  // MOCK data (keyin API)
   const activity = [
     { id: "a1", title: "Admin yangi event yaratdi", description: "Hackathon 2026 • Registration ochildi", timeLabel: "Hozir", tone: "info" as const, href: "/dashboard/events/1" },
-    { id: "a2", title: "Student ro‘yxatdan o‘tdi", description: "Azizbek A. • Hackathon 2026", timeLabel: "8 daqiqa oldin", tone: "info" as const },
-    { id: "a3", title: "Ro‘yxatdan o‘tish tasdiqlandi", description: "Dilnoza S. • Case Competition", timeLabel: "1 soat oldin", tone: "success" as const },
+    { id: "a2", title: "Student ro'yxatdan o'tdi", description: "Azizbek A. • Hackathon 2026", timeLabel: "8 daqiqa oldin", tone: "info" as const },
+    { id: "a3", title: "Ro'yxatdan o'tish tasdiqlandi", description: "Dilnoza S. • Case Competition", timeLabel: "1 soat oldin", tone: "success" as const },
     { id: "a4", title: "Coin berildi", description: "Top 3 • 120 coins tarqatildi", timeLabel: "Bugun 13:10", tone: "success" as const },
-    { id: "a5", title: "Deadline yaqinlashmoqda", description: "AI Workshop • ro‘yxatdan o‘tish 1 kunda yopiladi", timeLabel: "Bugun", tone: "warning" as const },
+    { id: "a5", title: "Deadline yaqinlashmoqda", description: "AI Workshop • ro'yxatdan o'tish 1 kunda yopiladi", timeLabel: "Bugun", tone: "warning" as const },
   ];
 
   const upcoming = [
@@ -32,20 +32,27 @@ export function UniversityAdminDashboard() {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader
+      <PageHeaderPro
         breadcrumbs={[{ label: "Dashboard" }]}
-        title="Dashboard (Admin)"
-        subtitle="Tizim holati, yaqin eventlar va so‘nggi faoliyat."
-        primaryAction={{ label: "Yangi event", href: "/events/create" }}
-        onSearchChange={(v) => console.log("search:", v)}
+        title="Dashboard"
+        subtitle="Tizim holati, yaqin eventlar va so'nggi faoliyat."
+        icon={BarChart01}
+        actions={
+          <a
+            href="/events/create"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-brand-solid px-4 text-sm font-semibold text-white shadow-xs ring-0 transition hover:bg-brand-solid_hover"
+          >
+            Yangi event
+          </a>
+        }
       />
 
       {/* KPI GRID */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-4">
-        <KpiStatCard title="Jami studentlar" value="2,184" trend="up" delta="5.2%" deltaLabel="o‘tgan oyga nisbatan" data={demo.students} colorClassName="text-fg-brand-secondary" />
+        <KpiStatCard title="Jami studentlar" value="2,184" trend="up" delta="5.2%" deltaLabel="o'tgan oyga nisbatan" data={demo.students} colorClassName="text-fg-brand-secondary" />
         <KpiStatCard title="Faol eventlar" value="7" trend="up" delta="1" deltaLabel="shu haftada" data={demo.events} colorClassName="text-fg-success-secondary" />
         <KpiStatCard title="Pending approvals" value="12" trend="down" delta="−3" deltaLabel="kechagiga nisbatan" data={demo.approvals} colorClassName="text-fg-error-secondary" />
-        <KpiStatCard title="Coins tarqatildi (oy)" value="4,620" trend="up" delta="9.1%" deltaLabel="o‘tgan oyga nisbatan" data={demo.coins} colorClassName="text-fg-brand-secondary" />
+        <KpiStatCard title="Coins tarqatildi (oy)" value="4,620" trend="up" delta="9.1%" deltaLabel="o'tgan oyga nisbatan" data={demo.coins} colorClassName="text-fg-brand-secondary" />
       </div>
 
       {/* MAIN ROW */}
@@ -53,8 +60,8 @@ export function UniversityAdminDashboard() {
         {/* 70% */}
         <DashboardSectionCard
           className="lg:col-span-7"
-          title="So‘nggi faoliyat"
-          subtitle="Adminlar va tizim bo‘yicha oxirgi harakatlar."
+          title="So'nggi faoliyat"
+          subtitle="Adminlar va tizim bo'yicha oxirgi harakatlar."
           hrefAll="/activity"
         >
           <DashboardActivityFeed items={activity} />

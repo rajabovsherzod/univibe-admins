@@ -4,25 +4,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import type { Key } from "react-aria-components";
-import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { toast } from "sonner";
-import { useMutation } from "@tanstack/react-query";
 
 import { ThemeSwitcher } from "@/components/application/theme/theme-switcher";
 import { Tabs } from "@/components/application/tabs/tabs";
-import { CustomToast } from "@/components/base/toast/custom-toast";
 
-// Validation Schema
-const loginSchema = z.object({
-  email: z.string().min(1, "Email kiritish shart").email("Email noto'g'ri formatda"),
-  password: z.string().min(1, "Parol kiritish shart").min(5, "Parol kamida 6 ta belgidan iborat bo'lishi kerak"),
-});
+import { loginSchema, type LoginFormData } from "./login-schema";
+import { useLoginMutation } from "./use-login-mutation";
 
-type LoginFormData = z.infer<typeof loginSchema>;
 type Role = "university-admin" | "university-staff";
 
 const ROLE_TABS = [
@@ -31,7 +21,6 @@ const ROLE_TABS = [
 ];
 
 export default function LoginPage() {
-  const router = useRouter();
   const [selectedRole, setSelectedRole] = useState<Key>("university-admin");
 
   const {
@@ -49,54 +38,10 @@ export default function LoginPage() {
 
   const handleRoleChange = (key: Key) => {
     setSelectedRole(key);
-    reset(); // Optional: reset form when switching roles
+    reset();
   };
 
-  // TanStack Query Mutation
-  const loginMutation = useMutation({
-    mutationFn: async (data: LoginFormData) => {
-      const result = await signIn(selectedRole as string, {
-        email: data.email,
-        password: data.password,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        throw new Error("Login yoki parol noto'g'ri. Iltimos qaytadan urinib ko'ring.");
-      }
-
-      if (!result?.ok) {
-        throw new Error("Kutilmagan xatolik yuz berdi.");
-      }
-
-      return result;
-    },
-    // No onMutate (no loading toast)
-    onSuccess: () => {
-      // Custom Success Toast
-      toast.custom((t) => (
-        <CustomToast
-          t={t}
-          type="success"
-          title="Muvaffaqiyatli kirildi"
-          description="Siz tizimga muvaffaqiyatli kirdingiz. Dashboardga yo'naltirilmoqdasiz."
-        />
-      ));
-      router.push("/dashboard");
-      router.refresh();
-    },
-    onError: (error) => {
-      // Custom Error Toast
-      toast.custom((t) => (
-        <CustomToast
-          t={t}
-          type="error"
-          title="Kirishda xatolik"
-          description={error.message || "Tizim xatosi yuz berdi."}
-        />
-      ));
-    },
-  });
+  const loginMutation = useLoginMutation(selectedRole as string);
 
   const onSubmit = (data: LoginFormData) => {
     loginMutation.mutate(data);
@@ -123,7 +68,6 @@ export default function LoginPage() {
               alt="Univibe Logo"
               width={80}
               height={80}
-              preload={true}
               unoptimized
               className="h-20 w-auto dark:hidden"
             />
@@ -133,7 +77,6 @@ export default function LoginPage() {
               alt="Univibe Logo"
               width={80}
               height={80}
-              preload={true}
               unoptimized
               className="h-20 w-auto hidden dark:block"
             />
@@ -143,9 +86,6 @@ export default function LoginPage() {
             <h1 className="text-display-xs font-semibold text-primary md:text-display-sm">
               Tizimga kirish
             </h1>
-            {/* <p className="text-md text-tertiary">
-              Davom etish uchun o'z vazifangizni tanlang va ma'lumotlarni kiriting.
-            </p> */}
           </div>
         </div>
 

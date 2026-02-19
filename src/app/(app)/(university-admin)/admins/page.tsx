@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, ChangeEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { Plus } from "@untitledui/icons";
+import { Plus, Users01 } from "@untitledui/icons";
 
-import { PageHeader } from "@/components/application/headers/page-header";
+import { PageHeaderPro } from "@/components/application/page-header/page-header-pro";
 import { DataTable } from "@/components/application/table/data-table";
 import { Button } from "@/components/base/buttons/button";
 import { API_CONFIG } from "@/lib/api/config";
@@ -74,32 +74,39 @@ export default function AdminsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
+      <PageHeaderPro
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
-          { label: "Adminlar" }
+          { label: "Adminlar" },
         ]}
         title="Adminlar"
         subtitle="Universitet adminlari va xodimlarni boshqarish."
-        primaryAction={{
-          label: "Admin qo'shish",
-          icon: Plus,
-          onClick: () => toast.info("Qo'shish funksiyasi tez orada...")
-        }}
-        onSearchChange={setSearch}
+        count={filteredData.length}
+        showSearch
+        searchValue={search}
+        onSearch={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+        icon={Users01}
+        actions={
+          <button
+            type="button"
+            onClick={() => toast.info("Qo'shish funksiyasi tez orada...")}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-brand-solid px-4 text-sm font-semibold text-white shadow-xs ring-0 transition hover:bg-brand-solid_hover"
+          >
+            <Plus className="size-4" />
+            Admin qo'shish
+          </button>
+        }
       />
 
-      <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-200 overflow-hidden">
-        <DataTable
-          ariaLabel="Adminlar ro'yxati"
-          data={filteredData}
-          columns={columns}
-          rowKey="user_public_id"
-          isLoading={isLoading}
-          emptyTitle="Adminlar topilmadi"
-          emptyDescription="Hozircha tizimda hech qanday admin yoki xodim mavjud emas."
-        />
-      </div>
+      <DataTable
+        ariaLabel="Adminlar ro'yxati"
+        data={filteredData}
+        columns={columns}
+        rowKey="user_public_id"
+        isLoading={isLoading}
+        emptyTitle="Adminlar topilmadi"
+        emptyDescription="Hozircha tizimda hech qanday admin yoki xodim mavjud emas."
+      />
     </div>
   );
 }

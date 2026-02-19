@@ -68,9 +68,9 @@ export function UniversalSidebar({
       className={[
         // same “feel” as Untitled sidebar
         "flex h-full w-full max-w-full flex-col justify-between overflow-auto",
-        "bg-card-primary pt-4 shadow-xs",
-        "md:border-r md:border-border-secondary",
-        "lg:w-(--width) lg:rounded-xl lg:border lg:border-border-secondary lg:pt-5",
+        "bg-primary pt-4 shadow-xs",
+        "md:border-r md:border-secondary",
+        "lg:w-(--width) lg:rounded-xl lg:border lg:border-secondary lg:pt-5",
         className,
       ].join(" ")}
     >

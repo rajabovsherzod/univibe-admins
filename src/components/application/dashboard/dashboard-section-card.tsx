@@ -2,16 +2,13 @@
 
 import React from "react";
 import Link from "next/link";
-
-function cx(...classes: Array<string | false | undefined | null>) {
-  return classes.filter(Boolean).join(" ");
-}
+import { cx } from "@/utils/cx";
 
 type DashboardSectionCardProps = {
   title: string;
   subtitle?: string;
   right?: React.ReactNode;
-  hrefAll?: string; // "Hammasi" linki
+  hrefAll?: string;
   children: React.ReactNode;
   className?: string;
 };
@@ -27,23 +24,25 @@ export function DashboardSectionCard({
   return (
     <section
       className={cx(
-        "rounded-2xl bg-card-primary p-4 md:p-6",
-        "shadow-xs-skeumorphic ring-1 ring-primary ring-inset",
+        "overflow-hidden rounded-2xl shadow-md ring-1 ring-secondary",
         className
       )}
     >
-      <div className="flex items-start justify-between gap-4">
+      {/* Brand header — same in dark & light */}
+      <div className="flex items-start justify-between gap-4 bg-brand-solid px-5 py-4">
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-primary">{title}</h3>
-          {subtitle ? <p className="mt-1 text-sm text-tertiary">{subtitle}</p> : null}
+          <h3 className="text-sm font-semibold text-white">{title}</h3>
+          {subtitle ? (
+            <p className="mt-1 text-sm text-white/80">{subtitle}</p>
+          ) : null}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {right}
           {hrefAll ? (
             <Link
               href={hrefAll}
-              className="rounded-lg bg-secondary_subtle px-3 py-2 text-xs font-semibold text-secondary ring-1 ring-secondary ring-inset hover:bg-primary_hover"
+              className="rounded-lg bg-white/20 px-3 py-2 text-xs font-semibold text-white ring-1 ring-white/30 ring-inset hover:bg-white/30 transition-colors"
             >
               Hammasi
             </Link>
@@ -51,7 +50,8 @@ export function DashboardSectionCard({
         </div>
       </div>
 
-      <div className="mt-4">{children}</div>
+      {/* Content */}
+      <div className="bg-primary p-4 md:p-6">{children}</div>
     </section>
   );
 }

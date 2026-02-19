@@ -14,6 +14,7 @@ import {
   Shield01,
   Grid01,
   PieChart03,
+  Briefcase01,
 } from "@untitledui/icons";
 
 export function AppSidebar() {
@@ -22,7 +23,8 @@ export function AppSidebar() {
   const navItems: (NavItemType | NavItemDividerType)[] = [
     { label: "Dashboard", href: "/dashboard", icon: HomeLine },
     { divider: true },
-    { label: "Adminlar", href: "/admins", icon: Users01 },
+    { label: "Xodimlar", href: "/staff", icon: Users01 },
+    { label: "Lavozimlar", href: "/job-positions", icon: Briefcase01 },
     { label: "Coins tizimi", href: "/coins-system", icon: Grid01 },
     { label: "Statistika", href: "/statistics", icon: PieChart03 },
     { divider: true },

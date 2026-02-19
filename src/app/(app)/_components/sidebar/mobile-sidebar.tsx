@@ -45,7 +45,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   const navItems: NavItemOrDivider[] = [
     { label: "Dashboard", href: "/dashboard", icon: HomeLine },
     { divider: true },
-    { label: "Adminlar", href: "/admins", icon: Users01 },
+    { label: "Xodimlar", href: "/staff", icon: Users01 },
     { label: "Coins tizimi", href: "/coins-system", icon: Grid01 },
     { label: "Statistika", href: "/statistics", icon: PieChart03 },
     { divider: true },

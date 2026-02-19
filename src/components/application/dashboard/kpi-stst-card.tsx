@@ -79,10 +79,10 @@ export function KpiStatCard({
   const gradientId = `kpi-gradient-${gid}`;
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden rounded-xl bg-secondary_subtle shadow-xs ring-1 ring-secondary ring-inset md:min-w-[320px]">
-      {/* title bar */}
-      <div className="mb-0.5 px-4 pb-2 pt-3 md:px-5">
-        <h3 className="text-sm font-semibold text-primary">{title}</h3>
+    <div className="flex flex-1 flex-col overflow-hidden rounded-xl bg-secondary_subtle shadow-md ring-1 ring-secondary ring-inset md:min-w-[280px]">
+      {/* title bar — brand-solid in BOTH light & dark */}
+      <div className="mb-0.5 rounded-t-xl bg-brand-solid px-4 pb-2 pt-3 md:px-5">
+        <h3 className="text-sm font-semibold text-white">{title}</h3>
       </div>
 
       {/* inner */}

@@ -2,11 +2,11 @@
 
 import React from "react";
 import { PageHeaderPro } from "@/components/application/page-header/page-header-pro";
-import { DashboardSectionCard } from "@/components/application/dashboard/dashboard-section-card";
+import { SectionCard } from "@/components/application/section-card/section-card";
 import { DashboardActivityFeed } from "@/components/application/dashboard/dashboard-activity-feed";
 import { DashboardUpcomingEvents } from "@/components/application/dashboard/dashboard-upcoming-events";
 import { KpiStatCard } from "@/components/application/dashboard/kpi-stst-card";
-import { BarChart01 } from "@untitledui/icons";
+import { Home02 } from "@untitledui/icons";
 
 const demo = {
   students: [10, 12, 14, 18, 22, 20, 26, 25, 28, 32, 34, 36].map((v) => ({ value: v })),
@@ -32,19 +32,12 @@ export function UniversityAdminDashboard() {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* PageHeaderPro — icon shown (no actions) */}
       <PageHeaderPro
         breadcrumbs={[{ label: "Dashboard" }]}
         title="Dashboard"
         subtitle="Tizim holati, yaqin eventlar va so'nggi faoliyat."
-        icon={BarChart01}
-        actions={
-          <a
-            href="/events/create"
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-brand-solid px-4 text-sm font-semibold text-white shadow-xs ring-0 transition hover:bg-brand-solid_hover"
-          >
-            Yangi event
-          </a>
-        }
+        icon={Home02}
       />
 
       {/* KPI GRID */}
@@ -55,27 +48,25 @@ export function UniversityAdminDashboard() {
         <KpiStatCard title="Coins tarqatildi (oy)" value="4,620" trend="up" delta="9.1%" deltaLabel="o'tgan oyga nisbatan" data={demo.coins} colorClassName="text-fg-brand-secondary" />
       </div>
 
-      {/* MAIN ROW */}
+      {/* MAIN ROW — using new SectionCard */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-10">
-        {/* 70% */}
-        <DashboardSectionCard
+        <SectionCard
           className="lg:col-span-7"
           title="So'nggi faoliyat"
-          subtitle="Adminlar va tizim bo'yicha oxirgi harakatlar."
+          description="Adminlar va tizim bo'yicha oxirgi harakatlar."
           hrefAll="/activity"
         >
           <DashboardActivityFeed items={activity} />
-        </DashboardSectionCard>
+        </SectionCard>
 
-        {/* 30% */}
-        <DashboardSectionCard
+        <SectionCard
           className="lg:col-span-3"
           title="Yaqinlashayotgan eventlar"
-          subtitle="Sana, joy va registration holati."
+          description="Sana, joy va registration holati."
           hrefAll="/events"
         >
           <DashboardUpcomingEvents items={upcoming} />
-        </DashboardSectionCard>
+        </SectionCard>
       </div>
     </div>
   );

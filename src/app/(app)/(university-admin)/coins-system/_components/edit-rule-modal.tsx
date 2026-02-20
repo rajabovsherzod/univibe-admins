@@ -11,18 +11,20 @@ import type { CoinRule } from "@/lib/api/types";
 
 import { PremiumFormModal } from "@/components/application/modals/premium-modal";
 import { MultiSelect } from "@/components/base/select/multi-select";
+import { Input } from "@/components/base/input/input";
+import { TextArea } from "@/components/base/textarea/textarea";
+import { Button } from "@/components/base/buttons/button";
 import type { Key } from "react-aria-components";
 
 export function EditRuleModal({ item, onClose }: { item: CoinRule; onClose: () => void }) {
   const updateMutation = useUpdateCoinRule();
-  const { data: jobPositions, isLoading: jobsLoading } = useJobPositions(); // Removed arg
+  const { data: jobPositions, isLoading: jobsLoading } = useJobPositions();
 
   const initialPositions = item.allowed_job_positions
     ? item.allowed_job_positions.split(",").map(s => s.trim()).filter(Boolean)
     : [];
 
   const {
-    register,
     handleSubmit,
     control,
     setValue,
@@ -67,71 +69,76 @@ export function EditRuleModal({ item, onClose }: { item: CoinRule; onClose: () =
       size="md"
       footer={
         <div className="flex w-full items-center justify-end gap-3">
-          <button
-            type="button"
+          <Button
+            color="secondary"
+            size="md"
             onClick={onClose}
-            disabled={isFormLoading}
-            className="rounded-lg px-4 py-2 text-sm font-semibold text-secondary shadow-xs ring-1 ring-inset ring-secondary transition hover:bg-secondary_hover disabled:opacity-50"
+            isDisabled={isFormLoading}
           >
             Bekor qilish
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
             form="edit-rule-form"
-            disabled={isFormLoading}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-solid px-4 py-2 text-sm font-semibold text-white shadow-xs transition hover:bg-brand-solid_hover disabled:opacity-50"
+            color="primary"
+            size="md"
+            isLoading={isFormLoading}
+            showTextWhileLoading
           >
             {isFormLoading ? "Saqlanmoqda..." : "Saqlash"}
-          </button>
+          </Button>
         </div>
       }
     >
       <form id="edit-rule-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="name" className="text-sm font-medium text-secondary">
-            Qoida nomi
-          </label>
-          <input
-            id="name"
-            {...register("name")}
-            className="rounded-lg bg-primary px-3 py-2 text-sm text-primary outline-none ring-1 ring-inset ring-secondary focus:ring-2 focus:ring-brand-solid"
-          />
-          {errors.name && <p className="text-xs text-error-primary">{errors.name.message}</p>}
-        </div>
+        <Controller
+          control={control}
+          name="name"
+          render={({ field }) => (
+            <Input
+              label="Qoida nomi"
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              isInvalid={!!errors.name}
+              hint={errors.name?.message}
+              isRequired
+            />
+          )}
+        />
+
+        <Controller
+          control={control}
+          name="description"
+          render={({ field }) => (
+            <TextArea
+              label="Izoh"
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              isInvalid={!!errors.description}
+              hint={errors.description?.message}
+              rows={3}
+              isRequired
+            />
+          )}
+        />
+
+        <Input
+          label="Coin miqdori"
+          value={String(item.coin_amount)}
+          isDisabled
+          isReadOnly
+        />
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="description" className="text-sm font-medium text-secondary">
-            Izoh
-          </label>
-          <textarea
-            id="description"
-            {...register("description")}
-            className="min-h-[80px] rounded-lg bg-primary px-3 py-2 text-sm text-primary outline-none ring-1 ring-inset ring-secondary focus:ring-2 focus:ring-brand-solid resize-none"
-          />
-          {errors.description && <p className="text-xs text-error-primary">{errors.description.message}</p>}
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-secondary">Coin miqdori</label>
-          <input
-            readOnly
-            disabled
-            value={item.coin_amount}
-            className="rounded-lg bg-secondary px-3 py-2 text-sm text-tertiary outline-none ring-1 ring-inset ring-secondary opacity-70 cursor-not-allowed"
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="job_positions" className="text-sm font-medium text-secondary">
-            Ruxsat etilgan lavozimlar
-          </label>
           <Controller
             control={control}
             name="allowed_job_position_public_ids"
             render={({ field: { value } }) => (
               <MultiSelect
                 id="job_positions"
-                label="Lavozimlarni tanlang"
+                label="Ruxsat etilgan lavozimlar"
                 selectedKeys={new Set(value)}
                 onSelectionChange={(keys) => {
                   const arr = Array.from(keys as Iterable<Key>).map(String);

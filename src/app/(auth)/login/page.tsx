@@ -4,11 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import type { Key } from "react-aria-components";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { ThemeSwitcher } from "@/components/application/theme/theme-switcher";
 import { Tabs } from "@/components/application/tabs/tabs";
+import { Input } from "@/components/base/input/input";
+import { Button } from "@/components/base/buttons/button";
 
 import { loginSchema, type LoginFormData } from "./login-schema";
 import { useLoginMutation } from "./use-login-mutation";
@@ -24,8 +26,8 @@ export default function LoginPage() {
   const [selectedRole, setSelectedRole] = useState<Key>("university-admin");
 
   const {
-    register,
     handleSubmit,
+    control,
     formState: { errors },
     reset,
   } = useForm<LoginFormData>({
@@ -62,7 +64,6 @@ export default function LoginPage() {
         {/* Header */}
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="flex items-center justify-center">
-            {/* Light Mode Logo */}
             <Image
               src="/brand-light-logo.svg"
               alt="Univibe Logo"
@@ -71,7 +72,6 @@ export default function LoginPage() {
               unoptimized
               className="h-20 w-auto dark:hidden"
             />
-            {/* Dark Mode Logo */}
             <Image
               src="/brand-dark-logo.png"
               alt="Univibe Logo"
@@ -109,43 +109,43 @@ export default function LoginPage() {
 
             {/* Inputs */}
             <div className="flex flex-col gap-4">
-              {/* Email Field */}
-              <div className="group flex w-full flex-col gap-1.5">
-                <label htmlFor="email" className="text-sm font-medium text-secondary">Email</label>
-                <div className={`relative flex w-full items-center rounded-lg bg-primary shadow-xs ring-1 ring-inset transition-shadow focus-within:ring-2 ${errors.email ? 'ring-error-solid focus-within:ring-error-solid' : 'ring-primary focus-within:ring-brand-solid'}`}>
-                  <input
-                    id="email"
+              <Controller
+                control={control}
+                name="email"
+                render={({ field }) => (
+                  <Input
+                    label="Email"
                     type="email"
-                    {...register("email")}
-                    autoComplete="email"
-                    disabled={loginMutation.isPending}
                     placeholder="admin@univibe.uz"
-                    className="m-0 w-full bg-transparent px-3.5 py-2.5 text-md text-primary outline-none placeholder:text-placeholder disabled:opacity-50"
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    isDisabled={loginMutation.isPending}
+                    isInvalid={!!errors.email}
+                    hint={errors.email?.message}
+                    autoComplete="email"
                   />
-                </div>
-                {errors.email && (
-                  <p className="text-sm text-error-primary mt-1">{errors.email.message}</p>
                 )}
-              </div>
+              />
 
-              {/* Password Field */}
-              <div className="group flex w-full flex-col gap-1.5">
-                <label htmlFor="password" className="text-sm font-medium text-secondary">Parol</label>
-                <div className={`relative flex w-full items-center rounded-lg bg-primary shadow-xs ring-1 ring-inset transition-shadow focus-within:ring-2 ${errors.password ? 'ring-error-solid focus-within:ring-error-solid' : 'ring-primary focus-within:ring-brand-solid'}`}>
-                  <input
-                    id="password"
+              <Controller
+                control={control}
+                name="password"
+                render={({ field }) => (
+                  <Input
+                    label="Parol"
                     type="password"
-                    {...register("password")}
-                    autoComplete="current-password"
-                    disabled={loginMutation.isPending}
                     placeholder="••••••••"
-                    className="m-0 w-full bg-transparent px-3.5 py-2.5 text-md text-primary outline-none placeholder:text-placeholder disabled:opacity-50"
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    isDisabled={loginMutation.isPending}
+                    isInvalid={!!errors.password}
+                    hint={errors.password?.message}
+                    autoComplete="current-password"
                   />
-                </div>
-                {errors.password && (
-                  <p className="text-sm text-error-primary mt-1">{errors.password.message}</p>
                 )}
-              </div>
+              />
             </div>
 
             {/* Forgot Password Link only */}
@@ -160,28 +160,22 @@ export default function LoginPage() {
             </div>
 
             {/* Submit */}
-            <button
+            <Button
               type="submit"
-              disabled={loginMutation.isPending}
-              className="group relative inline-flex h-max items-center justify-center gap-1.5 rounded-lg bg-brand-solid px-4 py-2.5 text-md font-semibold text-white shadow-xs-skeumorphic ring-1 ring-transparent ring-inset transition hover:bg-brand-solid_hover disabled:opacity-70 disabled:cursor-not-allowed outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-solid"
+              color="primary"
+              size="lg"
+              isDisabled={loginMutation.isPending}
+              isLoading={loginMutation.isPending}
+              showTextWhileLoading
+              className="w-full"
             >
-              {loginMutation.isPending ? (
-                <span className="flex items-center gap-2">
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Kirish...
-                </span>
-              ) : (
-                "Kirish"
-              )}
-            </button>
+              {loginMutation.isPending ? "Kirish..." : "Kirish"}
+            </Button>
           </form>
         </div>
 
         <p className="text-center text-sm text-tertiary">
-          Hali hisobingiz yo'qmi? <span className="text-brand-solid font-medium">Administratorga murojaat qiling.</span>
+          Hali hisobingiz yo&apos;qmi? <span className="text-brand-solid font-medium">Administratorga murojaat qiling.</span>
         </p>
 
       </div>

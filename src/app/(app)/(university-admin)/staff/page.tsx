@@ -28,6 +28,8 @@ async function fetchStaffList(token: string): Promise<StaffListResponseItem[]> {
 export default function StaffPage() {
   const { data: session } = useSession();
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const { data, isLoading } = useQuery({
     queryKey: ["staff-list"],
@@ -66,6 +68,9 @@ export default function StaffPage() {
       item.email.toLowerCase().includes(search.toLowerCase())
   );
 
+  const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
+  const paginatedData = filteredData.slice((page - 1) * pageSize, page * pageSize);
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeaderPro
@@ -78,7 +83,11 @@ export default function StaffPage() {
         count={filteredData.length}
         showSearch
         searchValue={search}
-        onSearch={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+        onSearch={(v: string) => {
+          setSearch(v);
+          setPage(1);
+        }}
+        searchPlaceholder="Xodimlarni qidirish..."
         actions={
           <Link
             href="/staff/create"
@@ -92,12 +101,17 @@ export default function StaffPage() {
 
       <DataTable
         ariaLabel="Xodimlar ro'yxati"
-        data={filteredData}
+        data={paginatedData}
         columns={columns}
         rowKey="user_public_id"
-        isLoading={isLoading}
+        isLoading={isLoading || !data}
         emptyTitle="Xodimlar topilmadi"
         emptyDescription="Hozircha tizimda hech qanday xodim mavjud emas."
+        pagination={{
+          page: page,
+          total: totalPages,
+          onPageChange: setPage,
+        }}
       />
     </div>
   );

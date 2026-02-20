@@ -30,6 +30,7 @@ export function DeletionAuditsTab() {
     {
       id: "student",
       header: "Talaba",
+      isRowHeader: true,
       cell: (row) => (
         <span className="text-sm font-medium text-primary">
           {row.student_name || "—"}
@@ -89,7 +90,7 @@ export function DeletionAuditsTab() {
         data={data?.results || []}
         columns={columns}
         rowKey="public_id"
-        isLoading={isLoading}
+        isLoading={isLoading || !data}
         emptyTitle="O'chirilganlar yo'q"
         emptyDescription="Hozircha hech qanday tranzaksiya bekor qilinmagan."
       />

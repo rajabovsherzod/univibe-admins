@@ -4,6 +4,7 @@ import type { ReactNode, ChangeEvent, FC, HTMLAttributes } from "react";
 import { cx } from "@/utils/cx";
 import { SearchMd, ChevronRight, HomeLine } from "@untitledui/icons";
 import Link from "next/link";
+import { Input } from "@/components/base/input/input";
 
 interface BreadcrumbItem {
   label: string;
@@ -20,7 +21,7 @@ type PageHeaderProProps = {
   showSearch?: boolean;
   searchPlaceholder?: string;
   searchValue?: string;
-  onSearch?: (e: ChangeEvent<HTMLInputElement>) => void;
+  onSearch?: (value: string) => void;
   countPosition?: "title" | "right";
   /** Icon shown ONLY when actions is absent. Brand colored. Vertically centered in RIGHT column. */
   icon?: FC<HTMLAttributes<HTMLOrSVGElement>>;
@@ -136,16 +137,12 @@ export function PageHeaderPro({
           )}
 
           {showSearch && (
-            <div className="relative group">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <SearchMd className="size-4 text-quaternary group-focus-within:text-primary transition-colors" />
-              </div>
-              <input
-                type="text"
+            <div className="w-56 sm:w-72">
+              <Input
                 placeholder={searchPlaceholder}
                 value={searchValue}
                 onChange={onSearch}
-                className="block w-48 sm:w-56 rounded-lg border-0 bg-secondary py-2 pl-9 pr-3 text-sm text-primary shadow-xs ring-1 ring-inset ring-secondary placeholder:text-placeholder focus:ring-2 focus:ring-inset focus:ring-brand-solid outline-none transition-all"
+                icon={SearchMd}
               />
             </div>
           )}
@@ -157,7 +154,8 @@ export function PageHeaderPro({
           {/* Decorative icon — brand solid, shown only without actions */}
           {showIcon && Icon && (
             <Icon
-              className="size-16 sm:size-20 shrink-0 text-brand-solid opacity-25 rotate-[12deg]"
+              className="size-20 sm:size-28 shrink-0 text-[#006ab0] opacity-40 rotate-[12deg]"
+              color="#006ab0"
             />
           )}
         </div>

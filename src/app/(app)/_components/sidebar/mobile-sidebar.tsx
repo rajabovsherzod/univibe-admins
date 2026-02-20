@@ -96,26 +96,15 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
         <div className="flex h-full flex-col">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-secondary px-5 py-4">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center">
               <Image
-                src="/brand-light-logo.svg"
-                alt="Univibe"
-                width={32}
+                src="/sidebar.svg"
+                alt="Univibe Admin"
+                width={140}
                 height={32}
-                className="h-8 w-auto dark:hidden"
+                className="h-8 w-auto"
                 unoptimized
               />
-              <Image
-                src="/brand-dark-logo.png"
-                alt="Univibe"
-                width={32}
-                height={32}
-                className="h-8 w-auto hidden dark:block"
-                unoptimized
-              />
-              <span className="text-lg font-bold tracking-tight text-brand-solid">
-                Univibe
-              </span>
             </div>
             <button
               onClick={onClose}

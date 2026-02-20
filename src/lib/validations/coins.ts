@@ -7,6 +7,7 @@ export const createCoinRuleSchema = z.object({
   allowed_job_position_public_ids: z
     .array(z.string())
     .min(1, "Kamida bitta lavozim tanlanishi shart"),
+  status: z.enum(["ACTIVE", "ARCHIVED"]).optional().default("ACTIVE"),
 });
 
 export type CreateCoinRuleInput = z.infer<typeof createCoinRuleSchema>;

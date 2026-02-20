@@ -63,10 +63,10 @@ export function PremiumFormModal({
                   onClick={() => onOpenChange(false)}
                   aria-label="Close"
                   className={cx(
-                    "absolute right-3 top-3 size-11 rounded-lg p-2",
-                    "text-fg-quaternary transition duration-100 ease-linear",
-                    "hover:bg-primary_hover hover:text-fg-quaternary_hover",
-                    "focus-visible:outline-2 focus-visible:outline-offset-2 outline-focus-ring",
+                    "absolute right-3 top-3 z-10 size-10 rounded-lg p-2.5",
+                    "text-white/70 transition duration-100 ease-linear",
+                    "hover:bg-white/10 hover:text-white",
+                    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white",
                   )}
                 >
                   <XClose className="size-5" />
@@ -74,27 +74,23 @@ export function PremiumFormModal({
               ) : null}
 
               {/* Header */}
-              <div className="flex items-start gap-3 px-4 pt-5 sm:px-6 sm:pt-6">
+              <div className="flex items-start gap-3 bg-brand-solid px-5 py-4 sm:px-6">
                 {Icon ? (
                   <div
                     className={cx(
-                      "relative grid size-11 place-items-center overflow-hidden rounded-xl",
-                      "ring-1 ring-primary ring-inset shadow-xs",
-                      iconBgClassName,
+                      "flex size-10 shrink-0 items-center justify-center rounded-xl",
+                      "bg-white/15 text-white shadow-inner"
                     )}
                   >
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/10 to-transparent" />
-                    <Icon className={cx("relative size-5", iconClassName)} aria-hidden="true" />
+                    <Icon className="size-5" aria-hidden="true" />
                   </div>
                 ) : null}
 
-                <div className="flex min-w-0 flex-col gap-0.5 pr-10">
-                  <h2 className="text-md font-semibold text-primary">{title}</h2>
-                  {description ? <p className="text-sm text-tertiary">{description}</p> : null}
+                <div className="flex min-w-0 flex-col gap-0.5 pr-8 pt-0.5">
+                  <h2 className="text-base font-semibold text-white">{title}</h2>
+                  {description ? <p className="text-sm text-white/80">{description}</p> : null}
                 </div>
               </div>
-
-              <div className="mt-5 h-px w-full bg-primary/60" />
 
               {/* Body */}
               <div className="max-h-[78vh] overflow-y-auto px-4 py-5 sm:px-6">

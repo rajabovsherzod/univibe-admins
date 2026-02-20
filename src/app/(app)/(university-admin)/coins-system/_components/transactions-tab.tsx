@@ -8,6 +8,8 @@ import type { DataTableColumn } from "@/components/application/table/data-table"
 import { useAuditTransactions } from "@/hooks/api/use-coins";
 import type { AuditTransaction } from "@/lib/api/types";
 import { cx } from "@/utils/cx";
+import { Select } from "@/components/base/select/select";
+import type { Key } from "react-aria-components";
 
 export function TransactionsTab() {
   const [page, setPage] = useState(1);
@@ -33,6 +35,7 @@ export function TransactionsTab() {
     {
       id: "type",
       header: "Turi",
+      isRowHeader: true,
       cell: (row) => {
         let Icon = ArrowUpRight;
         let color = "text-success-primary bg-success-soft";
@@ -62,15 +65,18 @@ export function TransactionsTab() {
       id: "amount",
       header: "Miqdori",
       cell: (row) => (
-        <span
-          className={cx(
-            "text-sm font-bold",
-            row.transaction_type === "ISSUANCE" ? "text-success-solid" : "text-error-solid"
-          )}
-        >
-          {row.transaction_type === "ISSUANCE" ? "+" : "-"}
-          {row.amount}
-        </span>
+        <div className="flex w-max items-center justify-end gap-1.5 align-middle">
+          <span
+            className={cx(
+              "text-sm font-bold",
+              row.transaction_type === "ISSUANCE" ? "text-success-solid" : "text-error-solid"
+            )}
+          >
+            {row.transaction_type === "ISSUANCE" ? "+" : "-"}
+            {row.amount}
+          </span>
+          <img src="/blue-coin-org.png" alt="Coin" className="size-5 drop-shadow-sm" />
+        </div>
       ),
     },
     {
@@ -103,16 +109,20 @@ export function TransactionsTab() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-3">
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className="rounded-lg bg-primary px-3 py-2 text-sm text-primary outline-none ring-1 ring-inset ring-secondary focus:ring-2 focus:ring-brand-solid"
+        <Select
+          items={[
+            { id: "", label: "Barchasi" },
+            { id: "ISSUANCE", label: "Berilgan (Issuance)" },
+            { id: "REDEMPTION", label: "Sarflangan (Redemption)" },
+            { id: "REVERSAL", label: "Qaytarilgan (Reversal)" },
+          ]}
+          selectedKey={typeFilter || null}
+          onSelectionChange={(k) => setTypeFilter(String(k))}
+          placeholder="Tranzaksiya turi"
+          className="w-full sm:w-[250px]"
         >
-          <option value="">Barchasi</option>
-          <option value="ISSUANCE">Berilgan (Issuance)</option>
-          <option value="REDEMPTION">Sarflangan (Redemption)</option>
-          <option value="REVERSAL">Qaytarilgan (Reversal)</option>
-        </select>
+          {(item) => <Select.Item id={item.id} label={item.label} />}
+        </Select>
         {/* Additional filters (date_from, etc) can go here */}
       </div>
 
@@ -121,7 +131,7 @@ export function TransactionsTab() {
         data={data?.results || []}
         columns={columns}
         rowKey="transaction_public_id"
-        isLoading={isLoading}
+        isLoading={isLoading || !data}
         emptyTitle="Tranzaksiyalar yo'q"
         emptyDescription="Hozircha hech qanday coin amaliyoti bajarilmagan."
       />

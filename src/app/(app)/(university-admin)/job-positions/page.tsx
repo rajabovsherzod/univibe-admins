@@ -1,15 +1,18 @@
 "use client";
 
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Edit05, Trash01, Briefcase01, X } from "@untitledui/icons";
+import { Plus, Edit05, Trash01, Briefcase01 } from "@untitledui/icons";
 
 import { PageHeaderPro } from "@/components/application/page-header/page-header-pro";
 import { DataTable } from "@/components/application/table/data-table";
 import type { DataTableColumn } from "@/components/application/table/data-table";
+import { Input } from "@/components/base/input/input";
+import { Button } from "@/components/base/buttons/button";
+import { PremiumFormModal } from "@/components/application/modals/premium-modal";
 import type { JobPosition } from "@/lib/api/types";
 import {
   useJobPositions,
@@ -24,16 +27,12 @@ const nameSchema = z.object({
 });
 type NameInput = z.infer<typeof nameSchema>;
 
-// ── Shared input style ─────────────────────────────────────────────────────
-const inputCls =
-  "w-full rounded-lg bg-primary px-3.5 py-2.5 text-sm text-primary placeholder:text-placeholder outline-none ring-1 ring-inset ring-secondary focus:ring-2 focus:ring-brand-solid transition-all";
-
 // ── Create Modal ───────────────────────────────────────────────────────────
 function CreateModal({ onClose }: { onClose: () => void }) {
   const create = useCreateJobPosition();
   const {
-    register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<NameInput>({ resolver: zodResolver(nameSchema) as any });
 
@@ -48,27 +47,52 @@ function CreateModal({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <Backdrop onClose={onClose}>
-      <ModalCard title="Yangi lavozim" onClose={onClose}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-secondary">
-              Lavozim nomi <span className="text-error-primary">*</span>
-            </label>
-            <input
-              {...register("name")}
-              autoFocus
+    <PremiumFormModal
+      isOpen={true}
+      onOpenChange={(v) => !v && onClose()}
+      title="Yangi lavozim"
+      description="Yangi lavozim nomini kiriting."
+      icon={Briefcase01}
+      size="sm"
+      footer={
+        <div className="flex justify-end gap-3">
+          <Button color="secondary" size="md" onClick={onClose} isDisabled={create.isPending}>
+            Bekor qilish
+          </Button>
+          <Button
+            type="submit"
+            form="create-job-form"
+            color="primary"
+            size="md"
+            isDisabled={create.isPending}
+            isLoading={create.isPending}
+            showTextWhileLoading
+          >
+            Yaratish
+          </Button>
+        </div>
+      }
+    >
+      <form id="create-job-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <Controller
+          control={control}
+          name="name"
+          render={({ field }) => (
+            <Input
+              label="Lavozim nomi"
               placeholder="Masalan: Dekan yordamchisi"
-              className={errors.name ? inputCls.replace("ring-secondary", "ring-error-primary") : inputCls}
+              value={field.value || ""}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              isInvalid={!!errors.name}
+              hint={errors.name?.message}
+              isRequired
+              autoFocus
             />
-            {errors.name && (
-              <p className="text-xs text-error-primary">{errors.name.message}</p>
-            )}
-          </div>
-          <ModalActions onClose={onClose} isPending={create.isPending} submitLabel="Yaratish" />
-        </form>
-      </ModalCard>
-    </Backdrop>
+          )}
+        />
+      </form>
+    </PremiumFormModal>
   );
 }
 
@@ -76,8 +100,8 @@ function CreateModal({ onClose }: { onClose: () => void }) {
 function EditModal({ item, onClose }: { item: JobPosition; onClose: () => void }) {
   const update = useUpdateJobPosition();
   const {
-    register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<NameInput>({
     resolver: zodResolver(nameSchema) as any,
@@ -95,26 +119,51 @@ function EditModal({ item, onClose }: { item: JobPosition; onClose: () => void }
   };
 
   return (
-    <Backdrop onClose={onClose}>
-      <ModalCard title="Lavozimni tahrirlash" onClose={onClose}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-secondary">
-              Lavozim nomi <span className="text-error-primary">*</span>
-            </label>
-            <input
-              {...register("name")}
+    <PremiumFormModal
+      isOpen={true}
+      onOpenChange={(v) => !v && onClose()}
+      title="Lavozimni tahrirlash"
+      description="Lavozim nomini o'zgartiring."
+      icon={Edit05}
+      size="sm"
+      footer={
+        <div className="flex justify-end gap-3">
+          <Button color="secondary" size="md" onClick={onClose} isDisabled={update.isPending}>
+            Bekor qilish
+          </Button>
+          <Button
+            type="submit"
+            form="edit-job-form"
+            color="primary"
+            size="md"
+            isDisabled={update.isPending}
+            isLoading={update.isPending}
+            showTextWhileLoading
+          >
+            Saqlash
+          </Button>
+        </div>
+      }
+    >
+      <form id="edit-job-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <Controller
+          control={control}
+          name="name"
+          render={({ field }) => (
+            <Input
+              label="Lavozim nomi"
+              value={field.value || ""}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              isInvalid={!!errors.name}
+              hint={errors.name?.message}
+              isRequired
               autoFocus
-              className={errors.name ? inputCls.replace("ring-secondary", "ring-error-primary") : inputCls}
             />
-            {errors.name && (
-              <p className="text-xs text-error-primary">{errors.name.message}</p>
-            )}
-          </div>
-          <ModalActions onClose={onClose} isPending={update.isPending} submitLabel="Saqlash" />
-        </form>
-      </ModalCard>
-    </Backdrop>
+          )}
+        />
+      </form>
+    </PremiumFormModal>
   );
 }
 
@@ -133,110 +182,40 @@ function DeleteModal({ item, onClose }: { item: JobPosition; onClose: () => void
   };
 
   return (
-    <Backdrop onClose={onClose}>
-      <ModalCard title="Lavozimni o'chirish" onClose={onClose}>
-        <div className="flex flex-col gap-5">
-          <p className="text-sm text-secondary">
-            <span className="font-semibold text-primary">«{item.name}»</span> lavozimini
-            o'chirmoqchimisiz? Bu amalni qaytarib bo'lmaydi.
-          </p>
-          <div className="flex justify-end gap-3 border-t border-secondary pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg px-4 py-2.5 text-sm font-medium text-secondary ring-1 ring-secondary transition hover:bg-secondary"
-            >
-              Bekor qilish
-            </button>
-            <button
-              type="button"
-              onClick={onConfirm}
-              disabled={del.isPending}
-              className="inline-flex items-center gap-2 rounded-lg bg-error-solid px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
-            >
-              {del.isPending && <Spinner />}
-              O'chirish
-            </button>
-          </div>
+    <PremiumFormModal
+      isOpen={true}
+      onOpenChange={(v) => !v && onClose()}
+      title="Lavozimni o'chirish"
+      description="Bu amalni qaytarib bo'lmaydi."
+      icon={Trash01}
+      iconBgClassName="bg-error-solid"
+      iconClassName="text-white"
+      size="sm"
+      footer={
+        <div className="flex justify-end gap-3">
+          <Button color="secondary" size="md" onClick={onClose} isDisabled={del.isPending}>
+            Bekor qilish
+          </Button>
+          <Button
+            onClick={onConfirm}
+            color="primary-destructive"
+            size="md"
+            isDisabled={del.isPending}
+            isLoading={del.isPending}
+            showTextWhileLoading
+          >
+            O&apos;chirish
+          </Button>
         </div>
-      </ModalCard>
-    </Backdrop>
-  );
-}
-
-// ── Shared modal primitives ────────────────────────────────────────────────
-function Backdrop({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md">{children}</div>
-    </div>
-  );
-}
-
-function ModalCard({
-  title,
-  onClose,
-  children,
-}: {
-  title: string;
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="overflow-hidden rounded-2xl bg-primary shadow-2xl ring-1 ring-secondary">
-      <div className="flex items-center justify-between bg-brand-solid px-5 py-4">
-        <h2 className="text-base font-semibold text-white">{title}</h2>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-lg p-1.5 text-white/70 transition hover:bg-white/10 hover:text-white"
-        >
-          <X className="size-4" />
-        </button>
+      }
+    >
+      <div className="flex flex-col gap-2">
+        <p className="text-sm text-secondary pt-2">
+          Haqiqatan ham <span className="font-semibold text-primary">«{item.name}»</span> lavozimini
+          o&apos;chirmoqchimisiz? Ushbu hujjat butunlay o'chib ketadi.
+        </p>
       </div>
-      <div className="p-5">{children}</div>
-    </div>
-  );
-}
-
-function ModalActions({
-  onClose,
-  isPending,
-  submitLabel,
-}: {
-  onClose: () => void;
-  isPending: boolean;
-  submitLabel: string;
-}) {
-  return (
-    <div className="flex justify-end gap-3 border-t border-secondary pt-4">
-      <button
-        type="button"
-        onClick={onClose}
-        disabled={isPending}
-        className="rounded-lg px-4 py-2.5 text-sm font-medium text-secondary ring-1 ring-secondary transition hover:bg-secondary disabled:opacity-50"
-      >
-        Bekor qilish
-      </button>
-      <button
-        type="submit"
-        disabled={isPending}
-        className="inline-flex items-center gap-2 rounded-lg bg-brand-solid px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-brand-solid_hover disabled:opacity-60"
-      >
-        {isPending && <Spinner />}
-        {submitLabel}
-      </button>
-    </div>
-  );
-}
-
-function Spinner() {
-  return (
-    <svg className="size-4 animate-spin" viewBox="0 0 24 24" fill="none">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-    </svg>
+    </PremiumFormModal>
   );
 }
 
@@ -247,10 +226,15 @@ export default function JobPositionsPage() {
   const { data, isLoading } = useJobPositions();
   const [modal, setModal] = useState<Modal>(null);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const filtered = (data || []).filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+  const paginatedData = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const columns: DataTableColumn<JobPosition>[] = [
     {
@@ -259,7 +243,9 @@ export default function JobPositionsPage() {
       headClassName: "w-[52px]",
       cellClassName: "py-3.5",
       cell: (_row, i) => (
-        <span className="text-sm tabular-nums text-tertiary">{(i ?? 0) + 1}</span>
+        <span className="text-sm tabular-nums text-tertiary">
+          {(page - 1) * pageSize + (i ?? 0) + 1}
+        </span>
       ),
     },
     {
@@ -293,22 +279,20 @@ export default function JobPositionsPage() {
       cellClassName: "py-3.5 px-3",
       cell: (row) => (
         <div className="flex items-center justify-end gap-1">
-          <button
-            type="button"
+          <Button
+            color="tertiary"
+            size="sm"
+            iconLeading={Edit05}
             onClick={() => setModal({ type: "edit", item: row })}
-            className="rounded-lg p-1.5 text-tertiary transition hover:bg-secondary hover:text-primary"
-            title="Tahrirlash"
-          >
-            <Edit05 className="size-4" />
-          </button>
-          <button
-            type="button"
+            aria-label="Tahrirlash"
+          />
+          <Button
+            color="tertiary-destructive"
+            size="sm"
+            iconLeading={Trash01}
             onClick={() => setModal({ type: "delete", item: row })}
-            className="rounded-lg p-1.5 text-tertiary transition hover:bg-error-soft hover:text-error-primary"
-            title="O'chirish"
-          >
-            <Trash01 className="size-4" />
-          </button>
+            aria-label="O'chirish"
+          />
         </div>
       ),
     },
@@ -327,28 +311,36 @@ export default function JobPositionsPage() {
         countLabel="Jami"
         showSearch
         searchValue={search}
-        onSearch={(e) => setSearch(e.target.value)}
-        searchPlaceholder="Lavozim qidirish..."
+        onSearch={(v: string) => {
+          setSearch(v);
+          setPage(1);
+        }}
+        searchPlaceholder="Lavozimni qidirish..."
         actions={
-          <button
-            type="button"
+          <Button
+            color="primary"
+            size="md"
+            iconLeading={Plus}
             onClick={() => setModal("create")}
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-brand-solid px-4 text-sm font-semibold text-white shadow-xs transition hover:bg-brand-solid_hover"
           >
-            <Plus className="size-4" />
             Yangi lavozim
-          </button>
+          </Button>
         }
       />
 
       <DataTable
         ariaLabel="Lavozimlar ro'yxati"
-        data={filtered}
+        data={paginatedData}
         columns={columns}
         rowKey="public_id"
-        isLoading={isLoading}
+        isLoading={isLoading || !data}
         emptyTitle="Lavozimlar topilmadi"
         emptyDescription="Hozircha hech qanday lavozim mavjud emas. Yangi lavozim qo'shing."
+        pagination={{
+          page: page,
+          total: totalPages,
+          onPageChange: setPage,
+        }}
       />
 
       {/* Modals */}

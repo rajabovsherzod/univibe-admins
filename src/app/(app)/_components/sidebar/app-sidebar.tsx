@@ -35,26 +35,15 @@ export function AppSidebar() {
   return (
     <div className="flex h-full flex-col rounded-xl border border-secondary/50 bg-primary shadow-md">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-5 py-5 border-b border-secondary">
+      <div className="flex items-center px-5 py-5 border-b border-secondary">
         <Image
-          src="/brand-light-logo.svg"
-          alt="Univibe"
-          width={36}
-          height={36}
-          className="h-9 w-auto dark:hidden"
+          src="/sidebar.svg"
+          alt="Univibe Admin"
+          width={160}
+          height={40}
+          className="h-10 w-auto"
           unoptimized
         />
-        <Image
-          src="/brand-dark-logo.png"
-          alt="Univibe"
-          width={36}
-          height={36}
-          className="h-9 w-auto hidden dark:block"
-          unoptimized
-        />
-        <span className="text-lg font-bold tracking-tight text-brand-solid">
-          Univibe
-        </span>
       </div>
 
       {/* Navigation */}

@@ -10,6 +10,7 @@ import { DataTable } from "@/components/application/table/data-table";
 import { adminColumns } from "./admin-columns";
 
 import { Button } from "@/components/base/buttons/button";
+import { Input } from "@/components/base/input/input";
 import { PremiumFormModal } from "@/components/application/modals/premium-modal";
 
 type CreateAdminPayload = {
@@ -20,6 +21,17 @@ type CreateAdminPayload = {
 
 export function AdminsClient({ admins }: { admins: AdminRow[] }) {
   const [open, setOpen] = React.useState(false);
+  const [search, setSearch] = React.useState("");
+  const [page, setPage] = React.useState(1);
+  const pageSize = 10;
+
+  const filtered = admins.filter(
+    (a) =>
+      a.fullName.toLowerCase().includes(search.toLowerCase()) ||
+      a.email.toLowerCase().includes(search.toLowerCase())
+  );
+  const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+  const paginatedData = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const [form, setForm] = React.useState<CreateAdminPayload>({
     name: "",
@@ -36,28 +48,40 @@ export function AdminsClient({ admins }: { admins: AdminRow[] }) {
         ]}
         title="Adminlar"
         subtitle="Adminlar ro'yxatini ko'rish, qidirish va boshqarish."
-        count={admins.length}
+        count={filtered.length}
+        showSearch
+        searchValue={search}
+        onSearch={(v: string) => {
+          setSearch(v);
+          setPage(1);
+        }}
+        searchPlaceholder="Admin qidirish..."
         icon={Users01}
         actions={
-          <button
-            type="button"
+          <Button
+            color="primary"
+            size="md"
+            iconLeading={Plus}
             onClick={() => setOpen(true)}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-brand-solid px-4 text-sm font-semibold text-white shadow-xs ring-0 transition hover:bg-brand-solid_hover"
           >
-            <Plus className="size-4" />
-            Yangi admin qo'shish
-          </button>
+            Yangi admin qo&apos;shish
+          </Button>
         }
       />
 
       <DataTable
         ariaLabel="Adminlar jadvali"
-        data={admins}
+        data={paginatedData}
         columns={adminColumns}
         rowKey="id"
         selectionMode="multiple"
         emptyTitle="Adminlar topilmadi"
         emptyDescription="Yangi admin qo'shish uchun yuqoridagi tugmadan foydalaning."
+        pagination={{
+          page: page,
+          total: totalPages,
+          onPageChange: setPage,
+        }}
       />
 
       <PremiumFormModal
@@ -78,7 +102,6 @@ export function AdminsClient({ admins }: { admins: AdminRow[] }) {
           <div className="flex items-center justify-end gap-3">
             <Button
               color="secondary"
-              type="button"
               onClick={() => setOpen(false)}
             >
               Bekor qilish
@@ -98,26 +121,30 @@ export function AdminsClient({ admins }: { admins: AdminRow[] }) {
             setOpen(false);
           }}
         >
-          <input
-            className="w-full rounded-lg bg-primary px-3.5 py-2.5 text-md text-primary ring-1 ring-primary ring-inset shadow-xs placeholder:text-placeholder focus:ring-2 focus:ring-brand-solid outline-none transition-shadow"
+          <Input
+            label="Ism"
             placeholder="Ism"
             value={form.name}
-            onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+            onChange={(v) => setForm((p) => ({ ...p, name: v }))}
+            isRequired
           />
 
-          <input
-            className="w-full rounded-lg bg-primary px-3.5 py-2.5 text-md text-primary ring-1 ring-primary ring-inset shadow-xs placeholder:text-placeholder focus:ring-2 focus:ring-brand-solid outline-none transition-shadow"
+          <Input
+            label="Email"
+            type="email"
             placeholder="Email"
             value={form.email}
-            onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+            onChange={(v) => setForm((p) => ({ ...p, email: v }))}
+            isRequired
           />
 
-          <input
-            className="w-full rounded-lg bg-primary px-3.5 py-2.5 text-md text-primary ring-1 ring-primary ring-inset shadow-xs placeholder:text-placeholder focus:ring-2 focus:ring-brand-solid outline-none transition-shadow"
-            placeholder="Parol"
+          <Input
+            label="Parol"
             type="password"
+            placeholder="Parol"
             value={form.password}
-            onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+            onChange={(v) => setForm((p) => ({ ...p, password: v }))}
+            isRequired
           />
         </form>
       </PremiumFormModal>

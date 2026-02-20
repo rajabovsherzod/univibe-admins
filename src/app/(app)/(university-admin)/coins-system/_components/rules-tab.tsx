@@ -10,10 +10,19 @@ import type { DataTableColumn } from "@/components/application/table/data-table"
 import { useCoinRules, useToggleRuleStatus } from "@/hooks/api/use-coins";
 import type { CoinRule } from "@/lib/api/types";
 import { cx } from "@/utils/cx";
+import { useDebounce } from "@/hooks/use-debounce";
 
-// Modals imported later
+import { Input } from "@/components/base/input/input";
+import { Select } from "@/components/base/select/select";
+import { Button } from "@/components/base/buttons/button";
+
 import { CreateRuleModal } from "./create-rule-modal";
 import { EditRuleModal } from "./edit-rule-modal";
+
+const STATUS_ITEMS = [
+  { id: "active", label: "Faollari" },
+  { id: "archived", label: "Arxivlanganlar" },
+];
 
 export function RulesTab() {
   const [page, setPage] = useState(1);
@@ -21,10 +30,12 @@ export function RulesTab() {
   const [statusFilter, setStatusFilter] = useState<"active" | "archived">("active");
   const [modal, setModal] = useState<"create" | { type: "edit"; item: CoinRule } | null>(null);
 
+  const debouncedSearch = useDebounce(search, 500);
+
   const { data, isLoading } = useCoinRules({
     page,
-    page_size: 20,
-    search: search || undefined,
+    page_size: 10,
+    search: debouncedSearch || undefined,
     status: statusFilter,
   });
 
@@ -49,7 +60,7 @@ export function RulesTab() {
       headClassName: "w-[50px]",
       cell: (row, i) => (
         <span className="text-sm tabular-nums text-tertiary">
-          {(page - 1) * 20 + (i ?? 0) + 1}
+          {(page - 1) * 10 + (i ?? 0) + 1}
         </span>
       ),
     },
@@ -71,8 +82,8 @@ export function RulesTab() {
       header: "Miqdori",
       cell: (row) => (
         <div className="flex items-center gap-1.5">
-          <Coins02 className="size-4 text-warning-solid" />
-          <span className="text-sm font-semibold text-warning-solid">{row.coin_amount}</span>
+          <span className="text-sm font-semibold text-brand-solid">{row.coin_amount}</span>
+          <img src="/blue-coin-org.png" alt="Coin" className="size-5 drop-shadow-sm" />
         </div>
       ),
     },
@@ -106,21 +117,21 @@ export function RulesTab() {
       cellClassName: "px-3",
       cell: (row) => (
         <div className="flex items-center justify-end gap-1">
-          <button
+          <Button
+            color="tertiary"
+            size="sm"
+            iconLeading={Edit05}
             onClick={() => setModal({ type: "edit", item: row })}
-            className="rounded-lg p-1.5 text-tertiary transition hover:bg-secondary hover:text-primary"
-            title="Tahrirlash"
-          >
-            <Edit05 className="size-4" />
-          </button>
-          <button
+            aria-label="Tahrirlash"
+          />
+          <Button
+            color="tertiary-destructive"
+            size="sm"
+            iconLeading={Trash01}
             onClick={() => handleToggleStatus(row)}
-            disabled={toggleStatus.isPending}
-            className="rounded-lg p-1.5 text-tertiary transition hover:bg-error-soft hover:text-error-primary disabled:opacity-50"
-            title={row.status === "ACTIVE" ? "Arxivlash" : "Faollashtirish"}
-          >
-            <Trash01 className="size-4" />
-          </button>
+            isDisabled={toggleStatus.isPending}
+            aria-label={row.status === "ACTIVE" ? "Arxivlash" : "Faollashtirish"}
+          />
         </div>
       ),
     },
@@ -131,30 +142,36 @@ export function RulesTab() {
       {/* ── Toolbar ── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <input
-            type="text"
+          <Input
             placeholder="Qidirish..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full sm:w-[250px] rounded-lg bg-primary px-3 py-2 text-sm text-primary placeholder:text-placeholder outline-none ring-1 ring-inset ring-secondary focus:ring-2 focus:ring-brand-solid"
+            onChange={(v) => {
+              setSearch(v as string);
+              setPage(1); // Reset page to 1 when searching
+            }}
+            className="w-full sm:w-[250px]"
           />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as "active" | "archived")}
-            className="rounded-lg bg-primary px-3 py-2 text-sm text-primary outline-none ring-1 ring-inset ring-secondary focus:ring-2 focus:ring-brand-solid"
+          <Select
+            selectedKey={statusFilter}
+            onSelectionChange={(key) => {
+              setStatusFilter(key as "active" | "archived");
+              setPage(1); // Reset page to 1 when changing status
+            }}
+            items={STATUS_ITEMS}
+            placeholder="Holati"
           >
-            <option value="active">Faollari</option>
-            <option value="archived">Arxivlanganlar</option>
-          </select>
+            {(item) => <Select.Item id={item.id} label={item.label} />}
+          </Select>
         </div>
 
-        <button
+        <Button
+          color="primary"
+          size="md"
+          iconLeading={Plus}
           onClick={() => setModal("create")}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-solid px-4 py-2 text-sm font-semibold text-white shadow-xs transition hover:bg-brand-solid_hover"
         >
-          <Plus className="size-4" />
           Yangi qoida
-        </button>
+        </Button>
       </div>
 
       {/* ── Table ── */}
@@ -163,12 +180,15 @@ export function RulesTab() {
         data={data?.results || []}
         columns={columns}
         rowKey="public_id"
-        isLoading={isLoading}
+        isLoading={isLoading || !data}
         emptyTitle="Qoidalar topilmadi"
         emptyDescription="Hozircha hech qanday coin qoidasi kiritilmagan."
+        pagination={{
+          page: page,
+          total: Math.ceil((data?.count || 0) / 10) || 1,
+          onPageChange: setPage,
+        }}
       />
-
-      {/* Pagination controls can be added here using data?.count */}
 
       {/* ── Modals ── */}
       {modal === "create" && <CreateRuleModal onClose={() => setModal(null)} />}

@@ -215,16 +215,13 @@ export default function StaffCreatePage() {
                       Lavozim <span className="text-error-primary">*</span>
                     </label>
                     <Select
-                      placeholder={jobsLoading ? "Yuklanmoqda..." : "Lavozim tanlang"}
-                      isDisabled={jobsLoading}
-                      selectedKey={selectedJobId || null}
-                      onSelectionChange={(key) =>
-                        setValue("job_position_public_id", key as string, {
-                          shouldValidate: true,
-                        })
-                      }
+                      id="job_position"
                       items={jobPositionItems}
+                      selectedKey={selectedJobId || null}
+                      onSelectionChange={(k) => setValue("job_position_public_id", String(k), { shouldValidate: true })}
                       isInvalid={!!errors.job_position_public_id}
+                      isDisabled={jobsLoading || isPending}
+                      placeholder={jobsLoading ? "Lavozimlar yuklanmoqda..." : "Lavozimni tanlang"}
                     >
                       {(item) => <Select.Item id={item.id} label={item.label} />}
                     </Select>

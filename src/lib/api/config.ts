@@ -71,6 +71,11 @@ export const API_CONFIG = {
       transactions: '/api/v1/coins/transactions/',
       transactionIssue: '/api/v1/coins/transactions/issue/',
       transactionDelete: (id: string) => `/api/v1/coins/transactions/${id}/delete/`,
+
+      // Admin 
+      deletionAudits: '/api/v1/coins/admin/deletion-audits/',
+      deletionAuditDetail: (id: string) => `/api/v1/coins/admin/deletion-audits/${id}/`,
+      auditTransactions: '/api/v1/coins/admin/transactions/audit/',
     },
   },
 } as const;

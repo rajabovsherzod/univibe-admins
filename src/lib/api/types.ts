@@ -221,6 +221,39 @@ export interface CoinTransaction {
   created_at_date?: string; // YYYY-MM-DD
 }
 
+export interface AuditTransaction {
+  transaction_public_id: string; // Not UUID, could be just string
+  staff_member_name: string;
+  staff_member_public_id: string;
+  coin_rule_name: string;
+  coin_rule_public_id: string;
+  transaction_type: "ISSUANCE" | "REDEMPTION" | "REVERSAL";
+  amount: number;
+  comment: string;
+  created_at: ISO8601Date;
+}
+
+export interface DeletionAudit {
+  public_id: UUID;
+  transaction_amount: number;
+  student_name: string;
+  staff_member_name: string;
+  deletion_reason: string;
+
+  // detail only fields
+  transaction_public_id?: string;
+  transaction_type?: string;
+  student_public_id?: string;
+  staff_member_public_id?: string;
+  coin_rule_name?: string;
+  coin_rule_public_id?: string;
+  transaction_comment?: string;
+  deleted_by_name?: string;
+  deleted_by_public_id?: string;
+  deleted_at?: ISO8601Date;
+}
+
+
 export interface CoinIssuePayload {
   student_public_id: UUID;
   coin_rule_public_id: UUID;

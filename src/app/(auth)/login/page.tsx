@@ -154,7 +154,6 @@ export default function LoginPage() {
               size="lg"
               isDisabled={loginMutation.isPending}
               isLoading={loginMutation.isPending}
-              showTextWhileLoading
               className="w-full"
             >
               {loginMutation.isPending ? "Kirish..." : "Kirish"}

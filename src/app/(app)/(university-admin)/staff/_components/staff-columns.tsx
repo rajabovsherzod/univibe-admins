@@ -3,7 +3,8 @@
 import Image from "next/image";
 import type { DataTableColumn } from "@/components/application/table/data-table";
 import type { StaffListResponseItem } from "@/lib/api/types";
-import { TableRowActionsDropdown } from "@/components/application/table/table";
+import { Button } from "@/components/base/buttons/button";
+import { Edit05, Trash01 } from "@untitledui/icons";
 
 function getInitials(name: string): string {
   return name
@@ -93,11 +94,24 @@ export function getStaffColumns(opts?: {
     {
       id: "actions",
       header: "",
-      headClassName: "w-[52px]",
+      headClassName: "w-[100px]",
       cellClassName: "px-3 py-3",
-      cell: () => (
-        <div className="flex items-center justify-end">
-          <TableRowActionsDropdown />
+      cell: (row) => (
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            color="tertiary"
+            size="sm"
+            iconLeading={Edit05}
+            onClick={() => opts?.onEdit?.(row.user_public_id)}
+            aria-label="Tahrirlash"
+          />
+          <Button
+            color="tertiary-destructive"
+            size="sm"
+            iconLeading={Trash01}
+            onClick={() => opts?.onDelete?.(row.user_public_id)}
+            aria-label="O'chirish"
+          />
         </div>
       ),
     },

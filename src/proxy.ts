@@ -10,8 +10,12 @@ export async function proxy(request: NextRequest) {
   // Debugging: Log all cookies
   console.log("Middleware Cookies:", request.cookies.getAll().map(c => c.name));
 
+  // Detect social media crawlers
+  const userAgent = request.headers.get('user-agent') || '';
+  const isBot = /TelegramBot|WhatsApp|Twitterbot|facebookexternalhit|LinkedInBot/i.test(userAgent);
+
   // Define public paths that don't require authentication
-  const isPublicPath = pathname === '/login' || pathname === '/forgot-password';
+  const isPublicPath = pathname === '/login' || pathname === '/forgot-password' || pathname.startsWith('/og') || isBot;
 
   // Check for valid session token
   const token = await getToken({

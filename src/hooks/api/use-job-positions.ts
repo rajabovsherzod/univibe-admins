@@ -1,27 +1,29 @@
 // hooks/api/use-job-positions.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
+import axios from "axios";
 import { API_CONFIG } from "@/lib/api/config";
 import type { JobPosition } from "@/lib/api/types";
 
 const ENDPOINTS = API_CONFIG.endpoints.staff;
 
-async function apiFetch(url: string, token: string, options?: RequestInit) {
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    const msg =
-      Object.values(err).flat().join(" ") || `Xatolik: ${res.status}`;
+async function apiFetch(url: string, token: string, options?: { method?: string; body?: string }) {
+  try {
+    const res = await axios({
+      url,
+      method: options?.method || "GET",
+      data: options?.body ? JSON.parse(options.body) : undefined,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    return res.data;
+  } catch (error: any) {
+    const errData = error.response?.data || {};
+    const msg = Object.values(errData).flat().join(" ") || `Xatolik: ${error.response?.status || error.message}`;
     throw new Error(msg as string);
   }
-  return res.status === 204 ? null : res.json();
 }
 
 // ── LIST ──────────────────────────────────────────────────────────────────

@@ -15,6 +15,9 @@ import {
   Grid01,
   PieChart03,
   Briefcase01,
+  GraduationHat01,
+  Building03,
+  LayersThree01,
 } from "@untitledui/icons";
 
 export function AppSidebar() {
@@ -24,7 +27,10 @@ export function AppSidebar() {
     { label: "Dashboard", href: "/dashboard", icon: HomeLine },
     { divider: true },
     { label: "Xodimlar", href: "/staff", icon: Users01 },
+    { label: "Fakultetlar", href: "/faculties", icon: Building03 },
+    { label: "Kurslar", href: "/year-levels", icon: LayersThree01 },
     { label: "Lavozimlar", href: "/job-positions", icon: Briefcase01 },
+    { label: "Darajalar", href: "/degree-levels", icon: GraduationHat01 },
     { label: "Coins tizimi", href: "/coins-system", icon: Grid01 },
     { label: "Statistika", href: "/statistics", icon: PieChart03 },
     { divider: true },
@@ -35,7 +41,7 @@ export function AppSidebar() {
   return (
     <div className="flex h-full flex-col rounded-xl border border-secondary/50 bg-primary shadow-md">
       {/* Logo */}
-      <div className="flex items-center px-5 py-5 border-b border-secondary">
+      <div className="relative z-10 flex items-center px-5 py-5 border-b border-secondary shadow-sm">
         <Image
           src="/sidebar.svg"
           alt="Univibe Admin"

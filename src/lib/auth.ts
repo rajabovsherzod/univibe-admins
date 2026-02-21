@@ -1,5 +1,6 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import axios from "axios";
 import { API_CONFIG } from "./api/config";
 
 // Extend the built-in session types
@@ -53,39 +54,17 @@ export const authOptions: NextAuthOptions = {
         console.log("Payload:", { email: credentials.email, password: credentials.password });
 
         try {
-          const res = await fetch(url, {
-            method: 'POST',
-            body: JSON.stringify({
-              email: credentials.email,
-              password: credentials.password
-            }),
+          const res = await axios.post(url, {
+            email: credentials.email,
+            password: credentials.password
+          }, {
             headers: { "Content-Type": "application/json" }
           });
 
-          console.log("Response Status:", res.status);
-
-          const text = await res.text();
-          console.log("Response Body:", text);
-
-          if (!res.ok) {
-            console.error(`API Error (${res.status}):`, text);
-            return null;
-          }
-
-          try {
-            // Try to parse JSON
-            const user = JSON.parse(text);
-            if (user.access_token) {
-              console.log("Login Successful, User:", user);
-              return user;
-            }
-          } catch (jsonError) {
-            console.error("JSON Parse Error:", jsonError);
-          }
-
-          return null;
-        } catch (e) {
-          console.error("Fetch Error:", e);
+          console.log("Login Successful, User:", res.data);
+          return res.data;
+        } catch (e: any) {
+          console.error("Axios Error:", e.response?.data || e.message);
           return null;
         }
       }
@@ -101,23 +80,19 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) return null;
 
         try {
-          const res = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.auth.loginStaff}`, {
-            method: 'POST',
-            body: JSON.stringify({
-              email: credentials.email,
-              password: credentials.password
-            }),
+          const res = await axios.post(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.auth.loginStaff}`, {
+            email: credentials.email,
+            password: credentials.password
+          }, {
             headers: { "Content-Type": "application/json" }
           });
 
-          const user = await res.json();
-
-          if (res.ok && user.access_token) {
-            return user;
+          if (res.data?.access_token) {
+            return res.data;
           }
           return null;
-        } catch (e) {
-          console.error(e);
+        } catch (e: any) {
+          console.error(e.response?.data || e.message);
           return null;
         }
       }

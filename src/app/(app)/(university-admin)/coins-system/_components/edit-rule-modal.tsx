@@ -83,7 +83,6 @@ export function EditRuleModal({ item, onClose }: { item: CoinRule; onClose: () =
             color="primary"
             size="md"
             isLoading={isFormLoading}
-            showTextWhileLoading
           >
             {isFormLoading ? "Saqlanmoqda..." : "Saqlash"}
           </Button>

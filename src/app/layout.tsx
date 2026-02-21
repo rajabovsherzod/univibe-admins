@@ -5,6 +5,7 @@ import { Theme } from "@/providers/theme";
 import "@/styles/globals.css";
 import { cx } from "@/utils/cx";
 import { Toaster } from "sonner";
+import { NProgressProvider } from "@/providers/nprogress-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -134,6 +135,7 @@ export default function RootLayout({
       </head>
       <body className={cx(inter.variable, "bg-primary antialiased")}>
         <AppProvider>
+          <NProgressProvider options={{ color: "#006ab0" }} />
           <Theme>
             <Toaster position="top-right" richColors closeButton />
             <div id="app-shell" className="min-h-dvh">

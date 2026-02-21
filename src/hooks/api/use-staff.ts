@@ -1,18 +1,22 @@
 // hooks/api/use-staff.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
+import axios from "axios";
 import { API_CONFIG } from "@/lib/api/config";
 import type { CreateStaffInput } from "@/lib/validations/staff";
 import type { JobPosition } from "@/lib/api/types";
 
 // ── Fetch job positions ──────────────────────────────────────────────────────
 async function fetchJobPositions(token: string): Promise<JobPosition[]> {
-  const res = await fetch(
-    `${API_CONFIG.baseURL}${API_CONFIG.endpoints.staff.jobPositions}`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  if (!res.ok) throw new Error("Lavozimlarni yuklashda xatolik");
-  return res.json();
+  try {
+    const res = await axios.get<JobPosition[]>(
+      `${API_CONFIG.baseURL}${API_CONFIG.endpoints.staff.jobPositions}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.detail || "Lavozimlarni yuklashda xatolik");
+  }
 }
 
 export function useJobPositions() {
@@ -40,18 +44,15 @@ async function createStaff(
     form.append("profile_photo", input.profile_photo);
   }
 
-  const res = await fetch(
-    `${API_CONFIG.baseURL}${API_CONFIG.endpoints.staff.create}`,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: form,
-    }
-  );
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    const messages = Object.values(err).flat().join(" ") || "Xodim yaratishda xatolik";
+  try {
+    await axios.post(
+      `${API_CONFIG.baseURL}${API_CONFIG.endpoints.staff.create}`,
+      form,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+  } catch (error: any) {
+    const errData = error.response?.data || {};
+    const messages = Object.values(errData).flat().join(" ") || "Xodim yaratishda xatolik";
     throw new Error(messages as string);
   }
 }
@@ -63,6 +64,32 @@ export function useCreateStaff() {
   return useMutation({
     mutationFn: (input: CreateStaffInput) =>
       createStaff(session?.accessToken as string, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["staff-list"] });
+    },
+  });
+}
+
+// ── Delete staff ─────────────────────────────────────────────────────────────
+async function deleteStaff(token: string, id: string): Promise<void> {
+  try {
+    await axios.delete(
+      `${API_CONFIG.baseURL}${API_CONFIG.endpoints.staff.delete(id)}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+  } catch (error: any) {
+    const errData = error.response?.data || {};
+    const message = Object.values(errData).flat().join(" ") || "Xodimni o'chirishda xatolik";
+    throw new Error(message as string);
+  }
+}
+
+export function useDeleteStaff() {
+  const { data: session } = useSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteStaff(session?.accessToken as string, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff-list"] });
     },

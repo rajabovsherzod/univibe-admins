@@ -7,7 +7,7 @@ import { Badge } from "@/components/base/badges/badges";
 import { cx, sortCx } from "@/utils/cx";
 
 const styles = sortCx({
-  root: "group relative flex w-full cursor-pointer items-center rounded-md bg-primary outline-focus-ring transition duration-100 ease-linear select-none hover:bg-primary_hover focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2",
+  root: "group relative flex w-full cursor-pointer items-center rounded-md bg-primary outline-focus-ring select-none hover:bg-primary_hover focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2",
   rootSelected: "bg-brand-solid hover:bg-brand-solid_hover shadow-xs",
 });
 
@@ -39,7 +39,7 @@ export const NavItemBase = ({ current, type, badge, href, icon: Icon, children, 
     <Icon
       aria-hidden="true"
       className={cx(
-        "mr-2 size-5 shrink-0 transition-inherit-all",
+        "mr-2 size-5 shrink-0",
         current ? "text-white" : "text-fg-quaternary group-hover:text-fg-secondary_hover"
       )}
     />
@@ -62,7 +62,7 @@ export const NavItemBase = ({ current, type, badge, href, icon: Icon, children, 
   const labelElement = (
     <span
       className={cx(
-        "flex-1 text-md font-semibold transition-inherit-all",
+        "flex-1 text-md font-semibold",
         truncate && "truncate",
         current ? "text-white" : "text-secondary group-hover:text-secondary_hover",
       )}

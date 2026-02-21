@@ -4,23 +4,15 @@ import { authOptions } from "@/lib/auth";
 import { UniversityAdminDashboard } from "../../_components/dashboard/university-admin-dashboard";
 import { UniversityStaffDashboard } from "../../_components/dashboard/university-staff-dashboard";
 import { redirect } from "next/navigation";
+import { constructMetadata } from "@/lib/utils/seo";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://admin.univibe.uz";
 
-export const metadata: Metadata = {
+export const metadata = constructMetadata({
   title: "Dashboard",
-  description: "Univibe boshqaruv paneli — tizim statistikasi va faoliyatini kuzating.",
-  robots: { index: false, follow: false, nocache: true },
-  alternates: { canonical: `${APP_URL}/dashboard` },
-  openGraph: {
-    title: "Dashboard | Univibe Admin",
-    description: "Univibe boshqaruv paneli — tizim statistikasi va faoliyatini kuzating.",
-    url: `${APP_URL}/dashboard`,
-    locale: "uz_UZ",
-    type: "website",
-    siteName: "Univibe Admin",
-  },
-};
+  description: "Universitet boshqaruv tizimi statistikasi va asosiy ko'rsatkichlari.",
+  noIndex: true, // Keep it private
+});
 
 
 export default async function DashboardPage() {

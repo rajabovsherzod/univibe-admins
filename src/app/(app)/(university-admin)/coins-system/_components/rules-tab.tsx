@@ -38,6 +38,7 @@ export function RulesTab() {
     search: debouncedSearch || undefined,
     status: statusFilter,
   });
+  console.log("Kelayotgan data: ", data)
 
   const toggleStatus = useToggleRuleStatus();
 

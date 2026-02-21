@@ -1,7 +1,8 @@
 "use client";
 
 import { Badge } from "@/components/base/badges/badges";
-import { TableRowActionsDropdown } from "@/components/application/table/table";
+import { Button } from "@/components/base/buttons/button";
+import { Edit05, Trash01 } from "@untitledui/icons";
 import type { DataTableColumn } from "@/components/application/table/data-table";
 import type { AdminRow } from "@/types/admins/admin";
 
@@ -92,8 +93,19 @@ export const adminColumns: DataTableColumn<AdminRow>[] = [
     headClassName: "w-[72px]",
     cellClassName: "px-4 py-3",
     cell: () => (
-      <div className="flex items-center justify-end">
-        <TableRowActionsDropdown />
+      <div className="flex items-center justify-end gap-1">
+        <Button
+          color="tertiary"
+          size="sm"
+          iconLeading={Edit05}
+          aria-label="Tahrirlash"
+        />
+        <Button
+          color="tertiary-destructive"
+          size="sm"
+          iconLeading={Trash01}
+          aria-label="O'chirish"
+        />
       </div>
     ),
   },

@@ -7,8 +7,9 @@ import {
   type Ref,
   createContext,
   useContext,
+  useState,
 } from "react";
-import { HelpCircle, InfoCircle } from "@untitledui/icons";
+import { HelpCircle, InfoCircle, Eye, EyeOff } from "@untitledui/icons";
 import type {
   InputProps as AriaInputProps,
   TextFieldProps as AriaTextFieldProps,
@@ -31,11 +32,11 @@ interface BaseProps {
 
 interface TextFieldProps
   extends BaseProps,
-    AriaTextFieldProps,
-    Pick<
-      InputBaseProps,
-      "size" | "wrapperClassName" | "inputClassName" | "iconClassName" | "tooltipClassName"
-    > {
+  AriaTextFieldProps,
+  Pick<
+    InputBaseProps,
+    "size" | "wrapperClassName" | "inputClassName" | "iconClassName" | "tooltipClassName"
+  > {
   ref?: Ref<HTMLDivElement>;
 }
 
@@ -79,15 +80,24 @@ export const InputBase = ({
   const context = useContext(TextFieldContext);
   const inputSize = context?.size || size;
 
+  // Track password visibility state
+  const [showPassword, setShowPassword] = useState(false);
+  const resolvedType = context?.type || inputProps.type;
+  const isPassword = resolvedType === "password";
+  const effectiveType = isPassword ? (showPassword ? "text" : "password") : resolvedType;
+
+  // Determine spacing rules based on icon presence
+  const hasTrailingAction = Boolean(tooltip || isInvalid || isPassword);
+
   const sizes = sortCx({
     sm: {
-      root: cx("px-3 py-2", hasTrailingIcon && "pr-9", hasLeadingIcon && "pl-10"),
+      root: cx("px-3 py-2", hasTrailingAction && "pr-9", hasLeadingIcon && "pl-10"),
       iconLeading: "left-3",
       iconTrailing: "right-3",
       shortcut: "pr-2.5",
     },
     md: {
-      root: cx("px-3.5 py-2.5", hasTrailingIcon && "pr-9.5", hasLeadingIcon && "pl-10.5"),
+      root: cx("px-3.5 py-2.5", hasTrailingAction && "pr-9.5", hasLeadingIcon && "pl-10.5"),
       iconLeading: "left-3.5",
       iconTrailing: "right-3.5",
       shortcut: "pr-3",
@@ -151,6 +161,7 @@ export const InputBase = ({
       <AriaInput
         {...(inputProps as AriaInputProps)}
         ref={ref}
+        type={effectiveType}
         placeholder={placeholder}
         className={cx(
           "m-0 w-full bg-transparent text-md text-primary ring-0 placeholder:text-placeholder",
@@ -167,7 +178,32 @@ export const InputBase = ({
         )}
       />
 
-      {tooltip && !isInvalid && (
+      {isPassword ? (
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-label={showPassword ? "Parolni yashirish" : "Parolni ko'rsatish"}
+          onClick={(e) => {
+            e.preventDefault();
+            setShowPassword((prev) => !prev);
+          }}
+          className={cx(
+            "absolute flex place-content-center place-items-center text-fg-quaternary transition hover:text-fg-quaternary_hover pointer-events-auto z-10 cursor-pointer",
+            sizes[inputSize].iconTrailing,
+          )}
+        >
+          {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+        </button>
+      ) : isInvalid ? (
+        <InfoCircle
+          className={cx(
+            "pointer-events-none absolute size-5 text-fg-error-secondary",
+            sizes[inputSize].iconTrailing,
+            context?.tooltipClassName,
+            tooltipClassName,
+          )}
+        />
+      ) : tooltip ? (
         <Tooltip title={tooltip} placement="top">
           <TooltipTrigger
             className={cx(
@@ -177,21 +213,10 @@ export const InputBase = ({
               tooltipClassName,
             )}
           >
-            <HelpCircle className="size-4" />
+            <HelpCircle className="size-5" />
           </TooltipTrigger>
         </Tooltip>
-      )}
-
-      {isInvalid && (
-        <InfoCircle
-          className={cx(
-            "pointer-events-none absolute size-4 text-fg-error-secondary",
-            sizes[inputSize].iconTrailing,
-            context?.tooltipClassName,
-            tooltipClassName,
-          )}
-        />
-      )}
+      ) : null}
 
       {shortcut && (
         <div
@@ -281,6 +306,7 @@ export const Input = ({
               wrapperClassName,
               tooltipClassName,
               tooltip,
+              type: props.type,
             }}
           />
 

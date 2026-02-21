@@ -16,6 +16,9 @@ import {
   Shield01,
   Grid01,
   PieChart03,
+  GraduationHat01,
+  Building03,
+  LayersThree01,
 } from "@untitledui/icons";
 
 interface MobileSidebarProps {
@@ -46,6 +49,9 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
     { label: "Dashboard", href: "/dashboard", icon: HomeLine },
     { divider: true },
     { label: "Xodimlar", href: "/staff", icon: Users01 },
+    { label: "Fakultetlar", href: "/faculties", icon: Building03 },
+    { label: "Kurslar", href: "/year-levels", icon: LayersThree01 },
+    { label: "Darajalar", href: "/degree-levels", icon: GraduationHat01 },
     { label: "Coins tizimi", href: "/coins-system", icon: Grid01 },
     { label: "Statistika", href: "/statistics", icon: PieChart03 },
     { divider: true },
@@ -95,7 +101,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
       >
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-secondary px-5 py-4">
+          <div className="relative z-10 flex items-center justify-between border-b border-secondary px-5 py-4 shadow-sm">
             <div className="flex items-center">
               <Image
                 src="/sidebar.svg"
@@ -136,7 +142,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
                       href={item.href}
                       onClick={onClose}
                       className={cx(
-                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-150",
+                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold",
                         active
                           ? "bg-brand-solid text-white shadow-sm"
                           : "text-secondary hover:bg-brand-solid/10 hover:text-brand-solid"

@@ -134,7 +134,7 @@ export const NavAccountMenu = ({
                   key={t.id}
                   onClick={() => setTheme(t.id)}
                   className={cx(
-                    "flex flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs transition-colors",
+                    "flex flex-1 flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs",
                     isSelected
                       ? "bg-brand-primary_alt text-brand-secondary ring-1 ring-brand-solid"
                       : "text-tertiary hover:bg-primary_hover hover:text-secondary"
@@ -213,7 +213,7 @@ export const NavAccountCard = ({
   // Skeleton while loading
   if (!displayUser && status === "loading") {
     return (
-      <div className="relative flex items-center gap-3 rounded-xl p-3 ring-1 ring-secondary ring-inset animate-pulse">
+      <div className="relative flex items-center gap-3 rounded-xl p-3 ring-1 ring-secondary ring-inset shadow-md bg-primary animate-pulse">
         <div className="flex items-center gap-3">
           <div className="size-10 rounded-full bg-secondary" />
           <div className="flex flex-col gap-1.5">
@@ -228,7 +228,7 @@ export const NavAccountCard = ({
   if (!displayUser) return null;
 
   return (
-    <div ref={triggerRef} className="relative flex items-center gap-3 rounded-xl p-3 ring-1 ring-secondary ring-inset">
+    <div ref={triggerRef} className="relative flex items-center gap-3 rounded-xl p-3 ring-1 ring-secondary ring-inset shadow-md bg-primary hover:shadow-lg transition-shadow">
       <AvatarLabelGroup
         size="md"
         src={undefined}
@@ -239,7 +239,7 @@ export const NavAccountCard = ({
 
       <div className="absolute top-1.5 right-1.5">
         <AriaDialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>
-          <AriaButton className="flex cursor-pointer items-center justify-center rounded-md p-1.5 text-fg-quaternary outline-focus-ring transition duration-100 ease-linear hover:bg-primary_hover hover:text-fg-quaternary_hover focus-visible:outline-2 focus-visible:outline-offset-2 pressed:bg-primary_hover pressed:text-fg-quaternary_hover">
+          <AriaButton className="flex cursor-pointer items-center justify-center rounded-md p-1.5 text-fg-quaternary outline-focus-ring hover:bg-primary_hover hover:text-fg-quaternary_hover focus-visible:outline-2 focus-visible:outline-offset-2 pressed:bg-primary_hover pressed:text-fg-quaternary_hover">
             <ChevronSelectorVertical className="size-4 shrink-0" />
           </AriaButton>
           <AriaPopover

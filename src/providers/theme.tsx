@@ -9,6 +9,7 @@ export function Theme({ children }: { children: React.ReactNode }) {
       value={{ light: "light-mode", dark: "dark-mode" }}
       defaultTheme="system"
       enableSystem
+      disableTransitionOnChange
     >
       {children}
     </ThemeProvider>

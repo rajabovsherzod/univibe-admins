@@ -269,7 +269,6 @@ export default function StaffCreatePage() {
               size="md"
               isDisabled={isPending}
               isLoading={isPending}
-              showTextWhileLoading
             >
               {isPending ? "Yaratilmoqda..." : "Xodim yaratish"}
             </Button>

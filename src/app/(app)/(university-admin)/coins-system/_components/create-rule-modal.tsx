@@ -80,7 +80,6 @@ export function CreateRuleModal({ onClose }: { onClose: () => void }) {
             color="primary"
             size="md"
             isLoading={isFormLoading}
-            showTextWhileLoading
           >
             {isFormLoading ? "Saqlanmoqda..." : "Saqlash"}
           </Button>

@@ -7,7 +7,6 @@ import type { Key } from "react-aria-components";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import { ThemeSwitcher } from "@/components/application/theme/theme-switcher";
 import { Tabs } from "@/components/application/tabs/tabs";
 import { Input } from "@/components/base/input/input";
 import { Button } from "@/components/base/buttons/button";
@@ -56,29 +55,18 @@ export default function LoginPage() {
       className="relative flex flex-col items-center justify-center bg-primary px-4"
       style={{ minHeight: `calc(100svh - ${HEADER_OFFSET}px)` }}
     >
-      <div className="absolute right-4 top-4 z-10 md:right-6 md:top-6">
-        <ThemeSwitcher />
-      </div>
 
       <div className="mx-auto flex w-full max-w-md flex-col gap-6 pt-10 pb-8 md:pt-12">
         {/* Header */}
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="flex items-center justify-center">
             <Image
-              src="/brand-light-logo.svg"
+              src="/icon.svg"
               alt="Univibe Logo"
               width={80}
               height={80}
               unoptimized
-              className="h-20 w-auto dark:hidden"
-            />
-            <Image
-              src="/brand-dark-logo.png"
-              alt="Univibe Logo"
-              width={80}
-              height={80}
-              unoptimized
-              className="h-20 w-auto hidden dark:block"
+              className="h-20 w-auto"
             />
           </div>
 

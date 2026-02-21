@@ -65,6 +65,7 @@ export interface DegreeLevel {
 export interface YearLevel {
   public_id: UUID;
   name: string;
+  year_number: number;
   university_public_id: UUID;
   created_at: ISO8601Date;
   updated_at: ISO8601Date;

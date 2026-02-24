@@ -38,7 +38,7 @@ export function CreateRuleModal({ onClose }: { onClose: () => void }) {
   const onSubmit = async (data: CreateCoinRuleInput) => {
     try {
       await createMutation.mutateAsync(data);
-      toast.success("Coin qoidasi muvaffaqiyatli yaratildi");
+      toast.success("Ball qoidasi muvaffaqiyatli yaratildi");
       onClose();
     } catch (e: any) {
       toast.error("Xatolik yuz berdi", { description: e.message });

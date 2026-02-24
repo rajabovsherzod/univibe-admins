@@ -41,7 +41,7 @@ export function EditRuleModal({ item, onClose }: { item: CoinRule; onClose: () =
   const onSubmit = async (data: UpdateCoinRuleInput) => {
     try {
       await updateMutation.mutateAsync({ id: item.public_id, data });
-      toast.success("Coin qoidasi muvaffaqiyatli tahrirlandi");
+      toast.success("Ball qoidasi muvaffaqiyatli tahrirlandi");
       onClose();
     } catch (e: any) {
       toast.error("Xatolik yuz berdi", { description: e.message });

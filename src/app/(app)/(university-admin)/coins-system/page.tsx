@@ -1,69 +1,22 @@
-"use client";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { constructMetadata } from "@/lib/utils/seo";
 
-import { Fragment, useState } from "react";
-import { PageHeaderPro } from "@/components/application/page-header/page-header-pro";
-import { CoinOutlineIcon } from "@/components/custom-icons/brand-icon";
-import { cx } from "@/utils/cx";
+import { AdminCoinsClient } from "./_components/admin-coins-client";
+import { StaffCoinsClient } from "./_components/staff-coins-client";
 
-import { RulesTab } from "./_components/rules-tab";
-import { TransactionsTab } from "./_components/transactions-tab";
-import { DeletionAuditsTab } from "./_components/deletion-audits-tab";
+export const metadata = constructMetadata({
+  title: "Ballar tizimi",
+  description: "Talabalar uchun ballarni va qoidalarni boshqarish.",
+});
 
-export default function CoinsSystemPage() {
-  const [activeTab, setActiveTab] = useState("rules");
+export default async function CoinsSystemPage() {
+  const session = await getServerSession(authOptions);
+  const role = session?.user?.role || "staff";
 
-  const tabs = [
-    { id: "rules", label: "Qoidalar" },
-    { id: "transactions", label: "Tranzaksiyalar (Audit)" },
-    { id: "deletions", label: "O'chirilganlar" },
-  ];
+  if (role === "staff") {
+    return <StaffCoinsClient />;
+  }
 
-  return (
-    <div className="flex flex-col gap-6">
-      <PageHeaderPro
-        breadcrumbs={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Coins tizimi" },
-        ]}
-        title="Coins tizimi"
-        subtitle="Talabalar uchun coinlarni va qoidalarni boshqarish markazi."
-        icon={CoinOutlineIcon}
-      />
-
-      {/* Main Container */}
-      <div className="flex flex-col overflow-hidden rounded-2xl bg-primary shadow-xs ring-1 ring-secondary">
-
-        {/* Header / Custom Tabs Area */}
-        <div className="border-b border-secondary bg-primary px-5 pt-4">
-          <div className="flex w-max items-center gap-4">
-            {tabs.map((tab, idx) => (
-              <Fragment key={tab.id}>
-                <button
-                  onClick={() => setActiveTab(tab.id)}
-                  className={cx(
-                    "pb-3 text-sm transition-all duration-200 outline-none border-b-2",
-                    activeTab === tab.id
-                      ? "border-brand-solid font-bold text-brand-solid"
-                      : "border-transparent font-medium text-secondary hover:border-border-secondary hover:text-primary"
-                  )}
-                >
-                  {tab.label}
-                </button>
-                {idx < tabs.length - 1 && (
-                  <div className="mb-3 h-4 w-px bg-secondary" />
-                )}
-              </Fragment>
-            ))}
-          </div>
-        </div>
-
-        {/* Content Area */}
-        <div className="p-5 min-h-[400px]">
-          {activeTab === "rules" && <RulesTab />}
-          {activeTab === "transactions" && <TransactionsTab />}
-          {activeTab === "deletions" && <DeletionAuditsTab />}
-        </div>
-      </div>
-    </div>
-  );
+  return <AdminCoinsClient />;
 }

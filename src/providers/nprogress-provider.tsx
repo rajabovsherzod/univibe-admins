@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import React, { useEffect, Suspense } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import NProgress from "nprogress";
 
@@ -13,7 +13,7 @@ type NProgressOptions = {
   color?: string;
 };
 
-export function NProgressProvider({
+function NProgressInner({
   options,
 }: {
   options?: NProgressOptions;
@@ -69,5 +69,17 @@ export function NProgressProvider({
         transform: rotate(3deg) translate(0px, -4px);
       }
     `}</style>
+  );
+}
+
+export function NProgressProvider({
+  options,
+}: {
+  options?: NProgressOptions;
+}) {
+  return (
+    <Suspense fallback={null}>
+      <NProgressInner options={options} />
+    </Suspense>
   );
 }

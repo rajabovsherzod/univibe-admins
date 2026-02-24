@@ -15,21 +15,26 @@ import {
   Users01,
   Shield01,
   Grid01,
+  FileCheck02,
   PieChart03,
   GraduationHat01,
   Building03,
   LayersThree01,
 } from "@untitledui/icons";
 
+import { useWaitedStudentsCount } from "@/hooks/api/use-students";
+
 interface MobileSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  role: string;
 }
 
 interface NavItem {
   label: string;
   href: string;
   icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  badge?: React.ReactNode;
   divider?: never;
 }
 
@@ -38,26 +43,52 @@ interface NavDivider {
   label?: never;
   href?: never;
   icon?: never;
+  badge?: never;
 }
 
 type NavItemOrDivider = NavItem | NavDivider;
 
-export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
+export function MobileSidebar({ isOpen, onClose, role }: MobileSidebarProps) {
   const pathname = usePathname();
+  const { data: waitedData } = useWaitedStudentsCount();
 
-  const navItems: NavItemOrDivider[] = [
+  const badgeContent = waitedData?.count ? (
+    <span className="flex h-5 items-center justify-center rounded-full bg-success-solid px-2 text-xs font-semibold text-white">
+      +{waitedData.count}
+    </span>
+  ) : undefined;
+
+  // Specific Staff Items
+  const staffItems: NavItemOrDivider[] = [
+    { label: "Dashboard", href: "/dashboard", icon: HomeLine },
+    { divider: true },
+    { label: "Talabalar ro'yxati", href: "/students", icon: Users01 },
+    { label: "Yangi talabalar", href: "/applications", icon: FileCheck02, badge: badgeContent },
+    { label: "Ballar tizimi", href: "/coins-system", icon: Grid01 },
+    { divider: true },
+    { label: "Sozlamalar", href: "/settings", icon: Settings01 },
+  ];
+
+  // Specific Admin Items
+  const adminItems: NavItemOrDivider[] = [
     { label: "Dashboard", href: "/dashboard", icon: HomeLine },
     { divider: true },
     { label: "Xodimlar", href: "/staff", icon: Users01 },
     { label: "Fakultetlar", href: "/faculties", icon: Building03 },
     { label: "Kurslar", href: "/year-levels", icon: LayersThree01 },
     { label: "Darajalar", href: "/degree-levels", icon: GraduationHat01 },
-    { label: "Coins tizimi", href: "/coins-system", icon: Grid01 },
+    { divider: true },
+    { label: "Talabalar ro'yxati", href: "/students", icon: Users01 },
+    { label: "Yangi talabalar", href: "/applications", icon: FileCheck02, badge: badgeContent },
+    { label: "Ballar tizimi", href: "/coins-system", icon: Grid01 },
     { label: "Statistika", href: "/statistics", icon: PieChart03 },
     { divider: true },
     { label: "Tizim", href: "/system", icon: Shield01 },
     { label: "Sozlamalar", href: "/settings", icon: Settings01 },
   ];
+
+  const navItems = role === "staff" ? staffItems : adminItems;
+  const panelLabel = role === "staff" ? "Xodim Paneli" : "Admin Panel";
 
   // Lock body scroll when open
   useEffect(() => {
@@ -155,6 +186,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
                         )}
                       />
                       <span className="flex-1">{item.label}</span>
+                      {item.badge && <span className="shrink-0">{item.badge}</span>}
                       {active && <ChevronRight className="size-4 text-white/70" />}
                     </Link>
                   </li>
@@ -166,7 +198,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
           {/* Panel Label */}
           <div className="border-t border-secondary px-5 py-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-tertiary">
-              Admin Panel
+              {panelLabel}
             </span>
           </div>
 

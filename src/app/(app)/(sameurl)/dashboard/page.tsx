@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -25,11 +26,19 @@ export default async function DashboardPage() {
   const role = session.user.role;
 
   if (role === "university_admin") {
-    return <UniversityAdminDashboard />;
+    return (
+      <Suspense fallback={<div className="p-4">Yuklanmoqda...</div>}>
+        <UniversityAdminDashboard />
+      </Suspense>
+    );
   }
 
   if (role === "staff") {
-    return <UniversityStaffDashboard />;
+    return (
+      <Suspense fallback={<div className="p-4">Yuklanmoqda...</div>}>
+        <UniversityStaffDashboard />
+      </Suspense>
+    );
   }
 
   return (

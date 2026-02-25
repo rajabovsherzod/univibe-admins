@@ -12,7 +12,7 @@ interface BreadcrumbItem {
 }
 
 type PageHeaderProProps = {
-  title: string;
+  title: ReactNode;
   subtitle?: string;
   count?: number;
   countLabel?: string;

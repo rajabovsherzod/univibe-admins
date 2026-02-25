@@ -18,6 +18,7 @@ import {
 } from "./student-columns";
 import { useStudents, useWaitedStudentsCount } from "@/hooks/api/use-students";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useSession } from "next-auth/react";
 
 // ── Tab config ─────────────────────────────────────────────────────────────
 type TabId = "approved" | "waited" | "rejected";
@@ -30,6 +31,7 @@ const TABS: { id: TabId; label: string }[] = [
 
 // ── Component ─────────────────────────────────────────────────────────────
 export function StudentsClient() {
+  const { status: sessionStatus } = useSession();
   const [activeTab, setActiveTab] = useState<TabId>("approved");
   const [page, setPage]           = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -148,7 +150,7 @@ export function StudentsClient() {
             data={currentData as any}
             columns={currentColumns as any}
             rowKey="user_public_id"
-            isLoading={isLoading}
+            isLoading={sessionStatus === "loading" || isLoading}
             emptyTitle={
               searchTerm
                 ? "Talaba topilmadi"

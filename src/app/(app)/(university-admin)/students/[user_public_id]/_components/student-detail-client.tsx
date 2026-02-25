@@ -31,9 +31,9 @@ const statusMap: Record<StudentStatus, { label: string; color: "success" | "erro
   waited:   { label: "Kutilmoqda",   color: "warning" },
 };
 
-// ── Skeleton line ──────────────────────────────────────────────────────────
+// ── Shimmer skeleton line ──────────────────────────────────────────────────
 function SkeletonLine({ width = "w-32" }: { width?: string }) {
-  return <div className={`mt-1.5 h-4 ${width} rounded-md bg-tertiary/60 animate-pulse`} />;
+  return <div className={`mt-1.5 h-4 ${width} rounded-md skeleton-shimmer`} />;
 }
 
 // ── Info row — icon + label always visible, value skeletons when loading ──
@@ -117,7 +117,9 @@ export function StudentDetailClient({ userId }: Props) {
           { label: "Talabalar ro'yxati", href: "/students" },
           { label: isPending ? "Yuklanmoqda..." : (fullName || "Talaba") },
         ]}
-        title={isPending ? "Talaba ma'lumotlari" : (fullName || "Talaba ma'lumotlari")}
+        title={isPending
+          ? <div className="h-7 w-48 rounded-md skeleton-shimmer" />
+          : (fullName || "Talaba ma'lumotlari")}
         subtitle="Talabaning to'liq profil ma'lumotlari va akademik holati."
         icon={Users01}
         actions={
@@ -134,15 +136,21 @@ export function StudentDetailClient({ userId }: Props) {
         <div className="flex flex-col gap-6">
           <SectionCard title="Profil" className="shadow-md">
             <div className="flex flex-col items-center gap-4 px-5 py-6">
-              <AvatarProfilePhoto
-                size="md"
-                src={student?.profile_photo_url || undefined}
-                initials={initials}
-              />
+              {/* Avatar */}
+              {isPending ? (
+                <div className="size-24 rounded-full skeleton-shimmer ring-1 ring-secondary" />
+              ) : (
+                <AvatarProfilePhoto
+                  size="md"
+                  src={student?.profile_photo_url || undefined}
+                  initials={initials}
+                />
+              )}
+
               <div className="flex flex-col items-center gap-2 text-center">
                 {/* Name */}
                 {isPending ? (
-                  <div className="h-5 w-36 rounded-md bg-tertiary/60 animate-pulse" />
+                  <div className="h-5 w-36 rounded-md skeleton-shimmer" />
                 ) : (
                   <h2 className="text-base font-semibold text-primary leading-snug">
                     {fullName || "Ism ko'rsatilmagan"}
@@ -151,7 +159,7 @@ export function StudentDetailClient({ userId }: Props) {
 
                 {/* Email */}
                 {isPending ? (
-                  <div className="h-4 w-28 rounded-md bg-tertiary/60 animate-pulse" />
+                  <div className="h-4 w-28 rounded-md skeleton-shimmer" />
                 ) : (
                   student?.email && (
                     <p className="text-sm text-tertiary">{student.email}</p>
@@ -160,7 +168,7 @@ export function StudentDetailClient({ userId }: Props) {
 
                 {/* Status badge */}
                 {isPending ? (
-                  <div className="h-6 w-24 rounded-full bg-tertiary/60 animate-pulse" />
+                  <div className="h-6 w-24 rounded-full skeleton-shimmer" />
                 ) : (
                   status && (
                     <BadgeWithDot color={status.color} size="sm">
@@ -203,20 +211,20 @@ export function StudentDetailClient({ userId }: Props) {
         <div className="lg:col-span-2 flex flex-col gap-6">
           <SectionCard title="Shaxsiy ma'lumotlar" className="shadow-md">
             <div className="px-5 py-2">
-              <InfoRow icon={User01}   label="Ism"              value={student?.name}                 isLoading={isPending} skeletonWidth="w-28" />
-              <InfoRow icon={User01}   label="Familiya"         value={student?.surname}              isLoading={isPending} skeletonWidth="w-32" />
-              <InfoRow icon={User01}   label="Otasining ismi"   value={student?.middle_name}          isLoading={isPending} skeletonWidth="w-36" />
+              <InfoRow icon={User01}   label="Ism"              value={student?.name}                      isLoading={isPending} skeletonWidth="w-28" />
+              <InfoRow icon={User01}   label="Familiya"         value={student?.surname}                   isLoading={isPending} skeletonWidth="w-32" />
+              <InfoRow icon={User01}   label="Otasining ismi"   value={student?.middle_name}               isLoading={isPending} skeletonWidth="w-36" />
               <InfoRow icon={Calendar} label="Tug'ilgan sana"   value={formatDate(student?.date_of_birth)} isLoading={isPending} skeletonWidth="w-44" />
-              <InfoRow icon={Phone01}  label="Telefon raqam"    value={student?.contact_phone_number} isLoading={isPending} skeletonWidth="w-36" />
-              <InfoRow icon={Mail01}   label="Elektron pochta"  value={student?.email}                isLoading={isPending} skeletonWidth="w-48" />
+              <InfoRow icon={Phone01}  label="Telefon raqam"    value={student?.contact_phone_number}      isLoading={isPending} skeletonWidth="w-36" />
+              <InfoRow icon={Mail01}   label="Elektron pochta"  value={student?.email}                     isLoading={isPending} skeletonWidth="w-48" />
             </div>
           </SectionCard>
 
           <SectionCard title="Akademik ma'lumotlar" className="shadow-md">
             <div className="px-5 py-2">
-              <InfoRow icon={GraduationHat01} label="Fakultet"        value={student?.faculty_name}       isLoading={isPending} skeletonWidth="w-52" />
-              <InfoRow icon={BookOpen01}      label="Ta'lim darajasi" value={student?.degree_level_name}  isLoading={isPending} skeletonWidth="w-28" />
-              <InfoRow icon={BookOpen01}      label="O'quv yili"      value={student?.year_level_name}    isLoading={isPending} skeletonWidth="w-20" />
+              <InfoRow icon={GraduationHat01} label="Fakultet"        value={student?.faculty_name}      isLoading={isPending} skeletonWidth="w-52" />
+              <InfoRow icon={BookOpen01}      label="Ta'lim darajasi" value={student?.degree_level_name} isLoading={isPending} skeletonWidth="w-28" />
+              <InfoRow icon={BookOpen01}      label="O'quv yili"      value={student?.year_level_name}   isLoading={isPending} skeletonWidth="w-20" />
             </div>
           </SectionCard>
         </div>

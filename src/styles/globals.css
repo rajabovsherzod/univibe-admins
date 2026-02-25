@@ -28,6 +28,42 @@
     transition-timing-function: inherit;
 }
 
+/* Skeleton shimmer color tokens */
+:root {
+    --shimmer-base: var(--color-gray-200);   /* light: rgb(233,234,235) */
+    --shimmer-glow: var(--color-bg-primary); /* light: white            */
+}
+.dark-mode {
+    --shimmer-base: var(--color-gray-700);   /* dark: rgb(55,58,65)     */
+    --shimmer-glow: var(--color-gray-600);   /* dark: rgb(97,101,108)   */
+}
+
+/* 30% = sweep, 70% = pause (~1.4s dark) */
+@keyframes shimmer {
+    0%   { transform: translateX(-100%); }
+    30%  { transform: translateX( 100%); }
+    100% { transform: translateX( 100%); }
+}
+
+@utility skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--shimmer-base);
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: linear-gradient(
+            90deg,
+            transparent          0%,
+            var(--shimmer-glow) 50%,
+            transparent         100%
+        );
+        animation: shimmer 2s linear infinite;
+    }
+}
+
 html,
 body {
     font-family: var(--font-body);

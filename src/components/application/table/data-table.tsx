@@ -94,15 +94,14 @@ function compareValues(a: Primitive, b: Primitive) {
 // --------------- Row Skeleton ---------------
 function RowSkeleton({ columns }: { columns: number }) {
   return (
-    <div className="flex gap-4 border-b border-secondary px-4 py-4 md:px-6">
+    <div className="flex items-center gap-4 border-b border-secondary px-4 py-3 md:px-6">
       {Array.from({ length: columns }).map((_, colIdx) => (
         <div
           key={colIdx}
           className={cx(
-            "h-4 animate-pulse rounded bg-quaternary",
-            colIdx === 0 ? "w-10" : "flex-1"
+            "skeleton-shimmer rounded-md",
+            colIdx === 0 ? "h-3.5 w-8 shrink-0" : "h-4 flex-1"
           )}
-          style={{ animationDelay: `${colIdx * 100}ms` }}
         />
       ))}
     </div>

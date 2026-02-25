@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -15,7 +14,6 @@ export const metadata = constructMetadata({
   noIndex: true, // Keep it private
 });
 
-
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
 
@@ -26,19 +24,11 @@ export default async function DashboardPage() {
   const role = session.user.role;
 
   if (role === "university_admin") {
-    return (
-      <Suspense fallback={<div className="p-4">Yuklanmoqda...</div>}>
-        <UniversityAdminDashboard />
-      </Suspense>
-    );
+    return <UniversityAdminDashboard />;
   }
 
   if (role === "staff") {
-    return (
-      <Suspense fallback={<div className="p-4">Yuklanmoqda...</div>}>
-        <UniversityStaffDashboard />
-      </Suspense>
-    );
+    return <UniversityStaffDashboard />;
   }
 
   return (

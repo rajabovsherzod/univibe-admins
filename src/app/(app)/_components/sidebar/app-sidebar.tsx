@@ -74,7 +74,8 @@ export function AppSidebar({ role }: { role: string }) {
           alt="Univibe Admin"
           width={160}
           height={40}
-          className="h-10 w-auto"
+          priority
+          className="h-10 w-40"
           unoptimized
         />
       </div>

@@ -18,6 +18,7 @@ import {
   GraduationHat01,
   Building03,
   LayersThree01,
+  ShoppingBag02,
 } from "@untitledui/icons";
 
 import { useWaitedStudentsCount } from "@/hooks/api/use-students";
@@ -41,6 +42,7 @@ export function AppSidebar({ role }: { role: string }) {
     { divider: true },
     { label: "Talabalar", href: "/students", icon: Users01, badge: badgeContent },
     { label: "Ballar tizimi", href: "/coins-system", icon: Grid01 },
+    { label: "Market", href: "/market", icon: ShoppingBag02 },
     { divider: true },
     { label: "Sozlamalar", href: "/settings", icon: Settings01 },
   ];
@@ -56,6 +58,7 @@ export function AppSidebar({ role }: { role: string }) {
     { label: "Darajalar", href: "/degree-levels", icon: GraduationHat01 },
     { divider: true },
     { label: "Ballar tizimi", href: "/coins-system", icon: Grid01 },
+    { label: "Market", href: "/market", icon: ShoppingBag02 },
     { label: "Statistika", href: "/statistics", icon: PieChart03 },
     { divider: true },
     { label: "Tizim", href: "/system", icon: Shield01 },

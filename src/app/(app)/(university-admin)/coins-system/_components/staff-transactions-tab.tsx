@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { ArrowUpRight, ArrowDownLeft, RefreshCcw01, Plus } from "@untitledui/icons";
+import { CoinOutlineIcon } from "@/components/custom-icons/brand-icon";
 import { DataTable } from "@/components/application/table/data-table";
 import type { DataTableColumn } from "@/components/application/table/data-table";
 import { useTransactions } from "@/hooks/api/use-transactions";
@@ -81,7 +82,7 @@ export function StaffTransactionsTab() {
             {row.transaction_type === "ISSUANCE" ? "+" : "-"}
             {row.amount}
           </span>
-          <img src="/blue-coin-org.png" alt="Coin" className="size-5 drop-shadow-sm" />
+          <CoinOutlineIcon size={18} color="#D97706" strokeWidth={22} />
         </div>
       ),
     },

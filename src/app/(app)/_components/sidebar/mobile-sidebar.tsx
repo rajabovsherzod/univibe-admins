@@ -20,6 +20,7 @@ import {
   GraduationHat01,
   Building03,
   LayersThree01,
+  ShoppingBag02,
 } from "@untitledui/icons";
 
 import { useWaitedStudentsCount } from "@/hooks/api/use-students";
@@ -65,6 +66,7 @@ export function MobileSidebar({ isOpen, onClose, role }: MobileSidebarProps) {
     { label: "Talabalar ro'yxati", href: "/students", icon: Users01 },
     { label: "Yangi talabalar", href: "/applications", icon: FileCheck02, badge: badgeContent },
     { label: "Ballar tizimi", href: "/coins-system", icon: Grid01 },
+    { label: "Market", href: "/market", icon: ShoppingBag02 },
     { divider: true },
     { label: "Sozlamalar", href: "/settings", icon: Settings01 },
   ];
@@ -81,6 +83,7 @@ export function MobileSidebar({ isOpen, onClose, role }: MobileSidebarProps) {
     { label: "Talabalar ro'yxati", href: "/students", icon: Users01 },
     { label: "Yangi talabalar", href: "/applications", icon: FileCheck02, badge: badgeContent },
     { label: "Ballar tizimi", href: "/coins-system", icon: Grid01 },
+    { label: "Market", href: "/market", icon: ShoppingBag02 },
     { label: "Statistika", href: "/statistics", icon: PieChart03 },
     { divider: true },
     { label: "Tizim", href: "/system", icon: Shield01 },

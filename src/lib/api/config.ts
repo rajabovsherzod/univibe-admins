@@ -77,6 +77,14 @@ export const API_CONFIG = {
       deletionAuditDetail: (id: string) => `/api/v1/coins/admin/deletion-audits/${id}/`,
       auditTransactions: '/api/v1/coins/admin/transactions/audit/',
     },
+
+    // Market – Products
+    market: {
+      products: '/api/v1/market/products/',
+      productCreate: '/api/v1/market/products/create/',
+      productArchive: (id: string) => `/api/v1/market/products/${id}/archive/`,
+      productStock: (id: string) => `/api/v1/market/products/${id}/stock/`,
+    },
   },
 } as const;
 

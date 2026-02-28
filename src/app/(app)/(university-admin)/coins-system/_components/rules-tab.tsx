@@ -4,6 +4,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Plus, Edit05, Trash01, Coins02 } from "@untitledui/icons";
+import { CoinOutlineIcon } from "@/components/custom-icons/brand-icon";
 
 import { DataTable } from "@/components/application/table/data-table";
 import type { DataTableColumn } from "@/components/application/table/data-table";
@@ -82,9 +83,9 @@ export function RulesTab() {
       id: "amount",
       header: "Miqdori",
       cell: (row) => (
-        <div className="flex items-center gap-1.5">
-          <span className="text-sm font-semibold text-brand-solid">{row.coin_amount}</span>
-          <img src="/blue-coin-org.png" alt="Coin" className="size-5 drop-shadow-sm" />
+        <div className="flex items-center gap-1.5 text-brand-solid">
+          <span className="text-sm font-semibold">{row.coin_amount}</span>
+          <CoinOutlineIcon size={18} color="currentColor" strokeWidth={22} />
         </div>
       ),
     },

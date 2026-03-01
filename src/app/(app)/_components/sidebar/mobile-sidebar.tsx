@@ -59,8 +59,8 @@ export function MobileSidebar({ isOpen, onClose, role }: MobileSidebarProps) {
 
   const pendingOrderCount = pendingOrdersData?.count ?? 0;
 
-  const badgeContent = waitedData?.count ? (
-    <Badge color="success" size="sm">+{waitedData.count}</Badge>
+  const badgeContent = waitedData?.waited_students_count ? (
+    <Badge color="brand" size="sm" className="!bg-brand-solid !text-white !ring-brand-solid shadow-sm">+{waitedData.waited_students_count}</Badge>
   ) : undefined;
 
   const pendingOrderBadge = pendingOrderCount > 0 ? (
@@ -87,8 +87,6 @@ export function MobileSidebar({ isOpen, onClose, role }: MobileSidebarProps) {
         { label: "Audit", href: "/market/audit" },
       ],
     },
-    { divider: true },
-    { label: "Sozlamalar", href: "/settings", icon: Settings01 },
   ];
 
   // Specific Admin Items

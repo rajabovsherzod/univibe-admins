@@ -1,4 +1,4 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import axios from "axios";
 import { API_CONFIG } from "./api/config";
@@ -33,7 +33,6 @@ declare module "next-auth/jwt" {
     role: string;
     university_id: string;
     full_name: string;
-    expiresAt: number;
   }
 }
 
@@ -103,8 +102,6 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role;
         token.university_id = user.university_id;
         token.full_name = user.full_name;
-        // Optionally set expiration if backend provides it
-        // token.expiresAt = Date.now() + expiresIn * 1000
       }
       return token;
     },
@@ -118,10 +115,12 @@ export const authOptions: NextAuthOptions = {
     }
   },
   pages: {
-    signIn: '/uz/login', // Adjust locale as needed or use middleware
+    signIn: "/login",
+    error: "/login",
   },
   session: {
     strategy: "jwt",
+    maxAge: 24 * 60 * 60, // 24 hours — matches access token lifetime (no server-side refresh)
   },
-  debug: process.env.NODE_ENV === 'development',
+  debug: false,
 };

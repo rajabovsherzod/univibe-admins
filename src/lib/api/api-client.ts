@@ -34,10 +34,10 @@ class ApiClient {
   constructor() {
     this.axiosInstance = axios.create({
       baseURL: API_CONFIG.baseURL,
+      timeout: 30_000,
       headers: {
         'Content-Type': 'application/json',
       },
-      // credentials: 'include', // Needed if using cookies, but we use Bearer token
     });
 
     this.setupInterceptors();

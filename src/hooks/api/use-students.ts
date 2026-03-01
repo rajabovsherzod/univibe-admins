@@ -79,6 +79,7 @@ export function useUpdateStudentStatus() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["waited-students-count"] });
     },
     onError: (error: any) => {
       const errData = error.response?.data || {};

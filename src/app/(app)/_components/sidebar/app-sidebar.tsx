@@ -8,7 +8,6 @@ import type { NavItemDividerType, NavItemType } from "@/components/application/a
 import { NavAccountCard } from "@/components/application/app-navigation/base-components/nav-account-card";
 import {
   HomeLine,
-  Settings01,
   Users01,
   Grid01,
   Briefcase01,
@@ -60,8 +59,6 @@ export function AppSidebar({ role }: { role: string }) {
         { label: "Buyurtmalar", href: "/market/orders", badge: pendingOrderBadge },
       ],
     },
-    { divider: true },
-    { label: "Sozlamalar", href: "/settings", icon: Settings01 },
   ];
 
   // Specific Admin Items

@@ -7,8 +7,6 @@ const secret = process.env.NEXTAUTH_SECRET;
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Debugging: Log all cookies
-  console.log("Middleware Cookies:", request.cookies.getAll().map(c => c.name));
 
   // Detect social media crawlers
   const userAgent = request.headers.get('user-agent') || '';
@@ -26,10 +24,6 @@ export async function proxy(request: NextRequest) {
 
   const isAuthenticated = !!token;
 
-  // Debugging (Remove in production or keep for now)
-  console.log(`Middleware Path: ${pathname}, Authenticated: ${isAuthenticated}`); // UNCOMMENTED
-  if (token) console.log("Token found in middleware");
-  else console.log("Token NOT found in middleware");
 
   // 1. Redirect unauthenticated users to login page (if trying to access protected route)
   if (!isAuthenticated && !isPublicPath) {

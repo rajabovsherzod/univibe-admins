@@ -5,6 +5,7 @@ import { Button } from "@/components/base/buttons/button";
 import { Edit05, Trash01 } from "@untitledui/icons";
 import type { DataTableColumn } from "@/components/application/table/data-table";
 import type { AdminRow } from "@/types/admins/admin";
+import { Tooltip } from "@/components/base/tooltip/tooltip";
 
 // --- Yordamchi funksiyalar ---
 
@@ -94,18 +95,22 @@ export const adminColumns: DataTableColumn<AdminRow>[] = [
     cellClassName: "px-4 py-3",
     cell: () => (
       <div className="flex items-center justify-end gap-1">
-        <Button
+        <Tooltip title="Tahrirlash" delay={200} color="brand">
+            <Button
           color="tertiary"
           size="sm"
           iconLeading={Edit05}
           aria-label="Tahrirlash"
         />
-        <Button
+          </Tooltip>
+        <Tooltip title="O'chirish" delay={200} color="error">
+            <Button
           color="tertiary-destructive"
           size="sm"
           iconLeading={Trash01}
           aria-label="O'chirish"
         />
+          </Tooltip>
       </div>
     ),
   },

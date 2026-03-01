@@ -5,15 +5,16 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { DataTableColumn } from "@/components/application/table/data-table";
 import type { Student } from "@/lib/api/types";
+import { Tooltip } from "@/components/base/tooltip/tooltip";
 import { Button } from "@/components/base/buttons/button";
 import { Avatar } from "@/components/base/avatar/avatar";
-import { Eye, CheckCircle, XCircle } from "@untitledui/icons";
+import { Eye, CheckCircle, XCircle, ClockRefresh } from "@untitledui/icons";
 import { CoinOutlineIcon } from "@/components/custom-icons/brand-icon";
 import { useUpdateStudentStatus } from "@/hooks/api/use-students";
 
 // ── Row types ──────────────────────────────────────────────────────────────
 export type ApprovedStudentRow = Student & { onIssueCoin?: () => void };
-export type WaitedStudentRow   = Student & { onSuccess?: () => void };
+export type WaitedStudentRow = Student & { onSuccess?: () => void };
 export type RejectedStudentRow = Student;
 
 // ── Coin icon wrapper (matches Button's iconLeading FC<{className?:string}>) ──
@@ -75,13 +76,28 @@ function WaitedActions({ row }: { row: WaitedStudentRow }) {
           Ko&apos;rish
         </Button>
       </Link>
-      <Button color="primary" size="sm" iconLeading={CheckCircle}
-        className="bg-success-solid hover:bg-success-solid_hover text-white ring-0 shadow-xs"
-        isLoading={loading === "approve"} isDisabled={loading !== null}
-        onClick={() => handle("approved")} aria-label="Tasdiqlash" />
-      <Button color="primary-destructive" size="sm" iconLeading={XCircle}
-        isLoading={loading === "reject"} isDisabled={loading !== null}
-        onClick={() => handle("rejected")} aria-label="Rad etish" />
+
+      <Tooltip title="Tasdiqlash" delay={200} color="success">
+        <button
+          onClick={() => handle("approved")}
+          disabled={loading !== null}
+          className="rounded-full p-1.5 text-success-600 hover:bg-success-50 dark:hover:bg-success-500/10 transition-colors disabled:opacity-50 focus:outline-none"
+          aria-label="Tasdiqlash"
+        >
+          <CheckCircle className="size-6" />
+        </button>
+      </Tooltip>
+
+      <Tooltip title="Rad etish" delay={200} color="error">
+        <button
+          onClick={() => handle("rejected")}
+          disabled={loading !== null}
+          className="rounded-full p-1.5 text-error-600 hover:bg-error-50 dark:hover:bg-error-500/10 transition-colors disabled:opacity-50 focus:outline-none"
+          aria-label="Rad etish"
+        >
+          <XCircle className="size-6" />
+        </button>
+      </Tooltip>
     </div>
   );
 }
@@ -117,6 +133,16 @@ export const approvedStudentColumns: DataTableColumn<ApprovedStudentRow>[] = [
           className="ring-1 ring-secondary shadow-xs">
           Ball berish
         </Button>
+        <Tooltip title="Tranzaksiyalar" delay={200} color="success">
+          <Link href={`/students/${row.user_public_id}/transactions?name=${encodeURIComponent(row.full_name || [row.name, row.surname, row.middle_name].filter(Boolean).join(" "))}`} aria-label="Tranzaksiyalar">
+            <button
+              className="rounded-full p-1.5 text-success-600 hover:bg-success-50 dark:hover:bg-success-500/10 transition-colors focus:outline-none"
+              aria-label="Tranzaksiyalar"
+            >
+              <ClockRefresh className="size-6" />
+            </button>
+          </Link>
+        </Tooltip>
       </div>
     ),
   },

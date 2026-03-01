@@ -24,6 +24,8 @@ import {
 } from "@untitledui/icons";
 
 import { useWaitedStudentsCount } from "@/hooks/api/use-students";
+import { useAdminOrders } from "@/app/(app)/(university-admin)/market/orders/_hooks/use-orders-admin";
+import { Badge } from "@/components/base/badges/badges";
 
 interface MobileSidebarProps {
   isOpen: boolean;
@@ -36,6 +38,7 @@ interface NavItem {
   href: string;
   icon: React.FC<React.SVGProps<SVGSVGElement>>;
   badge?: React.ReactNode;
+  items?: { label: string; href: string; badge?: React.ReactNode }[];
   divider?: never;
 }
 
@@ -52,11 +55,18 @@ type NavItemOrDivider = NavItem | NavDivider;
 export function MobileSidebar({ isOpen, onClose, role }: MobileSidebarProps) {
   const pathname = usePathname();
   const { data: waitedData } = useWaitedStudentsCount();
+  const { data: pendingOrdersData } = useAdminOrders({ status: 'PENDING', page_size: 1 });
+
+  const pendingOrderCount = pendingOrdersData?.count ?? 0;
 
   const badgeContent = waitedData?.count ? (
-    <span className="flex h-5 items-center justify-center rounded-full bg-success-solid px-2 text-xs font-semibold text-white">
-      +{waitedData.count}
-    </span>
+    <Badge color="success" size="sm">+{waitedData.count}</Badge>
+  ) : undefined;
+
+  const pendingOrderBadge = pendingOrderCount > 0 ? (
+    <Badge color="brand" size="sm" className="!bg-brand-solid !text-white !ring-brand-solid shadow-sm">
+      {pendingOrderCount}
+    </Badge>
   ) : undefined;
 
   // Specific Staff Items
@@ -66,7 +76,17 @@ export function MobileSidebar({ isOpen, onClose, role }: MobileSidebarProps) {
     { label: "Talabalar ro'yxati", href: "/students", icon: Users01 },
     { label: "Yangi talabalar", href: "/applications", icon: FileCheck02, badge: badgeContent },
     { label: "Ballar tizimi", href: "/coins-system", icon: Grid01 },
-    { label: "Market", href: "/market", icon: ShoppingBag02 },
+    {
+      label: "Market",
+      icon: ShoppingBag02,
+      href: "/market",
+      badge: pendingOrderBadge,
+      items: [
+        { label: "Mahsulotlar", href: "/market" },
+        { label: "Buyurtmalar", href: "/market/orders", badge: pendingOrderBadge },
+        { label: "Audit", href: "/market/audit" },
+      ],
+    },
     { divider: true },
     { label: "Sozlamalar", href: "/settings", icon: Settings01 },
   ];
@@ -83,7 +103,17 @@ export function MobileSidebar({ isOpen, onClose, role }: MobileSidebarProps) {
     { label: "Talabalar ro'yxati", href: "/students", icon: Users01 },
     { label: "Yangi talabalar", href: "/applications", icon: FileCheck02, badge: badgeContent },
     { label: "Ballar tizimi", href: "/coins-system", icon: Grid01 },
-    { label: "Market", href: "/market", icon: ShoppingBag02 },
+    {
+      label: "Market",
+      icon: ShoppingBag02,
+      href: "/market",
+      badge: pendingOrderBadge,
+      items: [
+        { label: "Mahsulotlar", href: "/market" },
+        { label: "Buyurtmalar", href: "/market/orders", badge: pendingOrderBadge },
+        { label: "Audit", href: "/market/audit" },
+      ],
+    },
     { label: "Statistika", href: "/statistics", icon: PieChart03 },
     { divider: true },
     { label: "Tizim", href: "/system", icon: Shield01 },

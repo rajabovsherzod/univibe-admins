@@ -84,6 +84,12 @@ export const API_CONFIG = {
       productCreate: '/api/v1/market/products/create/',
       productArchive: (id: string) => `/api/v1/market/products/${id}/archive/`,
       productStock: (id: string) => `/api/v1/market/products/${id}/stock/`,
+      auditRedemptions: '/api/v1/market/admin/redemptions/audit/',
+
+      // Orders
+      ordersList: '/api/v1/market/orders/',
+      orderDetail: (id: string) => `/api/v1/market/orders/${id}/`,
+      orderStatus: (id: string) => `/api/v1/market/orders/${id}/status/`,
     },
   },
 } as const;

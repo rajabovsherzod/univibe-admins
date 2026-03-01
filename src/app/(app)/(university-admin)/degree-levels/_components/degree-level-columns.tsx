@@ -4,6 +4,7 @@ import type { DataTableColumn } from "@/components/application/table/data-table"
 import type { DegreeLevel } from "@/lib/api/types";
 import { Button } from "@/components/base/buttons/button";
 import { Edit05, Trash01, GraduationHat01 } from "@untitledui/icons";
+import { Tooltip } from "@/components/base/tooltip/tooltip";
 
 export function getDegreeLevelColumns({
   page,

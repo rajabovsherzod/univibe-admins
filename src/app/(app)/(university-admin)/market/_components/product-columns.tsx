@@ -4,6 +4,7 @@ import Image from "next/image";
 import type { DataTableColumn } from "@/components/application/table/data-table";
 import { CoinOutlineIcon } from "@/components/custom-icons/brand-icon";
 import type { Product } from "../_hooks/use-products";
+import { Tooltip } from "@/components/base/tooltip/tooltip";
 
 export const productColumns: DataTableColumn<Product>[] = [
   {

@@ -113,10 +113,10 @@ export function useStudentDetail(userId: string) {
   });
 }
 
-export function useWaitedStudentsCount() {
+export function useWaitedStudentsCount(options?: { enabled?: boolean }) {
   const { data: session } = useSession();
 
-  return useQuery<{ count: number }>({
+  return useQuery<{ waited_students_count: number; university_public_id: string }>({
     queryKey: ["waited-students-count"],
     queryFn: async () => {
       const res = await axios.get(
@@ -129,7 +129,7 @@ export function useWaitedStudentsCount() {
       );
       return res.data;
     },
-    enabled: !!session?.accessToken,
-    refetchInterval: 30000, // Refetch every 30 seconds for real-time-ish sidebars
+    enabled: !!session?.accessToken && (options?.enabled ?? true),
+    refetchInterval: 30000,
   });
 }

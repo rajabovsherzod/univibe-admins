@@ -14,6 +14,7 @@ import { PageHeaderPro } from "@/components/application/page-header/page-header-
 import { DataTable } from "@/components/application/table/data-table";
 import type { DataTableColumn } from "@/components/application/table/data-table";
 import type { JobPosition } from "@/lib/api/types";
+import { Tooltip } from "@/components/base/tooltip/tooltip";
 import {
   useJobPositions,
   useCreateJobPosition,

@@ -14,7 +14,6 @@ import {
   Sun,
   Moon01,
   Monitor01,
-  Check,
 } from "@untitledui/icons";
 import { useFocusManager } from "react-aria";
 import type { DialogProps as AriaDialogProps } from "react-aria-components";
@@ -24,7 +23,6 @@ import {
   DialogTrigger as AriaDialogTrigger,
   Popover as AriaPopover,
 } from "react-aria-components";
-import { AvatarLabelGroup } from "@/components/base/avatar/avatar-label-group";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { cx } from "@/utils/cx";
@@ -40,6 +38,12 @@ const themes = [
   { id: "dark", label: "Qorong'u", icon: Moon01 },
   { id: "system", label: "Tizim", icon: Monitor01 },
 ] as const;
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  return (parts[0]?.[0] || 'U').toUpperCase();
+}
 
 export const NavAccountMenu = ({
   className,
@@ -73,6 +77,11 @@ export const NavAccountMenu = ({
   }, [onKeyDown]);
 
   const handleSignOut = async () => {
+    document.cookie = 'user_data=;path=/;max-age=0;SameSite=Lax';
+    localStorage.removeItem('univibe-profile');
+    localStorage.removeItem('user-storage');
+    localStorage.removeItem('user-profile-storage');
+    sessionStorage.clear();
     await signOut({ callbackUrl: "/login" });
   };
 
@@ -89,7 +98,12 @@ export const NavAccountMenu = ({
             <div className="flex items-center gap-3">
               <Avatar
                 src={undefined}
-                initials={session.user.full_name?.charAt(0).toUpperCase() || "U"}
+                placeholder={
+                  <span className="text-lg font-bold text-white">
+                    {getInitials(session.user.full_name || 'U')}
+                  </span>
+                }
+                className="!bg-brand-solid"
                 size="lg"
                 status="online"
               />
@@ -229,13 +243,27 @@ export const NavAccountCard = ({
 
   return (
     <div ref={triggerRef} className="relative flex items-center gap-3 rounded-xl p-3 ring-1 ring-secondary ring-inset shadow-md bg-primary hover:shadow-lg transition-shadow">
-      <AvatarLabelGroup
-        size="md"
-        src={undefined}
-        title={displayUser.full_name || "Foydalanuvchi"}
-        subtitle={displayUser.email || ""}
-        status="online"
-      />
+      <figure className="group flex min-w-0 flex-1 items-center gap-2">
+        <Avatar
+          size="md"
+          src={undefined}
+          placeholder={
+            <span className="text-sm font-bold text-white">
+              {getInitials(displayUser.full_name || 'U')}
+            </span>
+          }
+          className="!bg-brand-solid"
+          status="online"
+        />
+        <figcaption className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-primary truncate">
+            {displayUser.full_name || "Foydalanuvchi"}
+          </p>
+          <p className="text-xs truncate text-tertiary">
+            {displayUser.email || ""}
+          </p>
+        </figcaption>
+      </figure>
 
       <div className="absolute top-1.5 right-1.5">
         <AriaDialogTrigger isOpen={isOpen} onOpenChange={setIsOpen}>

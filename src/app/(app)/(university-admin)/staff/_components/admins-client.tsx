@@ -117,7 +117,6 @@ export function AdminsClient({ admins }: { admins: AdminRow[] }) {
           className="flex flex-col gap-4"
           onSubmit={(e) => {
             e.preventDefault();
-            console.log("create admin payload:", form);
             setOpen(false);
           }}
         >

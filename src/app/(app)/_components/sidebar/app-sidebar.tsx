@@ -1,5 +1,4 @@
 // app/(app)/_components/sidebar/app-sidebar.tsx
-// 1:1 copy of pro-project OwnerSidebar, adapted for Univibe
 "use client";
 
 import { usePathname } from "next/navigation";
@@ -11,9 +10,7 @@ import {
   HomeLine,
   Settings01,
   Users01,
-  Shield01,
   Grid01,
-  PieChart03,
   Briefcase01,
   GraduationHat01,
   Building03,
@@ -22,32 +19,52 @@ import {
 } from "@untitledui/icons";
 
 import { useWaitedStudentsCount } from "@/hooks/api/use-students";
+import { useAdminOrders } from "@/app/(app)/(university-admin)/market/orders/_hooks/use-orders-admin";
+import { Badge } from "@/components/base/badges/badges";
 
 export function AppSidebar({ role }: { role: string }) {
   const pathname = usePathname();
-  const { data: waitedData } = useWaitedStudentsCount();
+  const { data: waitedData } = useWaitedStudentsCount({ enabled: role === "staff" });
+  const { data: pendingOrdersData } = useAdminOrders({ status: 'PENDING', page_size: 1 });
 
-  const badgeContent = waitedData?.count ? (
-    <span className="flex h-5 items-center justify-center rounded-full bg-success-solid px-2 text-xs font-semibold text-white">
-      +{waitedData.count}
-    </span>
+  const pendingOrderCount = pendingOrdersData?.count ?? 0;
+
+  const badgeContent = waitedData?.waited_students_count ? (
+    <Badge color="brand" size="sm" className="!bg-brand-solid !text-white !ring-brand-solid shadow-sm">
+      +{waitedData.waited_students_count}
+    </Badge>
+  ) : undefined;
+
+  const pendingOrderBadge = pendingOrderCount > 0 ? (
+    <Badge color="brand" size="sm" className="!bg-brand-solid !text-white !ring-brand-solid shadow-sm">
+      +{pendingOrderCount}
+    </Badge>
   ) : undefined;
 
   // Base items for everyone
   const dashboardItem: NavItemType = { label: "Dashboard", href: "/dashboard", icon: HomeLine };
 
-  // Specific Staff Items — talabalar bitta tabli sahifada
+  // Specific Staff Items
   const staffItems: (NavItemType | NavItemDividerType)[] = [
     dashboardItem,
     { divider: true },
     { label: "Talabalar", href: "/students", icon: Users01, badge: badgeContent },
     { label: "Ballar tizimi", href: "/coins-system", icon: Grid01 },
-    { label: "Market", href: "/market", icon: ShoppingBag02 },
+    {
+      label: "Market",
+      href: "/market",
+      icon: ShoppingBag02,
+      badge: pendingOrderBadge,
+      items: [
+        { label: "Mahsulotlar", href: "/market" },
+        { label: "Buyurtmalar", href: "/market/orders", badge: pendingOrderBadge },
+      ],
+    },
     { divider: true },
     { label: "Sozlamalar", href: "/settings", icon: Settings01 },
   ];
 
-  // Specific Admin Items — talabalar admin uchun yo'q
+  // Specific Admin Items
   const adminItems: (NavItemType | NavItemDividerType)[] = [
     dashboardItem,
     { divider: true },
@@ -58,11 +75,17 @@ export function AppSidebar({ role }: { role: string }) {
     { label: "Darajalar", href: "/degree-levels", icon: GraduationHat01 },
     { divider: true },
     { label: "Ballar tizimi", href: "/coins-system", icon: Grid01 },
-    { label: "Market", href: "/market", icon: ShoppingBag02 },
-    { label: "Statistika", href: "/statistics", icon: PieChart03 },
-    { divider: true },
-    { label: "Tizim", href: "/system", icon: Shield01 },
-    { label: "Sozlamalar", href: "/settings", icon: Settings01 },
+    {
+      label: "Market",
+      href: "/market/orders",
+      icon: ShoppingBag02,
+      badge: pendingOrderBadge,
+      items: [
+        { label: "Mahsulotlar", href: "/market" },
+        { label: "Buyurtmalar", href: "/market/orders", badge: pendingOrderBadge },
+        { label: "Audit", href: "/market/audit" },
+      ],
+    },
   ];
 
   const navItems = role === "staff" ? staffItems : adminItems;

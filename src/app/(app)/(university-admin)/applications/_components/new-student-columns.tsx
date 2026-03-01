@@ -8,6 +8,7 @@ import { Avatar } from "@/components/base/avatar/avatar";
 import { useUpdateStudentStatus } from "@/hooks/api/use-students";
 import { toast } from "sonner";
 import { useState } from "react";
+import { Tooltip } from "@/components/base/tooltip/tooltip";
 
 export type WaitedStudentRow = Student & {
   onView?: () => void;

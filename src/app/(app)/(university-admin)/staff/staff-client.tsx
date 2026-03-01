@@ -53,7 +53,6 @@ export default function StaffPage() {
   };
 
   const handleView = (id: string) => {
-    console.log("View", id);
   };
 
   const columns = getStaffColumns({

@@ -5,6 +5,7 @@ import type { DataTableColumn } from "@/components/application/table/data-table"
 import type { StaffListResponseItem } from "@/lib/api/types";
 import { Button } from "@/components/base/buttons/button";
 import { Edit05, Trash01 } from "@untitledui/icons";
+import { Tooltip } from "@/components/base/tooltip/tooltip";
 
 function getInitials(name: string): string {
   return name

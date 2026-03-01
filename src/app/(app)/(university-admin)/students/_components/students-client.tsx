@@ -8,6 +8,7 @@ import { cx } from "@/utils/cx";
 import { DataTable } from "@/components/application/table/data-table";
 import { PageHeaderPro } from "@/components/application/page-header/page-header-pro";
 import { IssueCoinModal } from "../../coins-system/_components/issue-coin-modal";
+import { Badge } from "@/components/base/badges/badges";
 
 import {
   approvedStudentColumns,
@@ -24,23 +25,20 @@ import { useSession } from "next-auth/react";
 type TabId = "approved" | "waited" | "rejected";
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: "approved",  label: "Tasdiqlangan"  },
-  { id: "waited",    label: "Kutilmoqda"    },
-  { id: "rejected",  label: "Rad qilingan"  },
+  { id: "approved", label: "Tasdiqlangan" },
+  { id: "waited", label: "Kutilmoqda" },
+  { id: "rejected", label: "Rad qilingan" },
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────
 export function StudentsClient() {
   const { status: sessionStatus } = useSession();
   const [activeTab, setActiveTab] = useState<TabId>("approved");
-  const [page, setPage]           = useState(1);
+  const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 500);
 
-  const [issueCoinStudent, setIssueCoinStudent] = useState<{
-    id: string;
-    name: string;
-  } | null>(null);
+  const [issueCoinStudent, setIssueCoinStudent] = useState<{ id: string; name: string } | null>(null);
 
   const { data: waitedMeta } = useWaitedStudentsCount();
 
@@ -69,10 +67,9 @@ export function StudentsClient() {
   const approvedRows: ApprovedStudentRow[] =
     activeTab === "approved"
       ? (data?.results || []).map((s) => ({
-          ...s,
-          onIssueCoin: () =>
-            setIssueCoinStudent({ id: s.user_public_id, name: s.full_name || "Ism yo'q" }),
-        }))
+        ...s,
+        onIssueCoin: () => setIssueCoinStudent({ id: s.user_public_id, name: s.full_name || "Ism yo'q" }),
+      }))
       : [];
 
   const waitedRows: WaitedStudentRow[] =
@@ -83,16 +80,16 @@ export function StudentsClient() {
   const rejectedRows = activeTab === "rejected" ? data?.results || [] : [];
 
   const currentColumns =
-    activeTab === "approved"  ? approvedStudentColumns  :
-    activeTab === "waited"    ? waitedStudentColumns     :
-                                rejectedStudentColumns;
+    activeTab === "approved" ? approvedStudentColumns :
+      activeTab === "waited" ? waitedStudentColumns :
+        rejectedStudentColumns;
 
   const currentData =
-    activeTab === "approved"  ? approvedRows  :
-    activeTab === "waited"    ? waitedRows    :
-                                rejectedRows;
+    activeTab === "approved" ? approvedRows :
+      activeTab === "waited" ? waitedRows :
+        rejectedRows;
 
-  const waitedCount = waitedMeta?.count ?? 0;
+  const waitedCount = waitedMeta?.waited_students_count ?? 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -130,9 +127,9 @@ export function StudentsClient() {
                 >
                   {tab.label}
                   {tab.id === "waited" && waitedCount > 0 && (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-warning-solid px-1.5 text-xs font-semibold text-white">
-                      {waitedCount}
-                    </span>
+                    <Badge color="brand" size="sm" className="!bg-brand-solid !text-white !ring-brand-solid shadow-sm ml-1">
+                      +{waitedCount}
+                    </Badge>
                   )}
                 </button>
                 {idx < TABS.length - 1 && (
@@ -155,17 +152,17 @@ export function StudentsClient() {
               searchTerm
                 ? "Talaba topilmadi"
                 : activeTab === "approved"
-                ? "Tasdiqlangan talabalar yo'q"
-                : activeTab === "waited"
-                ? "Kutilayotgan arizalar yo'q"
-                : "Rad qilingan talabalar yo'q"
+                  ? "Tasdiqlangan talabalar yo'q"
+                  : activeTab === "waited"
+                    ? "Kutilayotgan arizalar yo'q"
+                    : "Rad qilingan talabalar yo'q"
             }
             emptyDescription={
               searchTerm
                 ? "Boshqa kalit so'z bilan qidiring."
                 : activeTab === "waited"
-                ? "Yangi arizalar kelib tushganda bu yerda ko'rinadi."
-                : undefined
+                  ? "Yangi arizalar kelib tushganda bu yerda ko'rinadi."
+                  : undefined
             }
             pagination={{
               page,
@@ -176,7 +173,6 @@ export function StudentsClient() {
         </div>
       </div>
 
-      {/* Ball berish modali */}
       {issueCoinStudent && (
         <IssueCoinModal
           isOpen={!!issueCoinStudent}
@@ -184,6 +180,8 @@ export function StudentsClient() {
           preselectedStudent={issueCoinStudent}
         />
       )}
+
+
     </div>
   );
 }

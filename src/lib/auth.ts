@@ -50,8 +50,6 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) return null;
 
         const url = `${API_CONFIG.baseURL}${API_CONFIG.endpoints.auth.loginAdmin}`;
-        console.log("Attempting Admin Login:", url);
-        console.log("Payload:", { email: credentials.email, password: credentials.password });
 
         try {
           const res = await axios.post(url, {
@@ -61,7 +59,6 @@ export const authOptions: NextAuthOptions = {
             headers: { "Content-Type": "application/json" }
           });
 
-          console.log("Login Successful, User:", res.data);
           return res.data;
         } catch (e: any) {
           console.error("Axios Error:", e.response?.data || e.message);

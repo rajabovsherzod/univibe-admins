@@ -76,9 +76,14 @@ class ApiClient {
         if (error.response?.status === 401 && !originalRequest._retry) {
           // TODO: Implement Refresh Logic if backend supports it
           // For now, logout on 401 as per previous decision
-          console.log('Got 401, signing out...');
-          await signOut({ redirect: true, callbackUrl: '/uz/login' });
-          return Promise.reject(new AuthenticationError('Sessiya tugadi. Qayta kiring.'));
+          if (typeof window !== 'undefined') {
+            document.cookie = 'user_data=;path=/;max-age=0;SameSite=Lax';
+            localStorage.removeItem('univibe-profile');
+            localStorage.removeItem('user-storage');
+            localStorage.removeItem('user-profile-storage');
+            sessionStorage.clear();
+            await signOut({ redirect: true, callbackUrl: '/uz/login' });
+          } return Promise.reject(new AuthenticationError('Sessiya tugadi. Qayta kiring.'));
         }
 
         // Handle other errors

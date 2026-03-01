@@ -19,6 +19,7 @@ import { AvatarProfilePhoto } from "@/components/base/avatar/avatar-profile-phot
 import { BadgeWithDot } from "@/components/base/badges/badges";
 import { SectionCard } from "@/components/application/section-card/section-card";
 import { Button } from "@/components/base/buttons/button";
+import { toHttps } from "@/utils/cx";
 import type { StudentStatus } from "@/lib/api/types";
 
 interface Props {
@@ -142,7 +143,7 @@ export function StudentDetailClient({ userId }: Props) {
               ) : (
                 <AvatarProfilePhoto
                   size="md"
-                  src={student?.profile_photo_url || undefined}
+                  src={toHttps(student?.profile_photo_url)}
                   initials={initials}
                 />
               )}

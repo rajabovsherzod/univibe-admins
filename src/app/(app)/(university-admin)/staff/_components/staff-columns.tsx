@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { toHttps } from "@/utils/cx";
 import type { DataTableColumn } from "@/components/application/table/data-table";
 import type { StaffListResponseItem } from "@/lib/api/types";
 import { Button } from "@/components/base/buttons/button";
@@ -19,7 +20,7 @@ function StaffAvatar({ src, name }: { src?: string | null; name: string }) {
   if (src) {
     return (
       <div className="relative size-10 shrink-0 overflow-hidden rounded-full ring-2 ring-secondary">
-        <Image src={src} alt={name} fill className="object-cover" sizes="40px" unoptimized />
+        <Image src={toHttps(src)!} alt={name} fill className="object-cover" sizes="40px" unoptimized />
       </div>
     );
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { toHttps } from "@/utils/cx";
 import type { DataTableColumn } from "@/components/application/table/data-table";
 import { CoinOutlineIcon } from "@/components/custom-icons/brand-icon";
 import type { Product } from "../_hooks/use-products";
@@ -15,7 +16,7 @@ export const productColumns: DataTableColumn<Product>[] = [
     cell: (row) => (
       <div className="size-10 rounded-lg overflow-hidden bg-secondary shrink-0">
         {row.image ? (
-          <Image src={row.image} alt={row.name} width={40} height={40} className="size-full object-cover" unoptimized />
+          <Image src={toHttps(row.image)!} alt={row.name} width={40} height={40} className="size-full object-cover" unoptimized />
         ) : (
           <div className="size-full flex items-center justify-center text-tertiary text-xs">—</div>
         )}

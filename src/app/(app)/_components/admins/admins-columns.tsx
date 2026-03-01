@@ -6,6 +6,7 @@ import { ButtonUtility } from "@/components/base/buttons/button-utility";
 import type { DataTableColumn } from "@/components/application/table/data-table";
 import type { StaffListResponseItem } from "@/lib/api/types";
 import Image from "next/image";
+import { toHttps } from "@/utils/cx";
 
 interface StaffColumnsOptions {
   onEdit: (id: string) => void;
@@ -43,7 +44,7 @@ export function getStaffColumns(options: StaffColumnsOptions): DataTableColumn<S
             {c.profile_photo_url ? (
               // Use unoptimized for external URLs or local development if domain not allowed
               <Image
-                src={c.profile_photo_url}
+                src={toHttps(c.profile_photo_url)!}
                 alt={c.full_name}
                 width={40}
                 height={40}

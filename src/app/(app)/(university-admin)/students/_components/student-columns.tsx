@@ -11,6 +11,7 @@ import { Avatar } from "@/components/base/avatar/avatar";
 import { Eye, CheckCircle, XCircle, ClockRefresh } from "@untitledui/icons";
 import { CoinOutlineIcon } from "@/components/custom-icons/brand-icon";
 import { useUpdateStudentStatus } from "@/hooks/api/use-students";
+import { toHttps } from "@/utils/cx";
 
 // ── Row types ──────────────────────────────────────────────────────────────
 export type ApprovedStudentRow = Student & { onIssueCoin?: () => void };
@@ -27,7 +28,7 @@ function StudentCell({ row }: { row: Student }) {
   return (
     <div className="flex items-center gap-3">
       <Avatar
-        src={row.profile_photo_url || undefined}
+        src={toHttps(row.profile_photo_url)}
         initials={(row.full_name || "T").substring(0, 2).toUpperCase()}
         size="sm"
       />

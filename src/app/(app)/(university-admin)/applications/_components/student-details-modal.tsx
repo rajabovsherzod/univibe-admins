@@ -7,6 +7,7 @@ import type { WaitedStudentRow } from "./new-student-columns";
 import { Button } from "@/components/base/buttons/button";
 import { CheckCircle, XCircle } from "@untitledui/icons";
 import { useUpdateStudentStatus } from "@/hooks/api/use-students";
+import { toHttps } from "@/utils/cx";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -48,7 +49,7 @@ export function StudentDetailsModal({ isOpen, onClose, student, onSuccess }: Stu
       icon={() => (
         <Avatar
           size="md"
-          src={student.profile_photo_url || undefined}
+          src={toHttps(student.profile_photo_url)}
           initials={(student.full_name || "T").substring(0, 2).toUpperCase()}
         />
       )}

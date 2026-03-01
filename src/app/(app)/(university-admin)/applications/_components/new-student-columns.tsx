@@ -6,6 +6,7 @@ import { Button } from "@/components/base/buttons/button";
 import { CheckCircle, XCircle, Eye } from "@untitledui/icons";
 import { Avatar } from "@/components/base/avatar/avatar";
 import { useUpdateStudentStatus } from "@/hooks/api/use-students";
+import { toHttps } from "@/utils/cx";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Tooltip } from "@/components/base/tooltip/tooltip";
@@ -87,7 +88,7 @@ export const newStudentColumns: DataTableColumn<WaitedStudentRow>[] = [
     cell: (row) => (
       <div className="flex items-center gap-3">
         <Avatar
-          src={row.profile_photo_url || undefined}
+          src={toHttps(row.profile_photo_url)}
           initials={(row.full_name || "T").substring(0, 2).toUpperCase()}
           size="sm"
         />

@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { toHttps } from '@/utils/cx';
 import { ShoppingBag02, X } from '@untitledui/icons';
 import { useAdminOrderDetail } from '../_hooks/use-orders-admin';
 import { useProducts } from '../../_hooks/use-products';
@@ -102,7 +103,7 @@ export function OrderDetailModal({ orderId, onClose }: OrderDetailModalProps) {
                         <div className="size-12 rounded-lg bg-tertiary overflow-hidden shrink-0 border border-secondary">
                           {image ? (
                             <Image
-                              src={image}
+                              src={toHttps(image)!}
                               alt={item.product_name_snapshot}
                               width={48}
                               height={48}

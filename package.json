@@ -11,6 +11,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@internationalized/date": "^3.11.0",
+    "@react-aria/utils": "^3.33.0",
     "@react-stately/utils": "^3.11.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@tailwindcss/typography": "^0.5.19",

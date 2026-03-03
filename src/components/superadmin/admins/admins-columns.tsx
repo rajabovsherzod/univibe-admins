@@ -135,15 +135,15 @@ export const adminsColumns: DataTableColumn<AdminRow>[] = [
           color="tertiary"
           tooltip="Tahrirlash"
           icon={Edit01}
-          onClick={() => console.log("edit", r.id)}
+          onClick={() => {}}
         />
         <ButtonUtility
           size="sm"
           color="tertiary"
-          tooltip="O‘chirish"
+          tooltip="O’chirish"
           icon={Trash01}
           className="hover:text-error hover:bg-error/10 transition-colors"
-          onClick={() => console.log("delete", r.id)}
+          onClick={() => {}}
         />
       </div>
     ),

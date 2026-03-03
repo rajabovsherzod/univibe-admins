@@ -31,24 +31,27 @@ export function useLoginMutation(selectedRole: string) {
     onSuccess: () => {
       toast.custom((t) => (
         <CustomToast
-          t= { t }
-          type = "success"
-          title = "Muvaffaqiyatli kirildi"
-          description = "Siz tizimga muvaffaqiyatli kirdingiz. Dashboardga yo'naltirilmoqdasiz."
+          t={t}
+          type="success"
+          title="Muvaffaqiyatli kirildi"
+          description="Siz tizimga muvaffaqiyatli kirdingiz. Dashboardga yo'naltirilmoqdasiz."
         />
       ));
-  router.push("/dashboard");
-  router.refresh();
-},
-onError: (error) => {
-  toast.custom((t) => (
-    <CustomToast
-          t= { t }
-          type = "error"
-          title = "Kirishda xatolik"
-          description = { error.message || "Tizim xatosi yuz berdi." }
-    />
+      // router.refresh() is intentionally NOT called here.
+      // Calling it right after push() causes a race condition:
+      // it re-renders the server layout before navigation completes,
+      // making getServerSession return null and redirect back to /login.
+      router.push("/dashboard");
+    },
+    onError: (error) => {
+      toast.custom((t) => (
+        <CustomToast
+          t={t}
+          type="error"
+          title="Kirishda xatolik"
+          description={error.message || "Tizim xatosi yuz berdi."}
+        />
       ));
-},
+    },
   });
 }

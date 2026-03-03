@@ -1,13 +1,11 @@
-// lib/api/api-client.ts
-
 import axios, {
   AxiosInstance,
   AxiosRequestConfig,
   AxiosResponse,
   AxiosError,
-  InternalAxiosRequestConfig
-} from 'axios';
-import { getSession, signOut } from 'next-auth/react';
+  InternalAxiosRequestConfig,
+} from "axios";
+import { getSession, signOut } from "next-auth/react";
 import {
   AppError,
   AuthenticationError,
@@ -16,9 +14,9 @@ import {
   ServerError,
   ValidationError,
   ErrorCode,
-  NetworkError, // Assuming this exists or will be added, if not use AppError
-} from './errors';
-import { API_CONFIG } from './config';
+  NetworkError,
+} from "./errors";
+import { API_CONFIG } from "./config";
 
 interface RequestOptions extends AxiosRequestConfig {
   skipAuth?: boolean;
@@ -27,6 +25,11 @@ interface RequestOptions extends AxiosRequestConfig {
 /**
  * Backend API bilan ishlash uchun markazlashtirilgan mijoz (Axios).
  * Avtomatik ravishda `next-auth` orqali tokenlarni boshqaradi va xatoliklarni qayta ishlaydi.
+ *
+ * 401 javobi kelganda:
+ *  1. getSession() chaqiriladi — bu JWT callback'ni ishga tushiradi va access token yangilanadi
+ *  2. Yangi token bilan so'rov qayta yuboriladi
+ *  3. Agar yangilash ham muvaffaqiyatsiz bo'lsa → signOut
  */
 class ApiClient {
   private axiosInstance: AxiosInstance;
@@ -36,7 +39,7 @@ class ApiClient {
       baseURL: API_CONFIG.baseURL,
       timeout: 30_000,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -44,13 +47,10 @@ class ApiClient {
   }
 
   private setupInterceptors() {
-    // Request Interceptor: Attach Token
+    // ── Request: Attach Bearer Token ──────────────────────────────────────
     this.axiosInstance.interceptors.request.use(
       async (config: InternalAxiosRequestConfig) => {
-        // Skip auth if explicitly requested (custom config property)
-        // Note: Axios config type doesn't have skipAuth by default, casting or extension needed if strictly typed
         const customConfig = config as RequestOptions;
-
         if (!customConfig.skipAuth) {
           const session = await getSession();
           if (session?.accessToken) {
@@ -59,34 +59,46 @@ class ApiClient {
         }
         return config;
       },
-      (error) => {
-        return Promise.reject(error);
-      }
+      (error) => Promise.reject(error)
     );
 
-    // Response Interceptor: Error Handling
+    // ── Response: Error Handling & 401 Refresh ────────────────────────────
     this.axiosInstance.interceptors.response.use(
-      (response: AxiosResponse) => {
-        return response;
-      },
+      (response: AxiosResponse) => response,
       async (error: AxiosError) => {
-        const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+        const originalRequest = error.config as InternalAxiosRequestConfig & {
+          _retry?: boolean;
+        };
 
-        // Handle 401 Unauthorized
         if (error.response?.status === 401 && !originalRequest._retry) {
-          // TODO: Implement Refresh Logic if backend supports it
-          // For now, logout on 401 as per previous decision
-          if (typeof window !== 'undefined') {
-            document.cookie = 'user_data=;path=/;max-age=0;SameSite=Lax';
-            localStorage.removeItem('univibe-profile');
-            localStorage.removeItem('user-storage');
-            localStorage.removeItem('user-profile-storage');
+          originalRequest._retry = true;
+
+          try {
+            // getSession() calls /api/auth/session which triggers the JWT callback.
+            // The JWT callback will try to refresh the expired access token.
+            const session = await getSession();
+
+            if (session?.accessToken && !session.error) {
+              originalRequest.headers.Authorization = `Bearer ${session.accessToken}`;
+              return this.axiosInstance(originalRequest);
+            }
+          } catch {
+            // Session fetch failed — fall through to signOut
+          }
+
+          // Refresh failed or session has error — log out
+          if (typeof window !== "undefined") {
+            document.cookie = "user_data=;path=/;max-age=0;SameSite=Lax";
+            localStorage.removeItem("univibe-profile");
+            localStorage.removeItem("user-storage");
+            localStorage.removeItem("user-profile-storage");
             sessionStorage.clear();
-            await signOut({ redirect: true, callbackUrl: '/uz/login' });
-          } return Promise.reject(new AuthenticationError('Sessiya tugadi. Qayta kiring.'));
+            signOut({ redirect: true, callbackUrl: "/login" });
+          }
+
+          return Promise.reject(new AuthenticationError("Sessiya tugadi. Qayta kiring."));
         }
 
-        // Handle other errors
         return Promise.reject(this.handleError(error));
       }
     );
@@ -94,12 +106,15 @@ class ApiClient {
 
   private handleError(error: AxiosError): AppError {
     if (!error.response) {
-      return new NetworkError('Tarmoqqa ulanishda xatolik yuz berdi');
+      return new NetworkError("Tarmoqqa ulanishda xatolik yuz berdi");
     }
 
     const status = error.response.status;
-    const data = error.response.data as Record<string, unknown> || {};
-    const message = (data.detail as string) || (data.message as string) || 'So\'rov muvaffaqiyatsiz tugadi';
+    const data = (error.response.data as Record<string, unknown>) || {};
+    const message =
+      (data.detail as string) ||
+      (data.message as string) ||
+      "So'rov muvaffaqiyatsiz tugadi";
 
     switch (status) {
       case 401:
@@ -107,7 +122,7 @@ class ApiClient {
       case 403:
         return new AuthorizationError(message);
       case 404:
-        return new NotFoundError('So\'ralgan manba topilmadi');
+        return new NotFoundError("So'ralgan manba topilmadi");
       case 400:
         return new ValidationError(message, data);
       case 500:
@@ -117,12 +132,12 @@ class ApiClient {
           code: ErrorCode.UNKNOWN_ERROR,
           message,
           statusCode: status,
-          details: data
+          details: data,
         });
     }
   }
 
-  // --- Public Methods ---
+  // ── Public Methods ────────────────────────────────────────────────────────
 
   async get<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
     const response = await this.axiosInstance.get<T>(endpoint, options);
@@ -137,10 +152,7 @@ class ApiClient {
   async postFormData<T>(endpoint: string, formData: FormData, options: RequestOptions = {}): Promise<T> {
     const response = await this.axiosInstance.post<T>(endpoint, formData, {
       ...options,
-      headers: {
-        ...options.headers,
-        'Content-Type': 'multipart/form-data',
-      },
+      headers: { ...options.headers, "Content-Type": "multipart/form-data" },
     });
     return response.data;
   }
@@ -153,10 +165,7 @@ class ApiClient {
   async putFormData<T>(endpoint: string, formData: FormData, options: RequestOptions = {}): Promise<T> {
     const response = await this.axiosInstance.put<T>(endpoint, formData, {
       ...options,
-      headers: {
-        ...options.headers,
-        'Content-Type': 'multipart/form-data',
-      },
+      headers: { ...options.headers, "Content-Type": "multipart/form-data" },
     });
     return response.data;
   }
@@ -169,10 +178,7 @@ class ApiClient {
   async patchFormData<T>(endpoint: string, formData: FormData, options: RequestOptions = {}): Promise<T> {
     const response = await this.axiosInstance.patch<T>(endpoint, formData, {
       ...options,
-      headers: {
-        ...options.headers,
-        'Content-Type': 'multipart/form-data',
-      },
+      headers: { ...options.headers, "Content-Type": "multipart/form-data" },
     });
     return response.data;
   }

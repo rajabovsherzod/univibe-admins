@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useId } from "react";
+import { useId } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts";
 import { MoreVertical } from "lucide-react";
 
@@ -145,7 +145,7 @@ export function KpiStatCard({
             type="button"
             aria-label="Menu"
             className="rounded-md text-fg-quaternary outline-focus-ring transition duration-100 ease-linear hover:text-tertiary"
-            onClick={() => console.log("card menu")}
+            onClick={() => {}}
           >
             <MoreVertical className="size-5" />
           </button>

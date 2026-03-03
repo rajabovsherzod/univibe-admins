@@ -4,6 +4,7 @@ const nextConfig = {
     optimizePackageImports: ["@untitledui/icons"],
   },
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",

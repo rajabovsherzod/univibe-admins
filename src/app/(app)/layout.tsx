@@ -24,7 +24,7 @@ export const dynamic = "force-dynamic";
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
 
-  if (!session) {
+  if (!session || session.error === "RefreshAccessTokenError") {
     redirect("/login");
   }
 

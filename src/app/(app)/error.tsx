@@ -12,9 +12,7 @@ export default function AppError({
 }) {
   const router = useRouter();
 
-  useEffect(() => {
-    console.error("[AppError]", error);
-  }, [error]);
+  useEffect(() => { void error; }, [error]);
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 px-4 text-center">

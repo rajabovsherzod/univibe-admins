@@ -2,14 +2,11 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { CustomToast } from "@/components/base/toast/custom-toast";
 import type { LoginFormData } from "./login-schema";
 
 export function useLoginMutation(selectedRole: string) {
-  const router = useRouter();
-
   return useMutation({
     mutationFn: async (data: LoginFormData) => {
       const result = await signIn(selectedRole, {
@@ -37,11 +34,11 @@ export function useLoginMutation(selectedRole: string) {
           description="Siz tizimga muvaffaqiyatli kirdingiz. Dashboardga yo'naltirilmoqdasiz."
         />
       ));
-      // router.refresh() is intentionally NOT called here.
-      // Calling it right after push() causes a race condition:
-      // it re-renders the server layout before navigation completes,
-      // making getServerSession return null and redirect back to /login.
-      router.push("/dashboard");
+      // window.location.href forces a FULL browser navigation (not RSC soft-nav).
+      // This bypasses Next.js App Router's client-side RSC cache, which can
+      // serve a stale unauthenticated response for /dashboard in production,
+      // causing an immediate redirect back to /login even after a successful signIn().
+      window.location.href = "/dashboard";
     },
     onError: (error) => {
       toast.custom((t) => (

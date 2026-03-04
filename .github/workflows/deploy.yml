@@ -1,0 +1,133 @@
+name: CI/CD - Production Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to Production Server
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.PRODUCTION_SSH_KEY }}
+
+      - name: Add server to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p ${{ secrets.PRODUCTION_SSH_PORT || 1312 }} -H ${{ secrets.PRODUCTION_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy with Docker
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          port: ${{ secrets.PRODUCTION_SSH_PORT || 1312 }}
+          envs: GH_PAT
+          command_timeout: 30m
+          script: |
+            set -e
+
+            DEPLOY_DIR="$HOME/univibe-admin"
+            CONTAINER_NAME="univibe-admin"
+            IMAGE_NAME="univibe-admin"
+
+            REPO_URL="https://${GH_PAT}@github.com/rajabovsherzod/univibe-admins.git"
+
+            # Backup .env if it exists
+            if [ -f "$DEPLOY_DIR/.env" ]; then
+              cp "$DEPLOY_DIR/.env" /tmp/univibe-admin-env-backup
+            fi
+
+            # Clean clone every deployment for reliability
+            rm -rf "$DEPLOY_DIR"
+            cd "$HOME"
+            echo "Cloning repository..."
+            git clone "$REPO_URL" univibe-admin
+            cd "$DEPLOY_DIR"
+
+            # Restore .env
+            if [ -f /tmp/univibe-admin-env-backup ]; then
+              mv /tmp/univibe-admin-env-backup "$DEPLOY_DIR/.env"
+            fi
+
+            echo "Checking out main..."
+            git checkout main
+
+            # Load env variables from server .env file
+            if [ -f "$DEPLOY_DIR/.env" ]; then
+              echo "Loading environment variables from .env..."
+              export $(grep -v '^#' "$DEPLOY_DIR/.env" | xargs)
+            else
+              echo "WARNING: No .env file found at $DEPLOY_DIR/.env"
+            fi
+
+            echo "Building Docker image..."
+            docker build \
+              --build-arg NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
+              --build-arg NEXT_PUBLIC_APP_URL="${NEXT_PUBLIC_APP_URL}" \
+              -t "$IMAGE_NAME" .
+
+            echo "Stopping existing container..."
+            docker stop "$CONTAINER_NAME" 2>/dev/null || true
+            docker rm "$CONTAINER_NAME" 2>/dev/null || true
+
+            echo "Starting new container..."
+            docker run -d \
+              --name "$CONTAINER_NAME" \
+              --restart unless-stopped \
+              -p 82:82 \
+              --env-file "$DEPLOY_DIR/.env" \
+              "$IMAGE_NAME"
+
+            echo "Waiting for container to be ready..."
+            sleep 10
+
+            # Verify container is running
+            if docker ps | grep -q "$CONTAINER_NAME"; then
+              echo "Container is running!"
+            else
+              echo "ERROR: Container failed to start!"
+              docker logs "$CONTAINER_NAME" --tail=50
+              exit 1
+            fi
+
+            echo "Cleaning up old images..."
+            docker image prune -f || true
+
+            echo "Deployment completed successfully!"
+            docker ps | grep "$CONTAINER_NAME"
+
+      - name: Health Check
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          port: ${{ secrets.PRODUCTION_SSH_PORT || 1312 }}
+          command_timeout: 5m
+          script: |
+            CONTAINER_NAME="univibe-admin"
+
+            echo "Checking container status..."
+            if docker ps | grep -q "$CONTAINER_NAME"; then
+              echo "Container is running!"
+              docker ps | grep "$CONTAINER_NAME"
+            else
+              echo "Container is not running!"
+              docker logs "$CONTAINER_NAME" --tail=100
+              exit 1
+            fi

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Plus } from "@untitledui/icons";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/base/buttons/button";
 import { PageHeaderPro } from "@/components/application/page-header/page-header-pro";
 import { DataTable } from "@/components/application/table/data-table";
@@ -13,6 +14,9 @@ import { CreateProductModal } from "./create-product-modal";
 const PAGE_SIZE = 20;
 
 export function MarketClient() {
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "university_admin";
+
   const [search, setSearch] = useState("");
   const [includeArchived, setIncludeArchived] = useState(false);
   const [page, setPage] = useState(1);
@@ -30,10 +34,10 @@ export function MarketClient() {
   const totalCount = data?.count || 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
 
-  // Add actions column
+  // Add actions column (admin only — staff can only view)
   const columns = [
     ...productColumns,
-    {
+    ...(isAdmin ? [{
       id: "actions",
       header: "",
       headClassName: "w-20",
@@ -47,7 +51,7 @@ export function MarketClient() {
             Arxiv
           </button>
         ) : null,
-    },
+    }] : []),
   ];
 
   return (
@@ -67,11 +71,11 @@ export function MarketClient() {
           setPage(1);
         }}
         searchPlaceholder="Mahsulotlarni qidirish..."
-        actions={
+        actions={isAdmin ? (
           <Button color="primary" size="md" iconLeading={Plus} onClick={() => setShowCreate(true)}>
             Yangi mahsulot
           </Button>
-        }
+        ) : undefined}
       />
 
       {/* Archive filter */}
@@ -106,11 +110,13 @@ export function MarketClient() {
         }}
       />
 
-      {/* Create modal */}
-      <CreateProductModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
+      {/* Create modal — admin only */}
+      {isAdmin && (
+        <CreateProductModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
+      )}
 
-      {/* Archive confirm modal */}
-      {archiveTarget && (
+      {/* Archive confirm modal — admin only */}
+      {isAdmin && archiveTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setArchiveTarget(null)} />
           <div className="relative w-full max-w-sm rounded-2xl bg-primary border border-secondary shadow-xl overflow-hidden">

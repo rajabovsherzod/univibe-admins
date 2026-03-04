@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment, useCallback, useMemo, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { PageHeaderPro } from '@/components/application/page-header/page-header-pro';
 import { DataTable } from '@/components/application/table/data-table';
 import { createOrderColumns } from './order-columns';
@@ -37,9 +38,12 @@ export function OrdersClient() {
   const totalCount = data?.count || 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
 
+  const { data: session } = useSession();
+  const canManage = session?.user?.role === "staff";
+
   const handleView = useCallback((id: string) => setSelectedOrderId(id), []);
 
-  const columns = useMemo(() => createOrderColumns(handleView), [handleView]);
+  const columns = useMemo(() => createOrderColumns(handleView, canManage), [handleView, canManage]);
 
   const tabs: Tab[] = [
     { id: '', label: 'Barchasi' },

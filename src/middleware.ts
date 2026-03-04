@@ -20,7 +20,7 @@ export async function middleware(request: NextRequest) {
 
   // Decode JWT token from cookie
   const token = await getToken({ req: request, secret });
-  const isAuthenticated = !!token;
+  const isAuthenticated = !!token && token.error !== "RefreshAccessTokenError";
 
   // 1. Unauthenticated → redirect to login
   if (!isAuthenticated && !isPublicPath) {
@@ -37,7 +37,10 @@ export async function middleware(request: NextRequest) {
 
   // 3. Authenticated user on login/forgot-password → redirect to dashboard
   if (isAuthenticated && isPublicPath && !isBot) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    const isTokenExpired = token.expiresAt && Date.now() > (token.expiresAt as number);
+    if (!isTokenExpired) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
   }
 
   return NextResponse.next();

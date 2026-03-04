@@ -1,72 +1,37 @@
 "use client";
 
-import React from "react";
 import { PageHeaderPro } from "@/components/application/page-header/page-header-pro";
-import { SectionCard } from "@/components/application/section-card/section-card";
-import { DashboardActivityFeed } from "@/components/application/dashboard/dashboard-activity-feed";
-import { DashboardUpcomingEvents } from "@/components/application/dashboard/dashboard-upcoming-events";
-import { KpiStatCard } from "@/components/application/dashboard/kpi-stst-card";
-import { Home02 } from "@untitledui/icons";
-
-const demo = {
-  students: [10, 12, 14, 18, 22, 20, 26, 25, 28, 32, 34, 36].map((v) => ({ value: v })),
-  events: [2, 2, 3, 3, 4, 4, 5, 5, 5, 6, 6, 7].map((v) => ({ value: v })),
-  approvals: [8, 6, 10, 7, 12, 9, 14, 11, 16, 13, 10, 9].map((v) => ({ value: v })),
-  coins: [120, 140, 160, 220, 180, 260, 300, 280, 340, 360, 420, 460].map((v) => ({ value: v })),
-};
+import { Home02, BarChart01 } from "@untitledui/icons";
 
 export function UniversityAdminDashboard() {
-  const activity = [
-    { id: "a1", title: "Admin yangi event yaratdi", description: "Hackathon 2026 • Registration ochildi", timeLabel: "Hozir", tone: "info" as const, href: "/dashboard/events/1" },
-    { id: "a2", title: "Student ro'yxatdan o'tdi", description: "Azizbek A. • Hackathon 2026", timeLabel: "8 daqiqa oldin", tone: "info" as const },
-    { id: "a3", title: "Ro'yxatdan o'tish tasdiqlandi", description: "Dilnoza S. • Case Competition", timeLabel: "1 soat oldin", tone: "success" as const },
-    { id: "a4", title: "Coin berildi", description: "Top 3 • 120 coins tarqatildi", timeLabel: "Bugun 13:10", tone: "success" as const },
-    { id: "a5", title: "Deadline yaqinlashmoqda", description: "AI Workshop • ro'yxatdan o'tish 1 kunda yopiladi", timeLabel: "Bugun", tone: "warning" as const },
-  ];
-
-  const upcoming = [
-    { id: "e1", title: "AI Workshop", dateLabel: "05-fev, 10:00", location: "A-301", registrationLabel: "Registration: 1 kun qoldi", capacityLabel: "62/80", status: "closing" as const, href: "/dashboard/events/ai-workshop" },
-    { id: "e2", title: "Hackathon 2026", dateLabel: "10-fev, 14:00", location: "Main Hall", registrationLabel: "Registration: 6 kun", capacityLabel: "48/120", status: "open" as const },
-    { id: "e3", title: "Case Competition", dateLabel: "12-fev, 09:00", location: "B-112", registrationLabel: "Start: 11 kun", capacityLabel: "36/40", status: "soon" as const },
-  ];
-
   return (
     <div className="flex flex-col gap-4">
-      {/* PageHeaderPro — icon shown (no actions) */}
       <PageHeaderPro
         breadcrumbs={[{ label: "Dashboard" }]}
         title="Dashboard"
         subtitle="Tizim holati, yaqin eventlar va so'nggi faoliyat."
         icon={Home02}
       />
+      <ComingSoon />
+    </div>
+  );
+}
 
-      {/* KPI GRID */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-4">
-        <KpiStatCard title="Jami studentlar" value="2,184" trend="up" delta="5.2%" deltaLabel="o'tgan oyga nisbatan" data={demo.students} colorClassName="text-fg-brand-secondary" />
-        <KpiStatCard title="Faol eventlar" value="7" trend="up" delta="1" deltaLabel="shu haftada" data={demo.events} colorClassName="text-fg-success-secondary" />
-        <KpiStatCard title="Pending approvals" value="12" trend="down" delta="−3" deltaLabel="kechagiga nisbatan" data={demo.approvals} colorClassName="text-fg-error-secondary" />
-        <KpiStatCard title="Coins tarqatildi (oy)" value="4,620" trend="up" delta="9.1%" deltaLabel="o'tgan oyga nisbatan" data={demo.coins} colorClassName="text-fg-brand-secondary" />
-      </div>
-
-      {/* MAIN ROW — using new SectionCard */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-10">
-        <SectionCard
-          className="lg:col-span-7"
-          title="So'nggi faoliyat"
-          description="Adminlar va tizim bo'yicha oxirgi harakatlar."
-          hrefAll="/activity"
-        >
-          <DashboardActivityFeed items={activity} />
-        </SectionCard>
-
-        <SectionCard
-          className="lg:col-span-3"
-          title="Yaqinlashayotgan eventlar"
-          description="Sana, joy va registration holati."
-          hrefAll="/events"
-        >
-          <DashboardUpcomingEvents items={upcoming} />
-        </SectionCard>
+function ComingSoon() {
+  return (
+    <div className="rounded-2xl border border-secondary bg-primary overflow-hidden">
+      <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
+        <div className="size-14 rounded-2xl bg-brand-50 dark:bg-brand-500/10 ring-1 ring-brand-200 dark:ring-brand-500/20 flex items-center justify-center mb-5">
+          <BarChart01 size={24} className="text-brand-600 dark:text-brand-400" />
+        </div>
+        <h2 className="text-lg font-bold text-primary mb-2">Tez orada</h2>
+        <p className="text-sm text-tertiary max-w-sm leading-relaxed">
+          Statistika, harakatlar tarixi, KPI ko&apos;rsatkichlari va boshqa tahliliy ma&apos;lumotlar tez orada qo&apos;shiladi.
+        </p>
+        <div className="mt-6 inline-flex items-center gap-2 text-xs font-medium text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/10 px-3 py-1.5 rounded-full ring-1 ring-brand-200 dark:ring-brand-500/20">
+          <span className="size-1.5 rounded-full bg-brand-500 animate-pulse" />
+          Ishlab chiqilmoqda
+        </div>
       </div>
     </div>
   );

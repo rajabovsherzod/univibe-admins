@@ -34,7 +34,7 @@ export interface Transaction {
   staff_member_public_id: string;
   coin_rule_name: string;
   coin_rule_public_id: string;
-  transaction_type: "ISSUANCE" | "DEDUCTION" | "TRANSFER";
+  transaction_type: "ISSUANCE" | "DEDUCTION" | "TRANSFER" | "REDEMPTION";
   amount: number;
   comment?: string;
   created_at: string;

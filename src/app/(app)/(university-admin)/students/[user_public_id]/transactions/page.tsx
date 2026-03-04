@@ -36,7 +36,7 @@ export default function StudentTransactionsPage({ params }: Props) {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; amount: number } | null>(null);
 
   const { data: student } = useStudentDetail(user_public_id);
-  const { data, isLoading } = useTransactions({ user_public_id, page, page_size: 10 });
+  const { data } = useTransactions({ user_public_id, page, page_size: 20 });
 
   // full_name is optional in Student type — fallback to name+surname, then URL param
   const paramName = searchParams.get("name") || "";
@@ -55,7 +55,7 @@ export default function StudentTransactionsPage({ params }: Props) {
       header: "№",
       headClassName: "w-[50px]",
       cell: (_, i) => (
-        <span className="text-sm tabular-nums text-tertiary">{(page - 1) * 10 + (i ?? 0) + 1}</span>
+        <span className="text-sm tabular-nums text-tertiary">{(page - 1) * 20 + (i ?? 0) + 1}</span>
       ),
     },
     {
@@ -66,10 +66,10 @@ export default function StudentTransactionsPage({ params }: Props) {
         let Icon = ArrowUpRight;
         let colorClass = "text-success-primary bg-success-soft";
         let label = "Berildi";
-        if (row.transaction_type === "DEDUCTION") {
+        if (row.transaction_type === "DEDUCTION" || row.transaction_type === "REDEMPTION") {
           Icon = ArrowDownLeft;
           colorClass = "text-error-primary bg-error-soft";
-          label = "Olib tashlandi";
+          label = "Yechildi";
         } else if (row.transaction_type === "TRANSFER") {
           Icon = RefreshCcw01;
           colorClass = "text-warning-primary bg-warning-soft";
@@ -89,10 +89,11 @@ export default function StudentTransactionsPage({ params }: Props) {
       id: "amount",
       header: "Miqdori",
       cell: (row) => {
-        const isPositive = row.transaction_type === "ISSUANCE";
+        const isPositive = row.amount > 0;
+        const absAmount = Math.abs(row.amount);
         return (
           <span className={cx("inline-flex items-center gap-1 text-sm font-bold tabular-nums", isPositive ? "text-success-solid" : "text-error-solid")}>
-            {isPositive ? "+" : "-"}{row.amount.toLocaleString()}
+            {isPositive ? "+" : "-"}{absAmount.toLocaleString()}
             <CoinOutlineIcon size={13} color="currentColor" strokeWidth={24} />
           </span>
         );
@@ -180,12 +181,12 @@ export default function StudentTransactionsPage({ params }: Props) {
             data={data?.results || []}
             columns={columns}
             rowKey="transaction_public_id"
-            isLoading={isLoading}
+            isLoading={data === undefined}
             emptyTitle="Tranzaksiyalar yo'q"
             emptyDescription="Bu talabaga hali hech qanday ball amali bajarilmagan."
             pagination={
-              data && data.count > 10
-                ? { page, total: Math.ceil(data.count / 10), onPageChange: setPage }
+              data && data.count > 20
+                ? { page, total: Math.ceil(data.count / 20), onPageChange: setPage }
                 : undefined
             }
           />

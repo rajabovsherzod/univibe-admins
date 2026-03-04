@@ -8,7 +8,8 @@ import { Button } from '@/components/base/buttons/button';
 import { Tooltip } from '@/components/base/tooltip/tooltip';
 import { Eye } from '@untitledui/icons';
 
-export function createOrderColumns(onView: (id: string) => void): DataTableColumn<AdminOrder>[] {
+/** canManage=true → staff (approve/reject); canManage=false → admin (view-only) */
+export function createOrderColumns(onView: (id: string) => void, canManage = false): DataTableColumn<AdminOrder>[] {
   return [
     {
       id: 'student',
@@ -96,7 +97,7 @@ export function createOrderColumns(onView: (id: string) => void): DataTableColum
               onClick={() => onView(row.public_id)}
             />
           </Tooltip>
-          <OrderStatusActions order={row} currentStatus={row.status} />
+          {canManage && <OrderStatusActions order={row} currentStatus={row.status} />}
         </div>
       ),
     },

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { ArrowUpRight, ArrowDownLeft, RefreshCcw01, Trash01, Coins01 } from "@untitledui/icons";
+import { ArrowUpRight, ArrowDownLeft, RefreshCcw01, Trash01, Coins01, ShoppingBag02 } from "@untitledui/icons";
 import { CoinOutlineIcon } from "@/components/custom-icons/brand-icon";
 import { DataTable } from "@/components/application/table/data-table";
 import type { DataTableColumn } from "@/components/application/table/data-table";
@@ -52,10 +52,18 @@ export function StudentTransactionsModal({ isOpen, onClose, student }: StudentTr
         let Icon = ArrowUpRight;
         let colorClass = "text-success-primary bg-success-soft";
         let label = "Berildi";
-        if (row.transaction_type === "DEDUCTION") {
+        if (row.transaction_type === "ISSUANCE") {
+          Icon = ArrowUpRight;
+          colorClass = "text-success-primary bg-success-soft";
+          label = "Berildi";
+        } else if (row.transaction_type === "DEDUCTION") {
           Icon = ArrowDownLeft;
           colorClass = "text-error-primary bg-error-soft";
           label = "Olib tashlandi";
+        } else if (row.transaction_type === "REDEMPTION") {
+          Icon = ShoppingBag02;
+          colorClass = "text-warning-primary bg-warning-soft";
+          label = "Xarid";
         } else if (row.transaction_type === "TRANSFER") {
           Icon = RefreshCcw01;
           colorClass = "text-warning-primary bg-warning-soft";
@@ -75,7 +83,7 @@ export function StudentTransactionsModal({ isOpen, onClose, student }: StudentTr
       id: "amount",
       header: "Miqdori",
       cell: (row) => {
-        const isPositive = row.transaction_type === "ISSUANCE";
+        const isPositive = row.transaction_type === "ISSUANCE" || row.transaction_type === "TRANSFER";
         return (
           <span className={cx("inline-flex items-center gap-1 text-sm font-bold tabular-nums", isPositive ? "text-success-solid" : "text-error-solid")}>
             {isPositive ? "+" : "-"}{row.amount.toLocaleString()}

@@ -164,11 +164,11 @@ export function StudentsClient() {
                   ? "Yangi arizalar kelib tushganda bu yerda ko'rinadi."
                   : undefined
             }
-            pagination={{
-              page,
-              total: Math.ceil((data?.count || 0) / 10) || 1,
-              onPageChange: setPage,
-            }}
+            pagination={
+              data && data.count > data.results.length
+                ? { page, total: Math.ceil(data.count / 10), onPageChange: setPage }
+                : undefined
+            }
           />
         </div>
       </div>

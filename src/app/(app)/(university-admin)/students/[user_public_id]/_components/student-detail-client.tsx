@@ -85,11 +85,8 @@ export function StudentDetailClient({ userId }: Props) {
 
   const formatDate = (iso?: string) => {
     if (!iso) return undefined;
-    return new Date(iso).toLocaleDateString("uz-UZ", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    const d = new Date(iso);
+    return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()}`;
   };
 
   // ── Error state ────────────────────────────────────────────────────────

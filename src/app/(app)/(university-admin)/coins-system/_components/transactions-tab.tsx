@@ -118,7 +118,7 @@ export function TransactionsTab() {
             { id: "REVERSAL", label: "Qaytarilgan (Reversal)" },
           ]}
           selectedKey={typeFilter || null}
-          onSelectionChange={(k) => setTypeFilter(String(k))}
+          onSelectionChange={(k) => { setTypeFilter(String(k)); setPage(1); }}
           placeholder="Tranzaksiya turi"
           className="w-full sm:w-[250px]"
         >
@@ -135,6 +135,11 @@ export function TransactionsTab() {
         isLoading={isLoading || !data}
         emptyTitle="Tranzaksiyalar yo'q"
         emptyDescription="Hozircha hech qanday coin amaliyoti bajarilmagan."
+        pagination={{
+          page: page,
+          total: Math.ceil((data?.count || 0) / 20) || 1,
+          onPageChange: setPage,
+        }}
       />
     </div>
   );

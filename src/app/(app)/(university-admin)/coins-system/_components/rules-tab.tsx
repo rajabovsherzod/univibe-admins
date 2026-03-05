@@ -20,39 +20,20 @@ import { Button } from "@/components/base/buttons/button";
 import { CreateRuleModal } from "./create-rule-modal";
 import { EditRuleModal } from "./edit-rule-modal";
 
-const STATUS_ITEMS = [
-  { id: "active", label: "Faollari" },
-  { id: "archived", label: "Arxivlanganlar" },
-];
+// Tizim holati (status) filtrlari olib tashlandi
 
 export function RulesTab() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"active" | "archived">("active");
-  const [modal, setModal] = useState<"create" | { type: "edit"; item: CoinRule } | null>(null);
-
   const debouncedSearch = useDebounce(search, 500);
 
   const { data, isLoading } = useCoinRules({
     page,
     page_size: 10,
     search: debouncedSearch || undefined,
-    status: statusFilter,
   });
 
-  const toggleStatus = useToggleRuleStatus();
-
-  const handleToggleStatus = async (item: CoinRule) => {
-    try {
-      const action = item.status === "ACTIVE" ? "archive" : "activate";
-      await toggleStatus.mutateAsync({ id: item.public_id, action });
-      toast.success(
-        `Qoida muvaffaqiyatli ${action === "activate" ? "faollashtirildi" : "arxivlandi"}`
-      );
-    } catch (e: any) {
-      toast.error("Xatolik", { description: e.message });
-    }
-  };
+  const [modal, setModal] = useState<"create" | { type: "edit"; item: CoinRule } | null>(null);
 
   const columns: DataTableColumn<CoinRule>[] = [
     {
@@ -89,26 +70,12 @@ export function RulesTab() {
       ),
     },
     {
-      id: "status",
-      header: "Holati",
-      cell: (row) => (
-        <span
-          className={cx(
-            "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
-            row.status === "ACTIVE"
-              ? "bg-success-soft text-success-primary"
-              : "bg-error-soft text-error-primary"
-          )}
-        >
-          {row.status === "ACTIVE" ? "Faol" : "Arxivlangan"}
-        </span>
-      ),
-    },
-    {
       id: "usage",
-      header: "Foydalanilgan",
+      header: "Birinchi ishlatilgan",
       cell: (row) => (
-        <span className="text-sm text-secondary">{row.usage_count} marta</span>
+        <span className="text-sm text-secondary">
+          {row.first_used_at ? format(new Date(row.first_used_at), "dd.MM.yyyy") : "—"}
+        </span>
       ),
     },
     {
@@ -124,14 +91,6 @@ export function RulesTab() {
             iconLeading={Edit05}
             onClick={() => setModal({ type: "edit", item: row })}
             aria-label="Tahrirlash"
-          />
-          <Button
-            color="tertiary-destructive"
-            size="sm"
-            iconLeading={Trash01}
-            onClick={() => handleToggleStatus(row)}
-            isDisabled={toggleStatus.isPending}
-            aria-label={row.status === "ACTIVE" ? "Arxivlash" : "Faollashtirish"}
           />
         </div>
       ),
@@ -152,17 +111,6 @@ export function RulesTab() {
             }}
             className="w-full sm:w-[250px]"
           />
-          <Select
-            selectedKey={statusFilter}
-            onSelectionChange={(key) => {
-              setStatusFilter(key as "active" | "archived");
-              setPage(1); // Reset page to 1 when changing status
-            }}
-            items={STATUS_ITEMS}
-            placeholder="Holati"
-          >
-            {(item) => <Select.Item id={item.id} label={item.label} />}
-          </Select>
         </div>
 
         <Button

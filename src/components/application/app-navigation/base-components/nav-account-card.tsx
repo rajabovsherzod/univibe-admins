@@ -82,7 +82,7 @@ export const NavAccountMenu = ({
     localStorage.removeItem('user-storage');
     localStorage.removeItem('user-profile-storage');
     sessionStorage.clear();
-    await signOut({ callbackUrl: "/login" });
+    await signOut({ callbackUrl: `${window.location.origin}/login` });
   };
 
   return (
@@ -227,12 +227,12 @@ export const NavAccountCard = ({
   // Skeleton while loading
   if (!displayUser && status === "loading") {
     return (
-      <div className="relative flex items-center gap-3 rounded-xl p-3 ring-1 ring-secondary ring-inset shadow-md bg-primary animate-pulse">
-        <div className="flex items-center gap-3">
-          <div className="size-10 rounded-full bg-secondary" />
-          <div className="flex flex-col gap-1.5">
-            <div className="h-4 w-24 rounded bg-secondary" />
-            <div className="h-3 w-32 rounded bg-secondary" />
+      <div className="relative flex items-center gap-3 rounded-xl p-3 ring-1 ring-secondary ring-inset shadow-md bg-primary">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="size-10 rounded-full shrink-0 skeleton-shimmer" />
+          <div className="flex flex-col gap-1.5 flex-1 w-full mt-1">
+            <div className="h-4 w-24 rounded skeleton-shimmer" />
+            <div className="h-3 w-32 rounded skeleton-shimmer" />
           </div>
         </div>
       </div>

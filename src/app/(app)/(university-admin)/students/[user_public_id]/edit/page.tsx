@@ -84,9 +84,9 @@ export default async function StudentEditPage({ params }: { params: Promise<{ us
     // Fetch all data in parallel
     const [student, faculties, degreeLevels, yearLevels] = await Promise.all([
       fetchStudentDetail(session.accessToken, user_public_id),
-      fetchFaculties(session.accessToken, session.user.universityId),
-      fetchDegreeLevels(session.accessToken, session.user.universityId),
-      fetchYearLevels(session.accessToken, session.user.universityId),
+      fetchFaculties(session.accessToken, session.user.university_id),
+      fetchDegreeLevels(session.accessToken, session.user.university_id),
+      fetchYearLevels(session.accessToken, session.user.university_id),
     ]);
 
     return (

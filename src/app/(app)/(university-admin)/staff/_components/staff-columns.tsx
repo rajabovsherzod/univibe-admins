@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { toHttps } from "@/utils/cx";
 import type { DataTableColumn } from "@/components/application/table/data-table";
 import type { StaffListResponseItem } from "@/lib/api/types";
@@ -36,6 +37,8 @@ export function getStaffColumns(opts?: {
   onDelete?: (id: string) => void;
   onView?: (id: string) => void;
 }): DataTableColumn<StaffListResponseItem>[] {
+  const router = useRouter();
+
   return [
     // ── № tartib raqami ──
     {
@@ -104,7 +107,7 @@ export function getStaffColumns(opts?: {
             color="tertiary"
             size="sm"
             iconLeading={Edit05}
-            onClick={() => opts?.onEdit?.(row.user_public_id)}
+            onClick={() => router.push(`/staff/edit/${row.user_public_id}`)}
             aria-label="Tahrirlash"
           />
           <Button

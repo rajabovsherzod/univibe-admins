@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   User01,
   Mail01,
@@ -21,6 +23,14 @@ import { SectionCard } from "@/components/application/section-card/section-card"
 import { Button } from "@/components/base/buttons/button";
 import { toHttps } from "@/utils/cx";
 import type { StudentStatus } from "@/lib/api/types";
+import { Pencil01, Trash01 } from "@untitledui/icons";
+import { useDeleteStudent } from "@/hooks/api/use-students";
+import { useState } from "react";
+import { Modal, Dialog, ModalOverlay, DialogTrigger } from "@/components/application/modals/modal";
+import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-icon";
+import { Trash01 as TrashIcon } from "@untitledui/icons";
+import { Input } from "@/components/base/input/input";
+import { PremiumFormModal } from "@/components/application/modals/premium-modal";
 
 interface Props {
   userId: string;
@@ -72,6 +82,7 @@ function InfoRow({
 
 export function StudentDetailClient({ userId }: Props) {
   const { data: student, isPending, isError } = useStudentDetail(userId);
+  const router = useRouter();
 
   const fullName = student
     ? [student.name, student.middle_name, student.surname].filter(Boolean).join(" ")
@@ -87,6 +98,38 @@ export function StudentDetailClient({ userId }: Props) {
     if (!iso) return undefined;
     const d = new Date(iso);
     return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()}`;
+  };
+
+  const handleEdit = () => {
+    window.location.href = `/students/${userId}/edit`;
+  };
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [confirmName, setConfirmName] = useState("");
+  const deleteStudent = useDeleteStudent();
+
+  const handleDelete = () => {
+    setConfirmName("");
+    setShowDeleteModal(true);
+  };
+
+  const studentFullName = student 
+    ? [student.name, student.middle_name, student.surname].filter(Boolean).join(" ")
+    : "";
+  
+  const isMatching = confirmName.trim() === studentFullName;
+
+  const confirmDelete = async () => {
+    if (!isMatching) return;
+    try {
+      await deleteStudent.mutateAsync(userId);
+      toast.success("Talaba muvaffaqiyatli o'chirildi!");
+      setConfirmName("");
+      setShowDeleteModal(false);
+      router.push("/students");
+    } catch (err: any) {
+      toast.error("Xatolik yuz berdi", { description: err.message });
+    }
   };
 
   // ── Error state ────────────────────────────────────────────────────────
@@ -107,77 +150,61 @@ export function StudentDetailClient({ userId }: Props) {
 
   // ── Main layout (both loading + loaded) ────────────────────────────────
   return (
-    <div className="flex flex-col gap-6">
-      {/* Page header — always rendered, back button always visible */}
+    <>
+      <div className="flex flex-col gap-6">
+      {/* Page header */}
       <PageHeaderPro
+        title="Talaba ma'lumotlari"
         breadcrumbs={[
           { label: "Dashboard", href: "/dashboard" },
-          { label: "Talabalar ro'yxati", href: "/students" },
-          { label: isPending ? "Yuklanmoqda..." : (fullName || "Talaba") },
+          { label: "Talabalar", href: "/students" },
+          { label: student?.name || "Bekorga yuklanmoqda..." },
         ]}
-        title={isPending
-          ? <div className="h-7 w-48 rounded-md skeleton-shimmer" />
-          : (fullName || "Talaba ma'lumotlari")}
-        subtitle="Talabaning to'liq profil ma'lumotlari va akademik holati."
-        icon={Users01}
-        actions={
-          <Link href="/students">
-            <Button color="secondary" iconLeading={ArrowLeft} size="md">
-              Ro&apos;yxatga qaytish
-            </Button>
-          </Link>
-        }
       />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* ── LEFT — Profile card ──────────────────────────────────────── */}
-        <div className="flex flex-col gap-6">
-          <SectionCard title="Profil" className="shadow-md">
-            <div className="flex flex-col items-center gap-4 px-5 py-6">
-              {/* Avatar */}
+      {/* Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left column */}
+        <div className="lg:col-span-1 flex flex-col gap-6">
+          {/* Profile photo section - Always render */}
+          <SectionCard title="Profil rasmi" className="shadow-md">
+            <div className="p-5 flex flex-col items-center gap-4">
               {isPending ? (
-                <div className="size-24 rounded-full skeleton-shimmer ring-1 ring-secondary" />
-              ) : (
-                <AvatarProfilePhoto
-                  size="md"
-                  src={toHttps(student?.profile_photo_url)}
-                  initials={initials}
-                />
-              )}
-
-              <div className="flex flex-col items-center gap-2 text-center">
-                {/* Name */}
-                {isPending ? (
+                <>
+                  <div className="size-24 rounded-full skeleton-shimmer ring-1 ring-secondary" />
                   <div className="h-5 w-36 rounded-md skeleton-shimmer" />
-                ) : (
-                  <h2 className="text-base font-semibold text-primary leading-snug">
-                    {fullName || "Ism ko'rsatilmagan"}
-                  </h2>
-                )}
-
-                {/* Email */}
-                {isPending ? (
                   <div className="h-4 w-28 rounded-md skeleton-shimmer" />
-                ) : (
-                  student?.email && (
-                    <p className="text-sm text-tertiary">{student.email}</p>
-                  )
-                )}
-
-                {/* Status badge */}
-                {isPending ? (
                   <div className="h-6 w-24 rounded-full skeleton-shimmer" />
-                ) : (
-                  status && (
-                    <BadgeWithDot color={status.color} size="sm">
-                      {status.label}
-                    </BadgeWithDot>
-                  )
-                )}
-              </div>
+                </>
+              ) : student ? (
+                <>
+                  <AvatarProfilePhoto
+                    size="md"
+                    src={toHttps(student?.profile_photo_url)}
+                    initials={initials}
+                  />
+
+                  <div className="flex flex-col items-center gap-2 text-center">
+                    <h2 className="text-base font-semibold text-primary leading-snug">
+                      {fullName || "Ism ko'rsatilmagan"}
+                    </h2>
+
+                    {student?.email && (
+                      <p className="text-sm text-tertiary">{student.email}</p>
+                    )}
+
+                    {status && (
+                      <BadgeWithDot color={status.color} size="sm">
+                        {status.label}
+                      </BadgeWithDot>
+                    )}
+                  </div>
+                </>
+              ) : null}
             </div>
           </SectionCard>
 
+          {/* Tizim ma'lumotlari - Always render */}
           <SectionCard title="Tizim ma'lumotlari" className="shadow-md">
             <div className="px-5 py-2">
               <InfoRow
@@ -195,17 +222,45 @@ export function StudentDetailClient({ userId }: Props) {
                 skeletonWidth="w-40"
               />
               <InfoRow
-                icon={CreditCard01}
-                label="Talaba ID"
-                value={student?.university_student_id}
+                icon={User01}
+                label="Status"
+                value={student?.status === 'approved' ? 'Tasdiqlangan' : student?.status === 'rejected' ? 'Rad qilingan' : 'Kutilmoqda'}
                 isLoading={isPending}
-                skeletonWidth="w-24"
+                skeletonWidth="w-32"
               />
+            </div>
+          </SectionCard>
+
+          {/* Harakatlar section - Always render, buttons disabled when loading */}
+          <SectionCard title="Harakatlar" className="shadow-md">
+            <div className="px-5 py-4 flex flex-col sm:flex-row gap-3">
+              <Button
+                color="primary"
+                size="md"
+                iconLeading={Pencil01}
+                onClick={handleEdit}
+                isDisabled={!student || isPending}
+                isLoading={isPending}
+                className="flex-1 sm:flex-none"
+              >
+                Tahrirlash
+              </Button>
+              <Button
+                color="primary-destructive"
+                size="md"
+                iconLeading={Trash01}
+                onClick={handleDelete}
+                isDisabled={!student || isPending}
+                isLoading={isPending}
+                className="flex-1 sm:flex-none"
+              >
+                O'chirish
+              </Button>
             </div>
           </SectionCard>
         </div>
 
-        {/* ── RIGHT — Details ──────────────────────────────────────────── */}
+        {/* Right column */}
         <div className="lg:col-span-2 flex flex-col gap-6">
           <SectionCard title="Shaxsiy ma'lumotlar" className="shadow-md">
             <div className="px-5 py-2">
@@ -228,5 +283,65 @@ export function StudentDetailClient({ userId }: Props) {
         </div>
       </div>
     </div>
-  );
+
+    {/* Delete Modal */}
+    {showDeleteModal && (
+      <PremiumFormModal
+        isOpen={showDeleteModal}
+        onOpenChange={(v) => {
+          if (!v) {
+            setConfirmName("");
+            setShowDeleteModal(false);
+          }
+        }}
+        title="Talabani o'chirish"
+        description="Bu amalni qaytarib bo'lmaydi."
+        icon={TrashIcon}
+        iconBgClassName="bg-error-solid"
+        iconClassName="text-white"
+        size="sm"
+        footer={
+          <div className="flex justify-end gap-3 w-full">
+            <Button 
+              color="secondary" 
+              size="md" 
+              onClick={() => setShowDeleteModal(false)} 
+              isDisabled={deleteStudent.isPending}
+              className="flex-1 sm:flex-none"
+            >
+              Bekor qilish
+            </Button>
+            <Button
+              onClick={confirmDelete}
+              color="primary-destructive"
+              size="md"
+              isDisabled={!isMatching || deleteStudent.isPending}
+              isLoading={deleteStudent.isPending}
+              className="flex-1 sm:flex-none"
+            >
+              O&apos;chirish
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-4 pt-2">
+          <div className="rounded-lg bg-secondary p-4 ring-1 ring-secondary ring-inset">
+            <p className="text-sm text-secondary">
+              Haqiqatan ham <strong className="font-semibold text-primary">«{studentFullName}»</strong> ismli talabani o&apos;chirmoqchimisiz?
+              Tizimdagi bu ma&apos;lumot butunlay o&apos;chib ketadi.
+            </p>
+          </div>
+
+          <Input
+            label="Tasdiqlash uchun talaba ismini kiriting"
+            placeholder={studentFullName}
+            value={confirmName}
+            onChange={setConfirmName}
+            autoFocus
+          />
+        </div>
+      </PremiumFormModal>
+    )}
+  </>
+);
 }

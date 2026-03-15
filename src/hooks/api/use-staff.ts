@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { API_CONFIG } from "@/lib/api/config";
-import type { CreateStaffInput } from "@/lib/validations/staff";
+import type { CreateStaffInput, UpdateStaffInput } from "@/lib/validations/staff";
 import type { JobPosition } from "@/lib/api/types";
 
 // ── Fetch job positions ──────────────────────────────────────────────────────
@@ -90,6 +90,45 @@ export function useDeleteStaff() {
 
   return useMutation({
     mutationFn: (id: string) => deleteStaff(session?.accessToken as string, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["staff-list"] });
+    },
+  });
+}
+
+// ── Update staff profile ─────────────────────────────────────────────────────
+async function updateStaffProfile(
+  token: string,
+  input: UpdateStaffInput & { user_public_id: string }
+): Promise<void> {
+  const form = new FormData();
+  form.append("name", input.name);
+  form.append("surname", input.surname);
+  form.append("job_position_public_id", input.job_position_public_id);
+  if (input.profile_photo instanceof File) {
+    form.append("profile_photo", input.profile_photo);
+  }
+
+  try {
+    await axios.put(
+      `${API_CONFIG.baseURL}${API_CONFIG.endpoints.staff.updateProfile(input.user_public_id)}`,
+      form,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+  } catch (error: any) {
+    const errData = error.response?.data || {};
+    const messages = Object.values(errData).flat().join(" ") || "Profilni yangilashda xatolik";
+    throw new Error(messages as string);
+  }
+}
+
+export function useUpdateStaffProfile() {
+  const { data: session } = useSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: UpdateStaffInput & { user_public_id: string }) =>
+      updateStaffProfile(session?.accessToken as string, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff-list"] });
     },

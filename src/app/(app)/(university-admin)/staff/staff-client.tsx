@@ -11,8 +11,8 @@ import { DataTable } from "@/components/application/table/data-table";
 import { API_CONFIG } from "@/lib/api/config";
 import type { StaffListResponseItem } from "@/lib/api/types";
 import { getStaffColumns } from "./_components/staff-columns";
+import { DeleteStaffModal } from "./_components/delete-staff-modal";
 import { toast } from "sonner";
-import { CustomToast } from "@/components/base/toast/custom-toast";
 
 async function fetchStaffList(token: string): Promise<StaffListResponseItem[]> {
   const res = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.staff.list}`, {
@@ -29,6 +29,7 @@ export default function StaffPage() {
   const { data: session } = useSession();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
   const pageSize = 10;
 
   const { data, isLoading } = useQuery({
@@ -37,28 +38,22 @@ export default function StaffPage() {
     enabled: !!session?.accessToken,
   });
 
-  const handleEdit = (id: string) => {
-    toast.info("Tahrirlash funksiyasi tez orada qo'shiladi");
-  };
+  const selectedItem = data?.find((item) => item.user_public_id === deleteItemId);
 
   const handleDelete = (id: string) => {
-    toast.custom((t) => (
-      <CustomToast
-        t={t}
-        type="warning"
-        title="O'chirish"
-        description="Bu funksiya tez orada ishga tushadi."
-      />
-    ));
+    setDeleteItemId(id);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setDeleteItemId(null);
   };
 
   const handleView = (id: string) => {
   };
 
   const columns = getStaffColumns({
-    onEdit: handleEdit,
     onDelete: handleDelete,
-    onView: handleView,
+    onView: () => {},
   });
 
   const filteredData = (data || []).filter(
@@ -112,6 +107,14 @@ export default function StaffPage() {
           onPageChange: setPage,
         }}
       />
+
+      {selectedItem && (
+        <DeleteStaffModal
+          item={selectedItem}
+          isOpen={!!deleteItemId}
+          onClose={handleCloseDeleteModal}
+        />
+      )}
     </div>
   );
 }

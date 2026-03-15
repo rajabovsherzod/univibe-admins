@@ -134,3 +134,89 @@ export function useWaitedStudentsCount(options?: { enabled?: boolean }) {
     refetchInterval: 30000,
   });
 }
+
+// ── Update student profile ────────────────────────────────────────────────
+export interface UpdateStudentInput {
+  user_public_id: string;
+  name?: string;
+  surname?: string;
+  middle_name?: string;
+  date_of_birth?: string;
+  university_student_id?: string;
+  faculty_id?: string;
+  degree_level_id?: string;
+  year_level_id?: string;
+  profile_photo?: File | null;
+  contact_phone_number?: string;
+}
+
+async function updateStudentProfile(
+  token: string,
+  input: UpdateStudentInput
+): Promise<void> {
+  const form = new FormData();
+  if (input.name) form.append("name", input.name);
+  if (input.surname) form.append("surname", input.surname);
+  if (input.middle_name) form.append("middle_name", input.middle_name);
+  if (input.date_of_birth) form.append("date_of_birth", input.date_of_birth);
+  if (input.university_student_id) form.append("university_student_id", input.university_student_id);
+  if (input.faculty_id) form.append("faculty_id", input.faculty_id);
+  if (input.degree_level_id) form.append("degree_level_id", input.degree_level_id);
+  if (input.year_level_id) form.append("year_level_id", input.year_level_id);
+  if (input.profile_photo instanceof File) {
+    form.append("profile_photo", input.profile_photo);
+  }
+  if (input.contact_phone_number) form.append("contact_phone_number", input.contact_phone_number);
+
+  try {
+    await axios.put(
+      `${API_CONFIG.baseURL}${ENDPOINTS.updateProfile(input.user_public_id)}`,
+      form,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+  } catch (error: any) {
+    const errData = error.response?.data || {};
+    const messages = Object.values(errData).flat().join(" ") || "Profilni yangilashda xatolik";
+    throw new Error(messages as string);
+  }
+}
+
+export function useUpdateStudentProfile() {
+  const { data: session } = useSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: UpdateStudentInput) =>
+      updateStudentProfile(session?.accessToken as string, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["student-detail"] });
+    },
+  });
+}
+
+// ── Delete student ───────────────────────────────────────────────────────
+async function deleteStudent(token: string, id: string): Promise<void> {
+  try {
+    await axios.delete(
+      `${API_CONFIG.baseURL}${ENDPOINTS.delete(id)}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+  } catch (error: any) {
+    const errData = error.response?.data || {};
+    const message = Object.values(errData).flat().join(" ") || "Talabani o'chirishda xatolik";
+    throw new Error(message as string);
+  }
+}
+
+export function useDeleteStudent() {
+  const { data: session } = useSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteStudent(session?.accessToken as string, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+    },
+  });
+}

@@ -40,6 +40,7 @@ export const API_CONFIG = {
       list: '/api/v1/university-staff/list/',
       create: '/api/v1/university-staff/create/',
       delete: (id: string) => `/api/v1/university-staff/delete/${id}/`,
+      updateProfile: (id: string) => `/api/v1/university-staff/profile/${id}/`, // PUT
 
       // Job Positions
       jobPositions: '/api/v1/university-staff/job-positions/',
@@ -54,6 +55,8 @@ export const API_CONFIG = {
       list: '/api/v1/student/students/',
       detail: (id: string) => `/api/v1/student/students/${id}/`,
       updateStatus: (id: string) => `/api/v1/student/students/${id}/status/`,
+      updateProfile: (id: string) => `/api/v1/student/students/${id}/`, // PUT
+      delete: (id: string) => `/api/v1/student/students/${id}/`, // DELETE
       waitedCount: '/api/v1/student/waited/',
     },
 

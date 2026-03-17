@@ -185,7 +185,7 @@ export default function StudentTransactionsPage({ params }: Props) {
             emptyTitle="Tranzaksiyalar yo'q"
             emptyDescription="Bu talabaga hali hech qanday ball amali bajarilmagan."
             pagination={
-              data && data.count > 20
+              data && data.count && data.count > 20
                 ? { page, total: Math.ceil(data.count / 20), onPageChange: setPage }
                 : undefined
             }

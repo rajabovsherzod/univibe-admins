@@ -168,7 +168,7 @@ export default function StudentTransactionsPage({ params }: Props) {
       />
 
       <div className="flex flex-col overflow-hidden rounded-2xl bg-primary shadow-xs ring-1 ring-secondary">
-        {data && (
+        {data && data.count && (
           <div className="flex items-center justify-end border-b border-secondary px-5 py-3">
             <span className="text-sm text-tertiary tabular-nums">
               Jami: {data.count} ta tranzaksiya
@@ -186,7 +186,7 @@ export default function StudentTransactionsPage({ params }: Props) {
             emptyDescription="Bu talabaga hali hech qanday ball amali bajarilmagan."
             pagination={
               data && data.count && data.count > 20
-                ? { page, total: Math.ceil(data.count / 20), onPageChange: setPage }
+                ? { page, total: Math.ceil((data.count || 1) / 20), onPageChange: setPage }
                 : undefined
             }
           />

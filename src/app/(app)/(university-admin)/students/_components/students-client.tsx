@@ -44,7 +44,7 @@ export function StudentsClient() {
 
   const { data, isLoading, isError, refetch } = useStudents({
     page,
-    page_size: 10,
+    page_size: 50,  // Backend default limit - 50 tadan
     search: debouncedSearch,
     status: activeTab,
   });
@@ -165,10 +165,18 @@ export function StudentsClient() {
                   : undefined
             }
             pagination={
-              data && data.count > data.results.length
-                ? { page, total: Math.ceil(data.count / 10), onPageChange: setPage }
+              data && data.pagination
+                ? {
+                    page,
+                    total: data.pagination.total_pages || 1,
+                    onPageChange: setPage,
+                    showRange: true,
+                    totalItems: data.pagination.total_items,
+                    pageSize: data.pagination.page_size,
+                  }
                 : undefined
             }
+
           />
         </div>
       </div>

@@ -149,14 +149,14 @@ export function StudentTransactionsModal({ isOpen, onClose, student }: StudentTr
         footer={
           <div className="flex w-full items-center justify-between gap-3">
             <span className="text-sm text-tertiary tabular-nums">
-              {data ? `Jami: ${data.count} ta` : ""}
+              {data?.count ? `Jami: ${data.count} ta` : ""}
             </span>
             <div className="flex items-center gap-2">
-              {data && data.count > 10 && (
+              {data && data.count && data.count > 10 && (
                 <>
                   <Button size="sm" color="secondary" onClick={() => setPage((p) => Math.max(1, p - 1))} isDisabled={page === 1}>←</Button>
                   <span className="text-sm text-secondary tabular-nums px-1">{page}</span>
-                  <Button size="sm" color="secondary" onClick={() => setPage((p) => p + 1)} isDisabled={page * 10 >= data.count}>→</Button>
+                  <Button size="sm" color="secondary" onClick={() => setPage((p) => p + 1)} isDisabled={page * 10 >= (data.count || 0)}>→</Button>
                 </>
               )}
               {isStaff && (

@@ -45,6 +45,10 @@ export type DataTablePagination = {
   total: number;
   onPageChange?: (page: number) => void;
   className?: string;
+  // Optional range display (e.g., "50/200")
+  showRange?: boolean;
+  totalItems?: number;
+  pageSize?: number;
 };
 
 export type DataTableProps<T extends object> = {
@@ -275,13 +279,24 @@ export function DataTable<T extends object>({
         </Table.Body>
       </Table>
 
-      {pagination && pagination.total > 1 && (
-        <PaginationPageMinimalCenter
-          page={pagination.page}
-          total={pagination.total}
-          onPageChange={pagination.onPageChange}
-          className={cx("border-t border-secondary px-4 py-3 md:px-6", pagination.className)}
-        />
+      {pagination && (
+        <div className={cx("flex items-center justify-between border-t border-secondary px-4 py-3 md:px-6", pagination.className)}>
+          {/* Range info */}
+          {pagination.showRange && pagination.totalItems && pagination.pageSize && (
+            <div className="text-sm text-tertiary">
+              {((pagination.page - 1) * pagination.pageSize) + 1}-{Math.min(pagination.page * pagination.pageSize, pagination.totalItems)} / {pagination.totalItems} tadan
+            </div>
+          )}
+          
+          {/* Pagination controls */}
+          <div className={cx("ml-auto", pagination.showRange ? "" : "w-full flex justify-center")}>
+            <PaginationPageMinimalCenter
+              page={pagination.page}
+              total={pagination.total}
+              onPageChange={pagination.onPageChange}
+            />
+          </div>
+        </div>
       )}
     </TableCard.Root>
   );

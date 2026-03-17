@@ -194,13 +194,13 @@ export function StaffTransactionsTab() {
           }
         />
 
-        {data && data.count > 20 && selectedStudentId && (
+        {data && data.count && data.count > 20 && selectedStudentId && (
           <div className="flex items-center justify-between border-t border-secondary px-5 py-3">
             <span className="text-sm text-tertiary">Jami: {data.count} ta</span>
             <div className="flex items-center gap-2">
               <Button size="sm" color="secondary" onClick={() => setPage((p) => Math.max(1, p - 1))} isDisabled={page === 1}>←</Button>
               <span className="text-sm text-secondary tabular-nums px-1">{page}</span>
-              <Button size="sm" color="secondary" onClick={() => setPage((p) => p + 1)} isDisabled={page * 20 >= data.count}>→</Button>
+              <Button size="sm" color="secondary" onClick={() => setPage((p) => p + 1)} isDisabled={page * 20 >= (data.count || 0)}>→</Button>
             </div>
           </div>
         )}

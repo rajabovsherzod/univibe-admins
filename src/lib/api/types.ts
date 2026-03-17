@@ -6,10 +6,20 @@ export type ISO8601Date = string;
 export type UUID = string;
 
 export interface PaginatedResponse<T> {
-  count: number;
-  next: string | null;
-  previous: string | null;
+  count?: number; // Old format (fallback)
+  next?: string | null;
+  previous?: string | null;
   results: T[];
+  
+  // New format with pagination object (from backend)
+  pagination?: {
+    page: number;
+    page_size: number;
+    total_items: number;
+    total_pages: number;
+    next: number | null;
+    previous: number | null;
+  };
 }
 
 export interface ApiError {

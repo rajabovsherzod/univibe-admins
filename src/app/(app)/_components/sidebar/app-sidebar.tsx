@@ -23,18 +23,28 @@ import { Badge } from "@/components/base/badges/badges";
 
 export function AppSidebar({ role }: { role: string }) {
   const pathname = usePathname();
-  const { data: waitedData } = useWaitedStudentsCount({ enabled: role === "staff" });
-  const { data: pendingOrdersData } = useAdminOrders({ status: 'PENDING', page_size: 1 });
+  
+  // Only fetch waited students count for staff role (skip entirely for admin)
+  const { data: waitedData } = useWaitedStudentsCount(
+    role === "staff" ? { enabled: true } : undefined
+  );
+  
+  // Only fetch pending orders for admin role (skip entirely for staff)
+  const { data: pendingOrdersData } = useAdminOrders(
+    role === "admin" ? { status: 'PENDING', page_size: 1 } : undefined
+  );
 
   const pendingOrderCount = pendingOrdersData?.count ?? 0;
 
-  const badgeContent = waitedData?.waited_students_count ? (
+  // Only show badge for staff
+  const badgeContent = (role === "staff" && waitedData?.waited_students_count) ? (
     <Badge color="brand" size="sm" className="!bg-brand-solid !text-white !ring-brand-solid shadow-sm">
       +{waitedData.waited_students_count}
     </Badge>
   ) : undefined;
 
-  const pendingOrderBadge = pendingOrderCount > 0 ? (
+  // Only show pending order badge for admin
+  const pendingOrderBadge = (role === "admin" && pendingOrderCount > 0) ? (
     <Badge color="brand" size="sm" className="!bg-brand-solid !text-white !ring-brand-solid shadow-sm">
       +{pendingOrderCount}
     </Badge>

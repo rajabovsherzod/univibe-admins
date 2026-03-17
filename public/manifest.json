@@ -1,5 +1,4 @@
 {
-  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
   "name": "Univibe Admin",
   "short_name": "UniAdmin",
   "description": "Univibe universiteti boshqaruv tizimi",

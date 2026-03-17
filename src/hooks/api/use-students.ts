@@ -130,7 +130,7 @@ export function useWaitedStudentsCount(options?: { enabled?: boolean }) {
       );
       return res.data;
     },
-    enabled: !!session?.accessToken && (options?.enabled ?? true),
+    enabled: !!session?.accessToken && (options?.enabled ?? false),
     refetchInterval: 30000,
   });
 }

@@ -11,10 +11,11 @@ import {
   Users01,
   Grid01,
   Briefcase01,
-  GraduationHat01,
   Building03,
   LayersThree01,
   ShoppingBag02,
+  Share04, // Marketing icon
+  GraduationHat01, // Graduation icon
 } from "@untitledui/icons";
 
 import { useWaitedStudentsCount } from "@/hooks/api/use-students";
@@ -65,7 +66,7 @@ export function AppSidebar({ role }: { role: string }) {
       icon: ShoppingBag02,
       badge: pendingOrderBadge,
       items: [
-        { label: "Mahsulotlar", href: "/market" },
+        { label: "Mukofotlar", href: "/market" },
         { label: "Buyurtmalar", href: "/market/orders", badge: pendingOrderBadge },
       ],
     },
@@ -88,9 +89,17 @@ export function AppSidebar({ role }: { role: string }) {
       icon: ShoppingBag02,
       badge: pendingOrderBadge,
       items: [
-        { label: "Mahsulotlar", href: "/market" },
+        { label: "Mukofotlar", href: "/market" },
         { label: "Buyurtmalar", href: "/market/orders", badge: pendingOrderBadge },
         { label: "Audit", href: "/market/audit" },
+      ],
+    },
+    {
+      label: "Marketing",
+      href: "/banners",
+      icon: Share04,
+      items: [
+        { label: "Bannerlar", href: "/banners" },
       ],
     },
   ];

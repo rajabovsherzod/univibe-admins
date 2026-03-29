@@ -138,15 +138,13 @@ export const PaginationPageMinimalCenter = ({ rounded, page = 1, total = 10, cla
             {...props}
             page={page}
             total={total}
-            className={cx("flex w-full items-center justify-between gap-3 border-t border-secondary pt-4 md:pt-5", className)}
+            className={cx("flex items-center gap-3", className)}
         >
-            <div className="flex flex-1 justify-start">
-                <Pagination.PrevTrigger asChild>
-                    <Button iconLeading={ArrowLeft} color="secondary" size="sm">
-                        {isDesktop ? "Oldingi" : undefined}
-                    </Button>
-                </Pagination.PrevTrigger>
-            </div>
+            <Pagination.PrevTrigger asChild>
+                <Button iconLeading={ArrowLeft} color="secondary" size="sm">
+                    {isDesktop ? "Oldingi" : undefined}
+                </Button>
+            </Pagination.PrevTrigger>
 
             <Pagination.Context>
                 {({ pages, currentPage, total }) => (
@@ -170,13 +168,11 @@ export const PaginationPageMinimalCenter = ({ rounded, page = 1, total = 10, cla
                 )}
             </Pagination.Context>
 
-            <div className="flex flex-1 justify-end">
-                <Pagination.NextTrigger asChild>
-                    <Button iconTrailing={ArrowRight} color="secondary" size="sm">
-                        {isDesktop ? "Keyingi" : undefined}
-                    </Button>
-                </Pagination.NextTrigger>
-            </div>
+            <Pagination.NextTrigger asChild>
+                <Button iconTrailing={ArrowRight} color="secondary" size="sm">
+                    {isDesktop ? "Keyingi" : undefined}
+                </Button>
+            </Pagination.NextTrigger>
         </Pagination.Root>
     );
 };

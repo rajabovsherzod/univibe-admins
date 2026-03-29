@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../../univibe-student"
+		},
+		{
+			"path": "../../API-DOCS"
 		}
 	]
 }

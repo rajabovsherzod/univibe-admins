@@ -82,7 +82,7 @@ export function MobileSidebar({ isOpen, onClose, role }: MobileSidebarProps) {
       href: "/market",
       badge: pendingOrderBadge,
       items: [
-        { label: "Mahsulotlar", href: "/market" },
+        { label: "Mukofotlar", href: "/market" },
         { label: "Buyurtmalar", href: "/market/orders", badge: pendingOrderBadge },
         { label: "Audit", href: "/market/audit" },
       ],
@@ -107,7 +107,7 @@ export function MobileSidebar({ isOpen, onClose, role }: MobileSidebarProps) {
       href: "/market",
       badge: pendingOrderBadge,
       items: [
-        { label: "Mahsulotlar", href: "/market" },
+        { label: "Mukofotlar", href: "/market" },
         { label: "Buyurtmalar", href: "/market/orders", badge: pendingOrderBadge },
         { label: "Audit", href: "/market/audit" },
       ],

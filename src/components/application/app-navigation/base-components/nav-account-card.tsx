@@ -227,7 +227,7 @@ export const NavAccountCard = ({
 
   const displayUser = session?.user;
 
-  // Skeleton while loading
+  // Skeleton while loading (only if no session yet)
   if (!displayUser && status === "loading") {
     return (
       <div className="relative flex items-center gap-3 rounded-xl p-3 ring-1 ring-secondary ring-inset shadow-md bg-primary">

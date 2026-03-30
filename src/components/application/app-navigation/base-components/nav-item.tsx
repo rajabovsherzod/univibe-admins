@@ -34,7 +34,7 @@ interface NavItemBaseProps {
   children?: ReactNode;
 }
 
-export const NavItemBase = ({ current, type, badge, href, icon: Icon, children, truncate = true, onClick }: NavItemBaseProps) => {
+export const NavItemBase = ({ current, type, badge, href, icon: Icon, children, truncate = true, onClick, open }: NavItemBaseProps) => {
   const iconElement = Icon && (
     <Icon
       aria-hidden="true"
@@ -62,7 +62,7 @@ export const NavItemBase = ({ current, type, badge, href, icon: Icon, children, 
   const labelElement = (
     <span
       className={cx(
-        "flex-1 text-md font-semibold",
+        "flex-1 text-left text-md font-semibold",
         truncate && "truncate",
         current ? "text-white" : "text-secondary group-hover:text-secondary_hover",
       )}
@@ -76,15 +76,12 @@ export const NavItemBase = ({ current, type, badge, href, icon: Icon, children, 
 
   if (type === "collapsible") {
     return (
-      <summary className={cx("px-3 py-2", styles.root, current && styles.rootSelected)} onClick={onClick}>
+      <button type="button" className={cx("w-full px-3 py-2", styles.root, current && styles.rootSelected)} onClick={onClick}>
         {iconElement}
-
         {labelElement}
-
         {badgeElement}
-
-        <ChevronDown aria-hidden="true" className="ml-3 size-4 shrink-0 stroke-[2.5px] text-fg-quaternary in-open:-scale-y-100" />
-      </summary>
+        <ChevronDown aria-hidden="true" className={cx("ml-3 size-4 shrink-0 stroke-[2.5px] text-fg-quaternary transition-transform duration-300", open ? "-scale-y-100" : "")} />
+      </button>
     );
   }
 

@@ -94,6 +94,22 @@ export const API_CONFIG = {
       orderDetail: (id: string) => `/api/v1/market/orders/${id}/`,
       orderStatus: (id: string) => `/api/v1/market/orders/${id}/status/`,
     },
+
+    // Banners Management
+    banners: {
+      // Dashboard (read-only for all authenticated users)
+      dashboard: '/api/v1/banners/dashboard/',
+      
+      // Management endpoints (university_admin only)
+      manage: {
+        list: '/api/v1/banners/manage/',
+        create: '/api/v1/banners/manage/create/',
+        detail: (publicId: string) => `/api/v1/banners/manage/${publicId}/`,
+        update: (publicId: string) => `/api/v1/banners/manage/${publicId}/`,
+        delete: (publicId: string) => `/api/v1/banners/manage/${publicId}/`,
+        changeStatus: (publicId: string) => `/api/v1/banners/manage/${publicId}/status/`,
+      },
+    },
   },
 } as const;
 

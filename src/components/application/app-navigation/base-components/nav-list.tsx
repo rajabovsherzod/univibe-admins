@@ -15,13 +15,16 @@ interface NavListProps {
 }
 
 export const NavList = ({ activeUrl, items, className }: NavListProps) => {
-  const [open, setOpen] = useState(false);
   const activeItem = items.find((item) => item.href === activeUrl || item.items?.some((subItem) => subItem.href === activeUrl));
   const [currentItem, setCurrentItem] = useState(activeItem);
+  const [openAccordion, setOpenAccordion] = useState<string | null>(activeItem?.label || null);
 
   useEffect(() => {
     const newActiveItem = items.find((item) => item.href === activeUrl || item.items?.some((subItem) => subItem.href === activeUrl));
     setCurrentItem(newActiveItem);
+    if (newActiveItem?.items?.length) {
+      setOpenAccordion(newActiveItem.label || null);
+    }
   }, [activeUrl, items]);
 
   return (
@@ -36,37 +39,48 @@ export const NavList = ({ activeUrl, items, className }: NavListProps) => {
         }
 
         if (item.items?.length) {
+          const isOpen = openAccordion === item.label;
           return (
-            <details
-              key={item.label}
-              open={activeItem?.href === item.href}
-              className="appearance-none py-0.5"
-              onToggle={(e) => {
-                setOpen(e.currentTarget.open);
-                setCurrentItem(item);
-              }}
-            >
-              <NavItemBase href={item.href} badge={item.badge} icon={item.icon} type="collapsible">
+            <li key={item.label} className="py-0.5 flex flex-col">
+              <NavItemBase 
+                href={item.href} 
+                badge={item.badge} 
+                icon={item.icon} 
+                type="collapsible"
+                open={isOpen}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setOpenAccordion(isOpen ? null : item.label);
+                  setCurrentItem(item);
+                }}
+              >
                 {item.label}
               </NavItemBase>
 
-              <dd>
-                <ul className="py-0.5">
-                  {item.items.map((childItem) => (
-                    <li key={childItem.label} className="py-0.5">
-                      <NavItemBase
-                        href={childItem.href}
-                        badge={childItem.badge}
-                        type="collapsible-child"
-                        current={activeUrl === childItem.href}
-                      >
-                        {childItem.label}
-                      </NavItemBase>
-                    </li>
-                  ))}
-                </ul>
-              </dd>
-            </details>
+              <div 
+                className={cx(
+                  "grid transition-all duration-300 ease-in-out",
+                  isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                )}
+              >
+                <div className="overflow-hidden">
+                  <ul className="py-0.5">
+                    {item.items.map((childItem) => (
+                      <li key={childItem.label} className="py-0.5">
+                        <NavItemBase
+                          href={childItem.href}
+                          badge={childItem.badge}
+                          type="collapsible-child"
+                          current={activeUrl === childItem.href}
+                        >
+                          {childItem.label}
+                        </NavItemBase>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </li>
           );
         }
 
@@ -78,7 +92,6 @@ export const NavList = ({ activeUrl, items, className }: NavListProps) => {
               icon={item.icon}
               href={item.href}
               current={currentItem?.href === item.href}
-              open={open && currentItem?.href === item.href}
             >
               {item.label}
             </NavItemBase>

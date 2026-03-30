@@ -184,13 +184,13 @@ export function DataTable<T extends object>({
   // Table header component (reusable)
   const TableHeader = () => (
     <Table.Header>
-      {columns.map((col) => (
+      {columns.map((col, idx) => (
         <Table.Head
           key={col.id}
           id={col.id}
           label={col.header}
           allowsSorting={Boolean(col.allowsSorting)}
-          isRowHeader={Boolean(col.isRowHeader)}
+          isRowHeader={col.isRowHeader ?? idx === 0}
           tooltip={col.tooltip}
           className={col.headClassName}
         />
@@ -257,11 +257,16 @@ export function DataTable<T extends object>({
         <Table.Body items={items}>
           {(obj) => {
             const row = obj as T;
-            const id = (row as any)[rowKey as string];
+            const rawId = (row as any)[rowKey as string];
             const rowIndex = sortedData.indexOf(row);
 
+            // Xatoliklarni oldini olish uchun (masalan duplicate UUID yoki null kelsa, qator index qo'shiladi)
+            // Lekin selection ishlatilganda ID lar unique deb faraz olinadi, aks holda selection buziladi
+            const baseId = rawId != null && rawId !== "" ? String(rawId) : `row`;
+            const rowId = selectionMode === "none" ? `${baseId}-${rowIndex}` : baseId;
+
             return (
-              <Table.Row id={String(id ?? "")}>
+              <Table.Row id={rowId}>
                 {columns.map((col) => {
                   const content =
                     col.cell?.(row, rowIndex) ??
@@ -288,12 +293,13 @@ export function DataTable<T extends object>({
             </div>
           )}
           
-          {/* Pagination controls */}
-          <div className={cx("ml-auto", pagination.showRange ? "" : "w-full flex justify-center")}>
+          {/* Pagination controls (Right-aligned and compact width component) */}
+          <div className="ml-auto w-fit">
             <PaginationPageMinimalCenter
               page={pagination.page}
               total={pagination.total}
               onPageChange={pagination.onPageChange}
+              className="pt-0 md:pt-0"
             />
           </div>
         </div>

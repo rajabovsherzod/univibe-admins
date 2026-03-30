@@ -119,11 +119,16 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
-export default function RootLayout({
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await getServerSession(authOptions);
+
   return (
     <html lang="uz" suppressHydrationWarning>
       <head>
@@ -134,7 +139,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_API_URL ?? "https://api.univibe.uz"} />
       </head>
       <body className={cx(inter.variable, "bg-primary antialiased")}>
-        <AppProvider>
+        <AppProvider session={session}>
           <NProgressProvider options={{ color: "#006ab0" }} />
           <Theme>
             <Toaster position="top-right" richColors closeButton />

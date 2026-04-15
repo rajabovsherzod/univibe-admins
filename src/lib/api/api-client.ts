@@ -22,17 +22,32 @@ interface RequestOptions extends AxiosRequestConfig {
   skipAuth?: boolean;
 }
 
+interface RefreshQueueItem {
+  resolve: (token: string) => void;
+  reject: (error: Error) => void;
+}
+
 /**
  * Backend API bilan ishlash uchun markazlashtirilgan mijoz (Axios).
- * Avtomatik ravishda `next-auth` orqali tokenlarni boshqaradi va xatoliklarni qayta ishlaydi.
  *
- * 401 javobi kelganda:
- *  1. getSession() chaqiriladi — bu JWT callback'ni ishga tushiradi va access token yangilanadi
- *  2. Yangi token bilan so'rov qayta yuboriladi
- *  3. Agar yangilash ham muvaffaqiyatsiz bo'lsa → signOut
+ * Token yangilash strategiyasi:
+ *  1. Har bir request'da getSession() orqali joriy access token olinadi.
+ *  2. 401 kelganda /api/auth/refresh endpoint'i chaqiriladi — bu expiresAt
+ *     tekshirmasdan to'g'ridan-to'g'ri backend'ga refresh so'rov yuboradi
+ *     va JWT cookie'ni yangilaydi.
+ *  3. Bir vaqtda kelgan bir nechta 401 uchun FAQAT bitta refresh so'rov
+ *     yuboriladi (isRefreshing lock). Qolgan requestlar navbatga (queue)
+ *     qo'yiladi va refresh tugagandan keyin yangi token bilan qayta yuboriladi.
+ *  4. Refresh muvaffaqiyatsiz tugasa → signOut.
  */
 class ApiClient {
   private axiosInstance: AxiosInstance;
+
+  // Bir vaqtda faqat bitta refresh so'rovi yuborilishini ta'minlovchi lock
+  private isRefreshing = false;
+
+  // 401 olgan, refresh tugashini kutayotgan requestlar navbati
+  private refreshQueue: RefreshQueueItem[] = [];
 
   constructor() {
     this.axiosInstance = axios.create({
@@ -44,6 +59,28 @@ class ApiClient {
     });
 
     this.setupInterceptors();
+  }
+
+  // Navbatdagi barcha requestlarni yakunlash (token yoki xato bilan)
+  private processQueue(error: Error | null, token: string | null) {
+    this.refreshQueue.forEach(({ resolve, reject }) => {
+      if (error) reject(error);
+      else resolve(token!);
+    });
+    this.refreshQueue = [];
+  }
+
+  /**
+   * /api/auth/refresh endpoint'ini chaqiradi.
+   * Bu endpoint expiresAt tekshirmasdan har doim backend'ga refresh so'rov yuboradi
+   * va muvaffaqiyatli bo'lsa JWT cookie'ni yangilaydi.
+   */
+  private async callRefreshEndpoint(): Promise<string> {
+    const res = await fetch("/api/auth/refresh", { method: "POST" });
+    if (!res.ok) throw new Error("Refresh failed");
+    const data = await res.json();
+    if (!data?.access) throw new Error("Invalid refresh response");
+    return data.access as string;
   }
 
   private setupInterceptors() {
@@ -62,7 +99,7 @@ class ApiClient {
       (error) => Promise.reject(error)
     );
 
-    // ── Response: Error Handling & 401 Refresh ────────────────────────────
+    // ── Response: 401 Refresh bilan qayta urinish ─────────────────────────
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => response,
       async (error: AxiosError) => {
@@ -71,32 +108,47 @@ class ApiClient {
         };
 
         if (error.response?.status === 401 && !originalRequest._retry) {
+          // Agar refresh allaqachon ketayotgan bo'lsa — navbatga qo'sh va kut
+          if (this.isRefreshing) {
+            return new Promise<string>((resolve, reject) => {
+              this.refreshQueue.push({ resolve, reject });
+            })
+              .then((newToken) => {
+                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                return this.axiosInstance(originalRequest);
+              })
+              .catch((err) => Promise.reject(err));
+          }
+
           originalRequest._retry = true;
+          this.isRefreshing = true;
 
           try {
-            // getSession() calls /api/auth/session which triggers the JWT callback.
-            // The JWT callback will try to refresh the expired access token.
-            const session = await getSession();
+            const newToken = await this.callRefreshEndpoint();
 
-            if (session?.accessToken && !session.error) {
-              originalRequest.headers.Authorization = `Bearer ${session.accessToken}`;
-              return this.axiosInstance(originalRequest);
-            }
+            // Navbatdagi barcha requestlarga yangi token berish
+            this.processQueue(null, newToken);
+            this.isRefreshing = false;
+
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            return this.axiosInstance(originalRequest);
           } catch {
-            // Session fetch failed — fall through to signOut
-          }
+            this.isRefreshing = false;
+            const authError = new AuthenticationError("Sessiya tugadi. Qayta kiring.");
+            this.processQueue(authError, null);
 
-          // Refresh failed or session has error — log out
-          if (typeof window !== "undefined") {
-            document.cookie = "user_data=;path=/;max-age=0;SameSite=Lax";
-            localStorage.removeItem("univibe-profile");
-            localStorage.removeItem("user-storage");
-            localStorage.removeItem("user-profile-storage");
-            sessionStorage.clear();
-            signOut({ redirect: true, callbackUrl: "/login" });
-          }
+            // Sessiya ma'lumotlarini tozalash va login sahifasiga yo'naltirish
+            if (typeof window !== "undefined") {
+              document.cookie = "user_data=;path=/;max-age=0;SameSite=Lax";
+              localStorage.removeItem("univibe-profile");
+              localStorage.removeItem("user-storage");
+              localStorage.removeItem("user-profile-storage");
+              sessionStorage.clear();
+              signOut({ redirect: true, callbackUrl: "/login" });
+            }
 
-          return Promise.reject(new AuthenticationError("Sessiya tugadi. Qayta kiring."));
+            return Promise.reject(authError);
+          }
         }
 
         return Promise.reject(this.handleError(error));

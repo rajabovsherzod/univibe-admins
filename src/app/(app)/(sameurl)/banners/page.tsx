@@ -5,8 +5,11 @@ import { BannerList } from '@/components/admins/banners/BannerList';
 import { BannersSliderAdmin } from '@/components/admins/banners/BannersSliderAdmin';
 import { Image01 } from '@untitledui/icons';
 import Link from 'next/link';
+import { usePermissions } from '@/hooks/use-permissions';
 
 export default function BannersPage() {
+  const { can } = usePermissions();
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -18,7 +21,7 @@ export default function BannersPage() {
       />
       
       {/* Preview Slider */}
-      <div className="bg-bg-primary rounded-xl p-4 border border-border-secondary">
+      <div className="bg-bg-primary rounded-xl p-4 border border-border-secondary shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15),0_4px_12px_-2px_rgba(0,0,0,0.1)]">
         <h3 className="text-sm font-semibold text-fg-primary mb-3">Dashboard Ko'rinishi</h3>
         <BannersSliderAdmin />
       </div>
@@ -30,9 +33,11 @@ export default function BannersPage() {
             Universitetingiz uchun bannerlar yarating va boshqaring
           </p>
         </div>
-        <Link href="/banners/create" className="inline-flex items-center gap-2 rounded-lg bg-brand-solid px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-solid_hover">
-          Banner Yaratish
-        </Link>
+        {can('banners.create') && (
+          <Link href="/banners/create" className="inline-flex items-center gap-2 rounded-lg bg-brand-solid px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-solid_hover">
+            Banner Yaratish
+          </Link>
+        )}
       </div>
       
       {/* Banner List */}

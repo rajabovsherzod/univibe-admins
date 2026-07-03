@@ -1,30 +1,11 @@
 // hooks/api/use-job-positions.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import axios from "axios";
 import { API_CONFIG } from "@/lib/api/config";
+import { apiFetch } from "@/lib/api/query-fetch";
 import type { JobPosition } from "@/lib/api/types";
 
 const ENDPOINTS = API_CONFIG.endpoints.staff;
-
-async function apiFetch(url: string, token: string, options?: { method?: string; body?: string }) {
-  try {
-    const res = await axios({
-      url,
-      method: options?.method || "GET",
-      data: options?.body ? JSON.parse(options.body) : undefined,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-    return res.data;
-  } catch (error: any) {
-    const errData = error.response?.data || {};
-    const msg = Object.values(errData).flat().join(" ") || `Xatolik: ${error.response?.status || error.message}`;
-    throw new Error(msg as string);
-  }
-}
 
 // ── LIST ──────────────────────────────────────────────────────────────────
 export function useJobPositions() {
@@ -46,7 +27,7 @@ export function useCreateJobPosition() {
   const { data: session } = useSession();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (name: string) =>
+    mutationFn: ({ name }: { name: string }) =>
       apiFetch(
         `${API_CONFIG.baseURL}${ENDPOINTS.jobPositionCreate}`,
         session?.accessToken as string,
@@ -61,11 +42,11 @@ export function useUpdateJobPosition() {
   const { data: session } = useSession();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, name }: { id: string; name: string }) =>
+    mutationFn: ({ id, ...data }: { id: string; name?: string }) =>
       apiFetch(
         `${API_CONFIG.baseURL}${ENDPOINTS.jobPositionUpdate(id)}`,
         session?.accessToken as string,
-        { method: "PATCH", body: JSON.stringify({ name }) }
+        { method: "PATCH", body: JSON.stringify(data) }
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["job-positions"] }),
   });

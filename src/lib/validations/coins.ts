@@ -3,10 +3,7 @@ import { z } from "zod";
 export const createCoinRuleSchema = z.object({
   name: z.string().min(2, "Qoida nomi kamida 2ta harf bo'lishi kerak"),
   description: z.string().min(5, "Izoh kamida 5ta harf bo'lishi kerak"),
-  coin_amount: z.coerce.number().min(1, "Coin miqdori kamida 1 bo'lishi kerak"),
-  allowed_job_position_public_ids: z
-    .array(z.string())
-    .min(1, "Kamida bitta lavozim tanlanishi shart"),
+  coin_amount: z.coerce.number().refine((val) => val !== 0, "Coin miqdori 0 bo'lishi mumkin emas"),
   status: z.enum(["ACTIVE", "ARCHIVED"]).optional().default("ACTIVE"),
 });
 
@@ -15,9 +12,7 @@ export type CreateCoinRuleInput = z.infer<typeof createCoinRuleSchema>;
 export const updateCoinRuleSchema = z.object({
   name: z.string().min(2, "Qoida nomi kamida 2ta harf bo'lishi kerak"),
   description: z.string().min(5, "Izoh kamida 5ta harf bo'lishi kerak"),
-  allowed_job_position_public_ids: z
-    .array(z.string())
-    .min(1, "Kamida bitta lavozim tanlanishi shart"),
+  coin_amount: z.coerce.number().refine((val) => val !== 0, "Coin miqdori 0 bo'lishi mumkin emas"),
 });
 
 export type UpdateCoinRuleInput = z.infer<typeof updateCoinRuleSchema>;

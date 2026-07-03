@@ -14,7 +14,12 @@ import { useUpdateStudentStatus } from "@/hooks/api/use-students";
 import { toHttps } from "@/utils/cx";
 
 // ── Row types ──────────────────────────────────────────────────────────────
-export type ApprovedStudentRow = Student & { onIssueCoin?: () => void };
+export type ApprovedStudentRow = Student & {
+  onIssueCoin?: () => void;
+  onIssuePenalty?: () => void;
+  canAward?: boolean;
+  canPenalty?: boolean;
+};
 export type WaitedStudentRow = Student & { onSuccess?: () => void };
 export type RejectedStudentRow = Student;
 
@@ -129,11 +134,20 @@ export const approvedStudentColumns: DataTableColumn<ApprovedStudentRow>[] = [
             Ko&apos;rish
           </Button>
         </Link>
-        <Button color="secondary" size="sm" iconLeading={CoinIconBtn}
-          onClick={() => row.onIssueCoin?.()}
-          className="ring-1 ring-secondary shadow-xs">
-          Ball berish
-        </Button>
+        {row.canAward && (
+          <Button color="secondary" size="sm" iconLeading={CoinIconBtn}
+            onClick={() => row.onIssueCoin?.()}
+            className="ring-1 ring-secondary shadow-xs">
+            Ball berish
+          </Button>
+        )}
+        {row.canPenalty && (
+          <Button color="secondary-destructive" size="sm" iconLeading={CoinIconBtn}
+            onClick={() => row.onIssuePenalty?.()}
+            className="ring-1 ring-error-300 dark:ring-error-700 shadow-xs">
+            Jarima
+          </Button>
+        )}
         <Tooltip title="Tranzaksiyalar" delay={200} color="success">
           <Link href={`/students/${row.user_public_id}/transactions?name=${encodeURIComponent(row.full_name || [row.name, row.surname, row.middle_name].filter(Boolean).join(" "))}`} aria-label="Tranzaksiyalar">
             <button

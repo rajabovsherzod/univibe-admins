@@ -5,16 +5,20 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, User01 } from "@untitledui/icons";
+import { ArrowLeft, User01, Shield01 } from "@untitledui/icons";
 
 import { PageHeaderPro } from "@/components/application/page-header/page-header-pro";
 import { Select } from "@/components/base/select/select";
 import { Input } from "@/components/base/input/input";
 import { Button } from "@/components/base/buttons/button";
-import { FileUpload } from "@/components/application/file-upload/file-upload-base";
+import { ProfilePhotoUploader } from "@/components/application/profile-photo-uploader/profile-photo-uploader";
+import { PermissionMatrix } from "@/components/application/rbac/permission-matrix";
 import { updateStaffSchema, type UpdateStaffInput } from "@/lib/validations/staff";
 import { useUpdateStaffProfile } from "@/hooks/api/use-staff";
-import Image from "next/image";
+import { useRbacCatalog } from "@/hooks/api/use-rbac-catalog";
+import { cx } from "@/utils/cx";
+
+const CARD_SHADOW = "shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15),0_4px_12px_-2px_rgba(0,0,0,0.1)]";
 
 interface StaffEditPageClientProps {
   staffData: {
@@ -25,6 +29,7 @@ interface StaffEditPageClientProps {
     job_position_public_id: string;
     profile_photo_url: string | null;
     full_name: string;
+    permissions: string[];
   };
   jobPositions: Array<{
     public_id: string;
@@ -35,7 +40,9 @@ interface StaffEditPageClientProps {
 export default function StaffEditPageClient({ staffData, jobPositions }: StaffEditPageClientProps) {
   const router = useRouter();
   const updateStaff = useUpdateStaffProfile();
+  const { data: catalog, isLoading: catalogLoading } = useRbacCatalog();
   const [photoPreview, setPhotoPreview] = useState<string | null>(staffData.profile_photo_url || null);
+  const [permissions, setPermissions] = useState<string[]>(staffData.permissions);
   const initialPhotoUrl = staffData.profile_photo_url || null;
 
   const {
@@ -55,12 +62,14 @@ export default function StaffEditPageClient({ staffData, jobPositions }: StaffEd
   });
 
   const selectedJobId = watch("job_position_public_id");
+  const nameValue = watch("name");
+  const surnameValue = watch("surname");
   const jobPositionItems = jobPositions.map((p) => ({ id: p.public_id, label: p.name }));
 
   const onSubmit = async (data: UpdateStaffInput) => {
     try {
-      await updateStaff.mutateAsync({ ...data, user_public_id: staffData.user_public_id });
-      toast.success("Xodim ma'lumotlari muvaffaqiyatli yangilandi!");
+      await updateStaff.mutateAsync({ ...data, user_public_id: staffData.user_public_id, permissions });
+      toast.success("Xodim ma'lumotlari va ruxsatlari muvaffaqiyatli yangilandi!");
       router.push("/staff");
     } catch (err: any) {
       toast.error("Xatolik yuz berdi", { description: err.message });
@@ -78,65 +87,40 @@ export default function StaffEditPageClient({ staffData, jobPositions }: StaffEd
           { label: "Xodimlar", href: "/staff" },
           { label: "Tahrirlash" },
         ]}
-        title="Xodimni tahrirlash"
-        subtitle="Xodim ma'lumotlarini o'zgartiring. * bilan belgilangan maydonlar majburiy."
+        title={`Xodimni tahrirlash — ${staffData.full_name}`}
+        subtitle="Xodim ma'lumotlarini va nima qila olishini o'zgartiring. * bilan belgilangan maydonlar majburiy."
         icon={User01}
       />
 
       {/* ── Form card ── */}
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-6">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-          {/* LEFT: Photo upload */}
+          {/* LEFT: Profile avatar */}
           <div className="lg:col-span-1">
-            <div className="overflow-hidden rounded-2xl bg-primary shadow-sm ring-1 ring-secondary">
+            <div className={cx("overflow-hidden rounded-2xl bg-primary ring-1 ring-secondary", CARD_SHADOW)}>
               <div className="bg-brand-solid px-5 py-3.5">
                 <h2 className="text-sm font-semibold text-white">Profil rasmi</h2>
               </div>
-              <div className="flex flex-col gap-4 p-6">
-                <FileUpload.Root>
-                  <FileUpload.DropZone
-                    accept="image/png, image/jpeg, image/webp"
-                    allowsMultiple={false}
-                    maxSize={5 * 1024 * 1024} // 5 MB
-                    onDropFiles={(files: FileList | File[]) => {
-                      const file = files[0];
-                      if (!file) return;
-                      setValue("profile_photo", file as any, { shouldValidate: true });
-                      setPhotoPreview(URL.createObjectURL(file));
-                    }}
-                    onSizeLimitExceed={() => toast.error("Kechirasiz, rasm hajmi 5 MB dan oshmasligi kerak")}
-                    hint="PNG, JPG yoki WebP (Maks. 5 MB)"
-                  />
-
-                  {watch("profile_photo") && (
-                    <FileUpload.List>
-                      <FileUpload.ListItemProgressBar
-                        name={(watch("profile_photo") as any)?.name || "Rasm"}
-                        size={(watch("profile_photo") as void | any)?.size || 0}
-                        progress={100}
-                        onDelete={() => {
-                          setValue("profile_photo", null, { shouldValidate: true });
-                          setPhotoPreview(initialPhotoUrl);
-                        }}
-                      />
-                    </FileUpload.List>
-                  )}
-
-                  {/* Profile preview */}
-                  {photoPreview && (
-                    <div className="mx-auto mt-2 flex size-32 items-center justify-center overflow-hidden rounded-full bg-secondary ring-4 ring-brand-solid/20">
-                      <Image src={photoPreview} alt="Preview" width={128} height={128} className="size-full object-cover" unoptimized />
-                    </div>
-                  )}
-                </FileUpload.Root>
-              </div>
+              <ProfilePhotoUploader
+                photoPreview={photoPreview}
+                fullName={[nameValue, surnameValue].filter(Boolean).join(" ") || staffData.full_name}
+                isDisabled={isPending}
+                onSelect={(file) => {
+                  setValue("profile_photo", file as any, { shouldValidate: true });
+                  setPhotoPreview(URL.createObjectURL(file));
+                }}
+                onRemove={() => {
+                  setValue("profile_photo", null, { shouldValidate: true });
+                  setPhotoPreview(initialPhotoUrl);
+                }}
+              />
             </div>
           </div>
 
           {/* RIGHT: Main fields */}
           <div className="lg:col-span-2">
-            <div className="overflow-hidden rounded-2xl bg-primary shadow-sm ring-1 ring-secondary">
+            <div className={cx("overflow-hidden rounded-2xl bg-primary ring-1 ring-secondary", CARD_SHADOW)}>
               <div className="bg-brand-solid px-5 py-3.5">
                 <h2 className="text-sm font-semibold text-white">Asosiy ma&apos;lumotlar</h2>
               </div>
@@ -209,8 +193,32 @@ export default function StaffEditPageClient({ staffData, jobPositions }: StaffEd
           </div>
         </div>
 
+        {/* Permissions — full width, below the grid */}
+        <div className={cx("overflow-hidden rounded-2xl bg-primary ring-1 ring-secondary", CARD_SHADOW)}>
+          <div className="flex items-center gap-2 bg-brand-solid px-5 py-3.5">
+            <Shield01 className="size-4 text-white" />
+            <h2 className="text-sm font-semibold text-white">Ruxsatlar</h2>
+          </div>
+          <div className="p-6">
+            <p className="mb-4 text-sm text-tertiary">
+              Bu xodim tizimda nima qila olishini shu yerda o'zgartirasiz. Ruxsatlar aynan shu
+              xodimga tegishli — boshqa bir xil lavozimdagi xodimlarga ta'sir qilmaydi.
+            </p>
+            {catalogLoading || !catalog ? (
+              <p className="py-8 text-center text-sm text-tertiary">Yuklanmoqda...</p>
+            ) : (
+              <PermissionMatrix
+                catalog={catalog}
+                value={permissions}
+                onChange={setPermissions}
+                isDisabled={isPending}
+              />
+            )}
+          </div>
+        </div>
+
         {/* ── Actions ── */}
-        <div className="mt-6 flex items-center justify-between">
+        <div className="flex items-center justify-between">
           <Button
             color="secondary"
             size="md"

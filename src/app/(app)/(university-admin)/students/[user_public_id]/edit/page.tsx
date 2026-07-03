@@ -1,84 +1,47 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { API_CONFIG } from "@/lib/api/config";
+import { ssrFetch } from "@/lib/api/ssr-fetch";
 import StudentEditClient from "./student-edit-client";
 
-// Fetch student detail
+// All SSR fetches below use ssrFetch, which retries transient dev-server
+// hiccups (404/5xx/network) so a momentary blip never crashes the page.
+
 async function fetchStudentDetail(token: string, userId: string) {
-  const res = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.students.detail(userId)}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    cache: "no-store",
-  });
-  
+  const res = await ssrFetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.students.detail(userId)}`, token);
   if (!res.ok) {
     throw new Error(`Talaba ma'lumotlarini yuklashda xatolik: ${res.status}`);
   }
-  
   return res.json();
 }
 
-// Fetch faculties
 async function fetchFaculties(token: string, universityId: string) {
-  const res = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.university.faculties}?university_id=${universityId}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    cache: "no-store",
-  });
-  
+  const res = await ssrFetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.university.faculties}?university_id=${universityId}`, token);
   if (!res.ok) {
     throw new Error("Fakultetlarni yuklashda xatolik");
   }
-  
   return res.json();
 }
 
-// Fetch degree levels
 async function fetchDegreeLevels(token: string, universityId: string) {
-  const res = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.university.degreeLevels}?university_id=${universityId}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    cache: "no-store",
-  });
-  
+  const res = await ssrFetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.university.degreeLevels}?university_id=${universityId}`, token);
   if (!res.ok) {
     throw new Error("Ta'lim darajalarini yuklashda xatolik");
   }
-  
   return res.json();
 }
 
-// Fetch year levels
 async function fetchYearLevels(token: string, universityId: string) {
-  const res = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.university.yearLevels}?university_id=${universityId}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    cache: "no-store",
-  });
-  
+  const res = await ssrFetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.university.yearLevels}?university_id=${universityId}`, token);
   if (!res.ok) {
     throw new Error("Kurslarni yuklashda xatolik");
   }
-  
   return res.json();
 }
 
 export default async function StudentEditPage({ params }: { params: Promise<{ user_public_id: string }> }) {
   const { user_public_id } = await params;
-  const session = await getServerSession(authOptions);
-  
-  if (!session || !session.accessToken) {
-    redirect("/login");
-  }
+  const session = await requireSession();
 
   try {
     // Fetch all data in parallel

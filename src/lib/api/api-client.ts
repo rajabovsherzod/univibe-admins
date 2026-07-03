@@ -6,6 +6,7 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import { getSession, signOut } from "next-auth/react";
+import { toast } from "sonner";
 import {
   AppError,
   AuthenticationError,
@@ -91,7 +92,11 @@ class ApiClient {
         if (!customConfig.skipAuth) {
           const session = await getSession();
           if (session?.accessToken) {
-            config.headers.Authorization = `Bearer ${session.accessToken}`;
+            if (config.headers && typeof config.headers.set === 'function') {
+              config.headers.set('Authorization', `Bearer ${session.accessToken}`);
+            } else {
+              config.headers.Authorization = `Bearer ${session.accessToken}`;
+            }
           }
         }
         return config;
@@ -114,7 +119,11 @@ class ApiClient {
               this.refreshQueue.push({ resolve, reject });
             })
               .then((newToken) => {
-                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                if (originalRequest.headers && typeof originalRequest.headers.set === 'function') {
+                  originalRequest.headers.set('Authorization', `Bearer ${newToken}`);
+                } else {
+                  originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                }
                 return this.axiosInstance(originalRequest);
               })
               .catch((err) => Promise.reject(err));
@@ -126,11 +135,14 @@ class ApiClient {
           try {
             const newToken = await this.callRefreshEndpoint();
 
-            // Navbatdagi barcha requestlarga yangi token berish
             this.processQueue(null, newToken);
             this.isRefreshing = false;
 
-            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            if (originalRequest.headers && typeof originalRequest.headers.set === 'function') {
+              originalRequest.headers.set('Authorization', `Bearer ${newToken}`);
+            } else {
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            }
             return this.axiosInstance(originalRequest);
           } catch {
             this.isRefreshing = false;
@@ -171,8 +183,20 @@ class ApiClient {
     switch (status) {
       case 401:
         return new AuthenticationError(message);
-      case 403:
+      case 403: {
+        // GET requests are promoted to <ForbiddenState /> by the QueryClient's
+        // `throwOnError` (see providers/query-client-provider.tsx) — a toast
+        // right before the page swaps to that full state would be redundant.
+        // Writes (create/update/delete) stay inline, so a toast is still the
+        // right feedback there.
+        const method = error.config?.method?.toLowerCase();
+        if (typeof window !== "undefined" && method && method !== "get") {
+          toast.error("Ruxsat yo'q", {
+            description: "Bu amalni bajarish uchun sizda ruxsat yo'q.",
+          });
+        }
         return new AuthorizationError(message);
+      }
       case 404:
         return new NotFoundError("So'ralgan manba topilmadi");
       case 400:

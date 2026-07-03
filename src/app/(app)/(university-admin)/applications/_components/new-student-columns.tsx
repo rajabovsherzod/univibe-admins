@@ -10,6 +10,7 @@ import { toHttps } from "@/utils/cx";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Tooltip } from "@/components/base/tooltip/tooltip";
+import { usePermissions } from "@/hooks/use-permissions";
 
 export type WaitedStudentRow = Student & {
   onView?: () => void;
@@ -18,6 +19,8 @@ export type WaitedStudentRow = Student & {
 
 function StudentActions({ row }: { row: WaitedStudentRow }) {
   const { mutateAsync: updateStatus } = useUpdateStudentStatus();
+  const { can } = usePermissions();
+  const canReview = can("students.applications.review");
   const [loadingAction, setLoadingAction] = useState<"approve" | "reject" | null>(null);
 
   const handleStatusChange = async (status: "approved" | "rejected") => {
@@ -38,7 +41,7 @@ function StudentActions({ row }: { row: WaitedStudentRow }) {
   };
 
   return (
-    <div className="flex items-center justify-end gap-2 text-fg-success-secondary">
+    <div className="flex items-center justify-end gap-2">
       <Button
         color="secondary"
         size="sm"
@@ -47,27 +50,32 @@ function StudentActions({ row }: { row: WaitedStudentRow }) {
         aria-label="Ko'rish"
         className="ring-1 ring-secondary shadow-xs font-semibold"
       >
-        Detallar
+        Ko'rish
       </Button>
-      <Button
-        color="primary"
-        size="sm"
-        iconLeading={CheckCircle}
-        onClick={() => handleStatusChange("approved")}
-        isLoading={loadingAction === "approve"}
-        isDisabled={loadingAction !== null}
-        aria-label="Tasdiqlash"
-        className="bg-success-solid hover:bg-success-solid_hover text-white ring-0 shadow-xs"
-      />
-      <Button
-        color="primary-destructive"
-        size="sm"
-        iconLeading={XCircle}
-        onClick={() => handleStatusChange("rejected")}
-        isLoading={loadingAction === "reject"}
-        isDisabled={loadingAction !== null}
-        aria-label="Rad etish"
-      />
+      {canReview && (
+        <>
+          <Button
+            color="primary"
+            size="sm"
+            iconLeading={CheckCircle}
+            onClick={() => handleStatusChange("approved")}
+            isLoading={loadingAction === "approve"}
+            isDisabled={loadingAction !== null}
+            aria-label="Tasdiqlash"
+            className="bg-success-600 hover:bg-success-700 text-white ring-0 shadow-xs *:data-icon:!text-white"
+          />
+          <Button
+            color="primary-destructive"
+            size="sm"
+            iconLeading={XCircle}
+            onClick={() => handleStatusChange("rejected")}
+            isLoading={loadingAction === "reject"}
+            isDisabled={loadingAction !== null}
+            aria-label="Rad etish"
+            className="*:data-icon:!text-white"
+          />
+        </>
+      )}
     </div>
   );
 }

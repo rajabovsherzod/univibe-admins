@@ -17,6 +17,14 @@ import {
   type ApprovedStudentRow,
   type WaitedStudentRow,
 } from "./student-columns";
+import { Select } from "@/components/base/select/select";
+import { SelectItem } from "@/components/base/select/select-item";
+import { Button } from "@/components/base/buttons/button";
+import { Input } from "@/components/base/input/input";
+import { SearchSm } from "@untitledui/icons";
+import { useFaculties } from "@/hooks/api/use-faculty";
+import { usePermissions } from "@/hooks/use-permissions";
+import { useYearLevels } from "@/hooks/api/use-year-level";
 import { useStudents, useWaitedStudentsCount } from "@/hooks/api/use-students";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useSession } from "next-auth/react";
@@ -33,20 +41,31 @@ const TABS: { id: TabId; label: string }[] = [
 // ── Component ─────────────────────────────────────────────────────────────
 export function StudentsClient() {
   const { status: sessionStatus } = useSession();
+  const { can } = usePermissions();
+  const canAward = can("coins.award");
+  const canPenalty = can("coins.penalty");
   const [activeTab, setActiveTab] = useState<TabId>("approved");
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [facultyId, setFacultyId] = useState<string>("");
+  const [yearLevelId, setYearLevelId] = useState<string>("");
+  const [gender, setGender] = useState<string>("");
   const debouncedSearch = useDebounce(searchTerm, 500);
 
-  const [issueCoinStudent, setIssueCoinStudent] = useState<{ id: string; name: string } | null>(null);
+  const [issueCoinStudent, setIssueCoinStudent] = useState<{ student: { id: string; name: string; balance?: number }, type: "reward" | "penalty" } | null>(null);
 
   const { data: waitedMeta } = useWaitedStudentsCount();
+  const { data: faculties } = useFaculties();
+  const { data: yearLevels } = useYearLevels();
 
   const { data, isLoading, isError, refetch } = useStudents({
     page,
     page_size: 50,  // Backend default limit - 50 tadan
     search: debouncedSearch,
     status: activeTab,
+    faculty_id: facultyId || undefined,
+    year_level_id: yearLevelId || undefined,
+    gender: gender || undefined,
   });
 
   useEffect(() => {
@@ -61,6 +80,9 @@ export function StudentsClient() {
     setActiveTab(tab);
     setPage(1);
     setSearchTerm("");
+    setFacultyId("");
+    setYearLevelId("");
+    setGender("");
   };
 
   // ── Build rows per active tab
@@ -68,7 +90,10 @@ export function StudentsClient() {
     activeTab === "approved"
       ? (data?.results || []).map((s) => ({
         ...s,
-        onIssueCoin: () => setIssueCoinStudent({ id: s.user_public_id, name: s.full_name || "Ism yo'q" }),
+        canAward,
+        canPenalty,
+        onIssueCoin: () => setIssueCoinStudent({ student: { id: s.user_public_id, name: s.full_name || "Ism yo'q", balance: s.coins_balance }, type: "reward" }),
+        onIssuePenalty: () => setIssueCoinStudent({ student: { id: s.user_public_id, name: s.full_name || "Ism yo'q", balance: s.coins_balance }, type: "penalty" }),
       }))
       : [];
 
@@ -101,48 +126,101 @@ export function StudentsClient() {
         title="Talabalar"
         subtitle="Universitetdagi barcha talabalarni boshqarish va ko'rish paneli."
         icon={Users01}
-        showSearch
-        searchValue={searchTerm}
-        onSearch={(val) => { setSearchTerm(val); setPage(1); }}
-        searchPlaceholder="Ism yoki talaba ID bo'yicha qidiring..."
       />
 
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="w-full sm:w-72">
+          <Input
+            icon={SearchSm}
+            placeholder="Ism yoki talaba ID bo'yicha qidiring..."
+            value={searchTerm}
+            onChange={(val) => { setSearchTerm(val); setPage(1); }}
+          />
+        </div>
+        <div className="w-full sm:w-56">
+          <Select
+            aria-label="Fakultet filteri"
+            placeholder="Fakultet"
+            selectedKey={facultyId || "all"}
+            onSelectionChange={(k) => { setFacultyId(k === "all" ? "" : k as string); setPage(1); }}
+            items={[
+              { id: "all", label: "Fakultet: Barchasi" },
+              ...(faculties?.map((f) => ({ id: f.public_id, label: f.name })) || []),
+            ]}
+          >
+            {(f) => <SelectItem id={f.id}>{f.label}</SelectItem>}
+          </Select>
+        </div>
+        <div className="w-full sm:w-48">
+          <Select
+            aria-label="Kurs filteri"
+            placeholder="Kurs"
+            selectedKey={yearLevelId || "all"}
+            onSelectionChange={(k) => { setYearLevelId(k === "all" ? "" : k as string); setPage(1); }}
+            items={[
+              { id: "all", label: "Kurs: Barchasi" },
+              ...(yearLevels?.map((yl) => ({ id: yl.public_id, label: yl.name })) || []),
+            ]}
+          >
+            {(yl) => <SelectItem id={yl.id}>{yl.label}</SelectItem>}
+          </Select>
+        </div>
+        <div className="w-full sm:w-40">
+          <Select
+            aria-label="Jins filteri"
+            placeholder="Jins"
+            selectedKey={gender || "all"}
+            onSelectionChange={(k) => { setGender(k === "all" ? "" : k as string); setPage(1); }}
+            items={[{ id: "all", label: "Jins: Barchasi" }, { id: "male", label: "Erkak" }, { id: "female", label: "Ayol" }]}
+          >
+            {(g) => <SelectItem id={g.id}>{g.label}</SelectItem>}
+          </Select>
+        </div>
+        {(searchTerm || facultyId || yearLevelId || gender) && (
+          <Button
+            color="primary"
+            onClick={() => { setSearchTerm(""); setFacultyId(""); setYearLevelId(""); setGender(""); setPage(1); }}
+          >
+            Tozalash
+          </Button>
+        )}
+      </div>
+
       {/* ── Tabli karta ────────────────────────────────────────────────── */}
-      <div className="flex flex-col overflow-hidden rounded-2xl bg-primary shadow-xs ring-1 ring-secondary">
+      <div className="flex flex-col overflow-hidden rounded-2xl bg-primary shadow-xs ring-1 ring-secondary p-5">
 
         {/* Tab strip */}
-        <div className="border-b border-secondary bg-primary px-5 pt-4">
-          <div className="flex w-max items-center gap-4">
-            {TABS.map((tab, idx) => (
-              <Fragment key={tab.id}>
-                <button
-                  type="button"
-                  onClick={() => handleTabChange(tab.id)}
-                  className={cx(
-                    "flex items-center gap-1.5 pb-3 text-sm transition-all duration-200 outline-none border-b-2",
-                    activeTab === tab.id
-                      ? "border-brand-solid font-bold text-brand-solid"
-                      : "border-transparent font-medium text-secondary hover:border-border-secondary hover:text-primary"
-                  )}
-                >
-                  {tab.label}
-                  {tab.id === "waited" && waitedCount > 0 && (
-                    <Badge color="brand" size="sm" className="!bg-brand-solid !text-white !ring-brand-solid shadow-sm ml-1">
-                      +{waitedCount}
-                    </Badge>
-                  )}
-                </button>
-                {idx < TABS.length - 1 && (
-                  <div className="mb-3 h-4 w-px bg-secondary" />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-5">
+          <div className="flex items-center gap-1 p-1 bg-secondary rounded-lg overflow-x-auto w-full sm:w-max">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleTabChange(tab.id)}
+                className={cx(
+                  "px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-colors flex-1 sm:flex-none flex items-center justify-center gap-1.5",
+                  activeTab === tab.id
+                    ? "bg-brand-solid text-white shadow-sm"
+                    : "text-tertiary hover:text-secondary"
                 )}
-              </Fragment>
+              >
+                {tab.label}
+                {tab.id === "waited" && waitedCount > 0 && (
+                  <Badge color={activeTab === "waited" ? "gray" : "brand"} size="sm" className={cx(
+                    activeTab === "waited" ? "!bg-white/20 !text-white !ring-transparent" : "!bg-brand-solid !text-white !ring-brand-solid",
+                    "shadow-sm ml-1"
+                  )}>
+                    +{waitedCount}
+                  </Badge>
+                )}
+              </button>
             ))}
           </div>
         </div>
 
         {/* Table */}
-        <div className="p-5">
-          <DataTable
+        <DataTable
             ariaLabel="Talabalar ro'yxati"
             data={currentData as any}
             columns={currentColumns as any}
@@ -178,14 +256,14 @@ export function StudentsClient() {
             }
 
           />
-        </div>
       </div>
 
       {issueCoinStudent && (
         <IssueCoinModal
           isOpen={!!issueCoinStudent}
           onClose={() => setIssueCoinStudent(null)}
-          preselectedStudent={issueCoinStudent}
+          preselectedStudent={issueCoinStudent.student}
+          ruleType={issueCoinStudent.type}
         />
       )}
 

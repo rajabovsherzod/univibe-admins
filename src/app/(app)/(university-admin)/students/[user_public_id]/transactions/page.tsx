@@ -7,6 +7,7 @@ import { ArrowUpRight, ArrowDownLeft, RefreshCcw01, Trash01, ClockRefresh } from
 import { CoinOutlineIcon } from "@/components/custom-icons/brand-icon";
 import { DataTable } from "@/components/application/table/data-table";
 import type { DataTableColumn } from "@/components/application/table/data-table";
+import { Tooltip, TooltipTrigger } from "@/components/base/tooltip/tooltip";
 import { Button } from "@/components/base/buttons/button";
 import { PageHeaderPro } from "@/components/application/page-header/page-header-pro";
 import { useTransactions } from "@/hooks/api/use-transactions";
@@ -103,9 +104,13 @@ export default function StudentTransactionsPage({ params }: Props) {
       id: "rule",
       header: "Qoida",
       cell: (row) => (
-        <span className="text-sm text-secondary truncate block max-w-[200px]" title={row.coin_rule_name}>
-          {row.coin_rule_name || "—"}
-        </span>
+        <Tooltip title={row.coin_rule_name || ""} delay={200}>
+          <TooltipTrigger className="text-left">
+            <span className="text-sm text-secondary truncate block max-w-[200px]">
+              {row.coin_rule_name || "—"}
+            </span>
+          </TooltipTrigger>
+        </Tooltip>
       ),
     },
     {
@@ -168,13 +173,6 @@ export default function StudentTransactionsPage({ params }: Props) {
       />
 
       <div className="flex flex-col overflow-hidden rounded-2xl bg-primary shadow-xs ring-1 ring-secondary">
-        {data && data.count && (
-          <div className="flex items-center justify-end border-b border-secondary px-5 py-3">
-            <span className="text-sm text-tertiary tabular-nums">
-              Jami: {data.count} ta tranzaksiya
-            </span>
-          </div>
-        )}
         <div className="p-5">
           <DataTable
             ariaLabel="Tranzaksiyalar"
@@ -184,11 +182,14 @@ export default function StudentTransactionsPage({ params }: Props) {
             isLoading={data === undefined}
             emptyTitle="Tranzaksiyalar yo'q"
             emptyDescription="Bu talabaga hali hech qanday ball amali bajarilmagan."
-            pagination={
-              data && data.count && data.count > 20
-                ? { page, total: Math.ceil((data.count || 1) / 20), onPageChange: setPage }
-                : undefined
-            }
+            pagination={{
+              page: page,
+              total: Math.ceil((data?.count ?? data?.pagination?.total_items ?? 0) / 20) || 1,
+              onPageChange: setPage,
+              showRange: true,
+              totalItems: data?.count ?? data?.pagination?.total_items ?? 0,
+              pageSize: 20,
+            }}
           />
         </div>
       </div>

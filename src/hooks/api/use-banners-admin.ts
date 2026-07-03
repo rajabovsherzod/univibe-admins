@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { api } from "@/lib/api/api-client";
 import { API_CONFIG } from "@/lib/api/config";
 import type {
@@ -38,6 +38,7 @@ export function useBannersList(page = 1, pageSize = 20) {
       );
       return response;
     },
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -61,8 +62,8 @@ export function useCreateBanner() {
       if (data.status) formData.append('status', data.status);
       if (data.is_active !== undefined) formData.append('is_active', data.is_active.toString());
       if (data.display_order !== undefined) formData.append('display_order', data.display_order.toString());
-      if (data.start_at) formData.append('start_at', data.start_at);
-      if (data.end_at) formData.append('end_at', data.end_at);
+      if (data.start_at !== undefined) formData.append('start_at', data.start_at);
+      if (data.end_at !== undefined) formData.append('end_at', data.end_at);
       
       // Append image files
       formData.append('image', data.image);
@@ -114,8 +115,8 @@ export function useUpdateBanner() {
       if (data.status) formData.append('status', data.status);
       if (data.is_active !== undefined) formData.append('is_active', data.is_active.toString());
       if (data.display_order !== undefined) formData.append('display_order', data.display_order.toString());
-      if (data.start_at) formData.append('start_at', data.start_at);
-      if (data.end_at) formData.append('end_at', data.end_at);
+      if (data.start_at !== undefined) formData.append('start_at', data.start_at);
+      if (data.end_at !== undefined) formData.append('end_at', data.end_at);
       
       const response = await api.patch<BannerManagement>(
         API_CONFIG.endpoints.banners.manage.update(publicId),

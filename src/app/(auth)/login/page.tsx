@@ -48,123 +48,164 @@ export default function LoginPage() {
     loginMutation.mutate(data);
   };
 
-  const HEADER_OFFSET = 80;
-
   return (
-    <section
-      className="relative flex flex-col items-center justify-center bg-primary px-4"
-      style={{ minHeight: `calc(100svh - ${HEADER_OFFSET}px)` }}
-    >
+    <section className="relative flex min-h-screen bg-primary">
+      {/* Left Side - Visual/Marketing */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-brand-600 overflow-hidden items-center justify-center p-12">
+        {/* Subtle Decorative Elements */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+          <div className="absolute -top-[10%] -left-[10%] w-[60%] h-[60%] rounded-full bg-white opacity-5 blur-[100px]" />
+          <div className="absolute -bottom-[20%] -right-[10%] w-[80%] h-[80%] rounded-full bg-brand-900 opacity-20 blur-[120px]" />
+          <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] rounded-full bg-brand-400 opacity-20 blur-[80px]" />
+        </div>
 
-      <div className="mx-auto flex w-full max-w-md flex-col gap-6 pt-10 pb-8 md:pt-12">
-        {/* Header */}
-        <div className="flex flex-col items-center gap-4 text-center">
-          <div className="flex items-center justify-center">
-            <Image
-              src="/icon.svg"
-              alt="Univibe Logo"
-              width={80}
-              height={80}
-              unoptimized
-              className="h-20 w-auto"
+        <div className="relative z-10 flex flex-col items-center justify-center text-white w-full max-w-lg text-center">
+          {/* The SVG */}
+          <div className="relative w-full max-w-[480px] aspect-square mb-8 transition-transform duration-700 hover:scale-105">
+            <Image 
+              src="/register/login.svg" 
+              alt="Login Visual" 
+              fill 
+              className="object-contain drop-shadow-2xl" 
+              priority
             />
           </div>
+          
+          <div className="flex flex-col gap-4">
+            <h2 className="text-display-md font-bold tracking-tight text-white leading-tight">
+              Univibe Boshqaruv Paneli
+            </h2>
+            <p className="text-brand-100 text-lg font-medium max-w-md mx-auto leading-relaxed">
+              Universitetingizni zamonaviy va raqamli usulda boshqaring. Barcha jarayonlar endi bitta joyda.
+            </p>
+          </div>
+        </div>
+      </div>
 
-          <div className="flex flex-col gap-1.5">
-            <h1 className="text-display-xs font-semibold text-primary md:text-display-sm">
+      {/* Right Side - Form */}
+      <div className="flex w-full lg:w-1/2 flex-col items-center justify-center px-6 py-12 sm:px-8 lg:px-12 bg-primary">
+        <div className="w-full max-w-[440px] flex flex-col gap-10">
+          
+          {/* Header */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center justify-center bg-brand-50 p-2.5 rounded-xl shadow-xs border border-brand-100">
+                <Image
+                  src="/icon.svg"
+                  alt="Univibe Logo"
+                  width={32}
+                  height={32}
+                  unoptimized
+                  className="h-8 w-auto"
+                />
+              </div>
+              <span className="text-2xl font-bold tracking-tight text-primary">Univibe</span>
+            </div>
+            <h1 className="text-display-xs font-bold text-primary md:text-display-sm tracking-tight">
               Tizimga kirish
             </h1>
-          </div>
-        </div>
-
-        {/* Card */}
-        <div className="rounded-2xl bg-card-primary p-6 shadow-xs-skeumorphic ring-1 ring-primary ring-inset md:p-7">
-
-          {/* Role Tabs */}
-          <div className="mb-6">
-            <Tabs
-              selectedKey={selectedRole}
-              onSelectionChange={handleRoleChange}
-              className="w-full"
-            >
-              <Tabs.List fullWidth type="button-brand" items={ROLE_TABS}>
-                {(item) => <Tabs.Item id={item.id}>{item.label}</Tabs.Item>}
-              </Tabs.List>
-            </Tabs>
+            <p className="text-tertiary text-md">
+              Boshqaruv paneliga kirish uchun ma'lumotlaringizni kiriting.
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
-
-            {/* Inputs */}
-            <div className="flex flex-col gap-4">
-              <Controller
-                control={control}
-                name="email"
-                render={({ field }) => (
-                  <Input
-                    label="Email"
-                    type="email"
-                    placeholder="admin@univibe.uz"
-                    value={field.value}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    isDisabled={loginMutation.isPending}
-                    isInvalid={!!errors.email}
-                    hint={errors.email?.message}
-                    autoComplete="email"
-                  />
-                )}
-              />
-
-              <Controller
-                control={control}
-                name="password"
-                render={({ field }) => (
-                  <Input
-                    label="Parol"
-                    type="password"
-                    placeholder="••••••••"
-                    value={field.value}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    isDisabled={loginMutation.isPending}
-                    isInvalid={!!errors.password}
-                    hint={errors.password?.message}
-                    autoComplete="current-password"
-                  />
-                )}
-              />
-            </div>
-
-            {/* Forgot Password Link only */}
-            <div className="flex items-center justify-end">
-              <Link
-                href="/forgot-password"
-                className="text-sm font-semibold text-brand-secondary hover:text-brand-secondary_hover transition-colors outline-none focus-visible:ring-2 focus-visible:ring-brand-solid rounded"
-                tabIndex={0}
+          <div className="flex flex-col gap-6">
+            {/* Role Tabs */}
+            <div className="p-1 bg-secondary rounded-xl ring-1 ring-inset ring-secondary shadow-sm">
+              <Tabs
+                selectedKey={selectedRole}
+                onSelectionChange={handleRoleChange}
+                className="w-full"
               >
-                Parolni unutdingizmi?
-              </Link>
+                <Tabs.List fullWidth type="button-brand" items={ROLE_TABS} className="w-full">
+                  {(item) => <Tabs.Item id={item.id} className="py-2.5 text-sm font-semibold">{item.label}</Tabs.Item>}
+                </Tabs.List>
+              </Tabs>
             </div>
 
-            {/* Submit */}
-            <Button
-              type="submit"
-              color="primary"
-              size="lg"
-              isDisabled={loginMutation.isPending}
-              isLoading={loginMutation.isPending}
-              className="w-full"
-            >
-              {loginMutation.isPending ? "Kirish..." : "Kirish"}
-            </Button>
-          </form>
+            {/* Form */}
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5 mt-2">
+              <div className="flex flex-col gap-5">
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field }) => (
+                    <Input
+                      label="Email manzil"
+                      type="email"
+                      placeholder="admin@univibe.uz"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      isDisabled={loginMutation.isPending}
+                      isInvalid={!!errors.email}
+                      hint={errors.email?.message}
+                      autoComplete="email"
+                      className="transition-all duration-200"
+                    />
+                  )}
+                />
+
+                <Controller
+                  control={control}
+                  name="password"
+                  render={({ field }) => (
+                    <Input
+                      label="Parol"
+                      type="password"
+                      placeholder="••••••••"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      isDisabled={loginMutation.isPending}
+                      isInvalid={!!errors.password}
+                      hint={errors.password?.message}
+                      autoComplete="current-password"
+                      className="transition-all duration-200"
+                    />
+                  )}
+                />
+              </div>
+
+              {/* Forgot Password Link */}
+              <div className="flex items-center justify-between mt-1">
+                <div className="flex items-center gap-2">
+                   {/* Placeholder for remember me checkbox if needed */}
+                </div>
+                <Link
+                  href="/forgot-password"
+                  className="text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-brand-500 rounded px-1 -mx-1"
+                  tabIndex={0}
+                >
+                  Parolni unutdingizmi?
+                </Link>
+              </div>
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                color="primary"
+                size="lg"
+                isDisabled={loginMutation.isPending}
+                isLoading={loginMutation.isPending}
+                className="w-full mt-2 py-3 text-base font-semibold shadow-md hover:shadow-lg transition-all"
+              >
+                {loginMutation.isPending ? "Tizimga kirilmoqda..." : "Kirish"}
+              </Button>
+            </form>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-2 flex items-center justify-start">
+            <p className="text-sm text-tertiary">
+              Hali hisobingiz yo&apos;qmi?{" "}
+              <span className="text-brand-600 font-semibold hover:text-brand-700 cursor-pointer transition-colors">
+                Administratorga murojaat qiling.
+              </span>
+            </p>
+          </div>
+          
         </div>
-
-        <p className="text-center text-sm text-tertiary">
-          Hali hisobingiz yo&apos;qmi? <span className="text-brand-solid font-medium">Administratorga murojaat qiling.</span>
-        </p>
-
       </div>
     </section>
   );

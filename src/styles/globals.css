@@ -22,6 +22,22 @@
     scrollbar-width: none; /* Firefox */
 }
 
+/* Global scrollbar — 2px, brand blue */
+::-webkit-scrollbar {
+    width: 2px;
+    height: 2px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #0072b0;
+    border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #005a8c;
+}
+
 @utility transition-inherit-all {
     transition-property: inherit;
     transition-duration: inherit;

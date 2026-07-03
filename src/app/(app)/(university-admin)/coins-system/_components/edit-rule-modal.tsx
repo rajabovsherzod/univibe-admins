@@ -1,7 +1,7 @@
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Edit05 } from "@untitledui/icons";
+import { Edit05, Minus, Plus } from "@untitledui/icons";
 
 import { useUpdateCoinRule } from "@/hooks/api/use-coins";
 import { useJobPositions } from "@/hooks/api/use-job-positions";
@@ -10,19 +10,12 @@ import type { UpdateCoinRuleInput } from "@/lib/validations/coins";
 import type { CoinRule } from "@/lib/api/types";
 
 import { PremiumFormModal } from "@/components/application/modals/premium-modal";
-import { MultiSelect } from "@/components/base/select/multi-select";
 import { Input } from "@/components/base/input/input";
 import { TextArea } from "@/components/base/textarea/textarea";
 import { Button } from "@/components/base/buttons/button";
-import type { Key } from "react-aria-components";
 
 export function EditRuleModal({ item, onClose }: { item: CoinRule; onClose: () => void }) {
   const updateMutation = useUpdateCoinRule();
-  const { data: jobPositions, isLoading: jobsLoading } = useJobPositions();
-
-  const initialPositions = item.allowed_job_positions
-    ? item.allowed_job_positions.split(",").map(s => s.trim()).filter(Boolean)
-    : [];
 
   const {
     handleSubmit,
@@ -34,7 +27,7 @@ export function EditRuleModal({ item, onClose }: { item: CoinRule; onClose: () =
     defaultValues: {
       name: item.name,
       description: item.description,
-      allowed_job_position_public_ids: initialPositions,
+      coin_amount: item.coin_amount,
     },
   });
 
@@ -48,12 +41,9 @@ export function EditRuleModal({ item, onClose }: { item: CoinRule; onClose: () =
     }
   };
 
-  const jobPositionItems = (jobPositions || []).map((pos) => ({
-    id: pos.public_id,
-    label: pos.name,
-  }));
-
   const isFormLoading = isSubmitting || updateMutation.isPending;
+
+  const isUsed = item.usage_count > 0;
 
   return (
     <PremiumFormModal
@@ -62,7 +52,7 @@ export function EditRuleModal({ item, onClose }: { item: CoinRule; onClose: () =
         if (!open) onClose();
       }}
       title="Qoidani tahrirlash"
-      description="Coin miqdorini ushbu bosqichda tahrirlab bo'lmaydi."
+      description={isUsed ? "Ushbu qoida bo'yicha allaqachon ball berilganligi sababli, uning miqdorini tahrirlab bo'lmaydi." : "Qoida bo'yicha hali ball berilmagan bo'lsa, uning barcha ma'lumotlarini bemalol tahrirlashingiz mumkin."}
       icon={Edit05}
       iconBgClassName="bg-brand-soft"
       iconClassName="text-brand-solid"
@@ -123,41 +113,35 @@ export function EditRuleModal({ item, onClose }: { item: CoinRule; onClose: () =
           )}
         />
 
-        <Input
-          label="Coin miqdori"
-          value={String(item.coin_amount)}
-          isDisabled
-          isReadOnly
-        />
-
-        <div className="flex flex-col gap-1.5">
-          <Controller
-            control={control}
-            name="allowed_job_position_public_ids"
-            render={({ field: { value } }) => (
-              <MultiSelect
-                id="job_positions"
-                label="Ruxsat etilgan lavozimlar"
-                selectedKeys={new Set(value)}
-                onSelectionChange={(keys) => {
-                  const arr = Array.from(keys as Iterable<Key>).map(String);
-                  setValue("allowed_job_position_public_ids", arr, {
-                    shouldValidate: true,
-                  });
+        <Controller
+          control={control}
+          name="coin_amount"
+          render={({ field }) => {
+            const isPenalty = item.coin_amount < 0;
+            return (
+              <Input
+                label="Ball miqdori"
+                type="number"
+                icon={isPenalty ? Minus : Plus}
+                iconClassName={isPenalty ? "text-error-solid" : "text-brand-solid"}
+                value={field.value === 0 ? "" : Math.abs(field.value).toString()}
+                onChange={(v) => {
+                  if (v === "") {
+                    field.onChange(0);
+                    return;
+                  }
+                  const val = Math.abs(Number(v));
+                  field.onChange(isPenalty ? -val : val);
                 }}
-                items={jobPositionItems}
-                isInvalid={!!errors.allowed_job_position_public_ids}
-                isDisabled={jobsLoading || isFormLoading}
-                placeholder={jobsLoading ? "Lavozimlar yuklanmoqda..." : "Lavozimni tanlang"}
-              >
-                {(item) => <MultiSelect.Item id={item.id} label={item.label} />}
-              </MultiSelect>
-            )}
-          />
-          {errors.allowed_job_position_public_ids && (
-            <p className="text-xs text-error-primary">{errors.allowed_job_position_public_ids.message}</p>
-          )}
-        </div>
+                onBlur={field.onBlur}
+                isInvalid={!!errors.coin_amount}
+                hint={isUsed ? "Ball berib bo'lingan qoidaning miqdorini tahrirlab bo'lmaydi." : errors.coin_amount?.message}
+                isRequired
+                isDisabled={isUsed}
+              />
+            );
+          }}
+        />
       </form>
     </PremiumFormModal>
   );

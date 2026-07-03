@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/base/buttons/button';
 import { Tooltip } from '@/components/base/tooltip/tooltip';
 import { CheckCircle, XCircle } from '@untitledui/icons';
+import { usePermissions } from '@/hooks/use-permissions';
 
 interface StatusButtonProps {
   order: AdminOrder;
@@ -12,6 +13,7 @@ interface StatusButtonProps {
 
 export function OrderStatusActions({ order, currentStatus }: StatusButtonProps) {
   const { mutate: updateStatus, isPending } = useUpdateOrderStatus();
+  const { can } = usePermissions();
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
 
@@ -44,7 +46,7 @@ export function OrderStatusActions({ order, currentStatus }: StatusButtonProps) 
     );
   };
 
-  if (currentStatus !== 'PENDING') return null;
+  if (currentStatus !== 'PENDING' || !can('market.order.process')) return null;
 
   return (
     <>

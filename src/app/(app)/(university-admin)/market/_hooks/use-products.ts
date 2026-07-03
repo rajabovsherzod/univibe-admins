@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { api } from "@/lib/api/api-client";
 import { API_CONFIG } from "@/lib/api/config";
 
@@ -57,6 +57,7 @@ export function useProducts(params: ProductListParams = {}) {
       return raw;
     },
     staleTime: 1000 * 60 * 2,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -65,6 +66,15 @@ export function useCreateProduct() {
   return useMutation({
     mutationFn: (formData: FormData) =>
       api.postFormData<Product>(String(API_CONFIG.endpoints.market.productCreate), formData),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["market-products"] }),
+  });
+}
+
+export function useUpdateProduct() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ publicId, formData }: { publicId: string; formData: FormData }) =>
+      api.patchFormData<Product>(API_CONFIG.endpoints.market.productUpdate(publicId), formData),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["market-products"] }),
   });
 }

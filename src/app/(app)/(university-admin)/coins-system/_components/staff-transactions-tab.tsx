@@ -13,12 +13,18 @@ import { cx } from "@/utils/cx";
 import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { Select } from "@/components/base/select/select";
+import { Tooltip, TooltipTrigger } from "@/components/base/tooltip/tooltip";
 import { IssueCoinModal } from "./issue-coin-modal";
 import { DeleteTransactionModal } from "./delete-transaction-modal";
+import { usePermissions } from "@/hooks/use-permissions";
 
 export function StaffTransactionsTab() {
+  const { can } = usePermissions();
+  const canAward = can("coins.award");
+  const canPenalty = can("coins.penalty");
+  const canDeleteTransaction = can("coins.transaction.delete");
   const [page, setPage] = useState(1);
-  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
+  const [issueModalState, setIssueModalState] = useState<{ isOpen: boolean; type: "reward" | "penalty" }>({ isOpen: false, type: "reward" });
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; amount: number } | null>(null);
 
   const [studentSearch, setStudentSearch] = useState("");
@@ -27,6 +33,7 @@ export function StaffTransactionsTab() {
 
   const { data: studentsData, isLoading: studentsLoading } = useStudents({
     search: studentSearch,
+    status: "approved",
     page_size: 10,
   });
 
@@ -58,7 +65,7 @@ export function StaffTransactionsTab() {
         if (row.transaction_type === "DEDUCTION") {
           Icon = ArrowDownLeft;
           colorClass = "text-error-primary bg-error-soft";
-          label = "Olib tashlandi";
+          label = "Jarima";
         } else if (row.transaction_type === "TRANSFER") {
           Icon = RefreshCcw01;
           colorClass = "text-warning-primary bg-warning-soft";
@@ -91,9 +98,13 @@ export function StaffTransactionsTab() {
       id: "rule",
       header: "Qoida",
       cell: (row) => (
-        <span className="text-sm text-secondary max-w-[200px] truncate block" title={row.coin_rule_name}>
-          {row.coin_rule_name || "—"}
-        </span>
+        <Tooltip title={row.coin_rule_name || ""} delay={200}>
+          <TooltipTrigger className="text-left">
+            <span className="text-sm text-secondary max-w-[200px] truncate block">
+              {row.coin_rule_name || "—"}
+            </span>
+          </TooltipTrigger>
+        </Tooltip>
       ),
     },
     {
@@ -111,7 +122,8 @@ export function StaffTransactionsTab() {
       headClassName: "w-12",
       cellClassName: "w-12",
       cell: (row) => {
-        if (row.transaction_type !== "ISSUANCE") return null;
+        if (row.transaction_type !== "ISSUANCE" && row.transaction_type !== "DEDUCTION") return null;
+        if (!canDeleteTransaction) return null;
         return (
           <button
             className="rounded-lg p-1.5 text-tertiary hover:bg-error-soft hover:text-error-primary transition-colors"
@@ -136,11 +148,20 @@ export function StaffTransactionsTab() {
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center rounded-xl border border-secondary bg-secondary/30 p-4">
         <div>
           <h3 className="text-base font-semibold text-primary">Tranzaksiyalar</h3>
-          <p className="text-sm text-tertiary">Talabani tanlang va uning ball tarixini ko&apos;ring yoki yangi ball bering</p>
+          <p className="text-sm text-tertiary">Talabani tanlang va uning ball tarixini ko&apos;ring yoki yangi amaliyot yarating</p>
         </div>
-        <Button iconLeading={Plus} onClick={() => setIsIssueModalOpen(true)} className="w-full sm:w-auto">
-          Ball berish
-        </Button>
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+          {canAward && (
+            <Button iconLeading={Plus} onClick={() => setIssueModalState({ isOpen: true, type: "reward" })} className="w-full sm:w-auto">
+              Ball berish
+            </Button>
+          )}
+          {canPenalty && (
+            <Button color="primary-destructive" iconLeading={Plus} className="w-full sm:w-auto ring-1 ring-error-300 dark:ring-error-700 shadow-xs" onClick={() => setIssueModalState({ isOpen: true, type: "penalty" })}>
+              Jarima
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Table card */}
@@ -192,29 +213,31 @@ export function StaffTransactionsTab() {
               ? "Bu talabaga hali hech qanday ball amali bajarilmagan."
               : "Tranzaksiyalarni ko'rish uchun yuqoridan talaba tanlang."
           }
+          pagination={
+            selectedStudentId
+              ? {
+                  page: page,
+                  total: Math.ceil((data?.count ?? data?.pagination?.total_items ?? 0) / 20) || 1,
+                  onPageChange: setPage,
+                  showRange: true,
+                  totalItems: data?.count ?? data?.pagination?.total_items ?? 0,
+                  pageSize: 20,
+                }
+              : undefined
+          }
         />
-
-        {data && data.count && data.count > 20 && selectedStudentId && (
-          <div className="flex items-center justify-between border-t border-secondary px-5 py-3">
-            <span className="text-sm text-tertiary">Jami: {data.count} ta</span>
-            <div className="flex items-center gap-2">
-              <Button size="sm" color="secondary" onClick={() => setPage((p) => Math.max(1, p - 1))} isDisabled={page === 1}>←</Button>
-              <span className="text-sm text-secondary tabular-nums px-1">{page}</span>
-              <Button size="sm" color="secondary" onClick={() => setPage((p) => p + 1)} isDisabled={page * 20 >= (data.count || 0)}>→</Button>
-            </div>
-          </div>
-        )}
       </div>
 
-      {isIssueModalOpen && (
+      {issueModalState.isOpen && (
         <IssueCoinModal
-          isOpen={isIssueModalOpen}
-          onClose={() => setIsIssueModalOpen(false)}
+          isOpen={issueModalState.isOpen}
+          onClose={() => setIssueModalState({ isOpen: false, type: "reward" })}
           preselectedStudent={
             selectedStudentId && selectedStudentName
               ? { id: selectedStudentId, name: selectedStudentName }
               : undefined
           }
+          ruleType={issueModalState.type}
         />
       )}
 

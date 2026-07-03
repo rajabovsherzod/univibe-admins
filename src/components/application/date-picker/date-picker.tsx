@@ -23,8 +23,8 @@ interface DatePickerProps extends AriaDatePickerProps<DateValue> {
 
 export const DatePicker = ({ value: valueProp, defaultValue, onChange, onApply, onCancel, placeholder, ...props }: DatePickerProps) => {
     const formatter = useDateFormatter({
-        month: "short",
-        day: "numeric",
+        day: "2-digit",
+        month: "2-digit",
         year: "numeric",
     });
     const [value, setValue] = useControlledState(valueProp, defaultValue || null, onChange);
@@ -71,7 +71,7 @@ export const DatePicker = ({ value: valueProp, defaultValue, onChange, onApply, 
                                         close();
                                     }}
                                 >
-                                    Cancel
+                                    Bekor qilish
                                 </Button>
                                 <Button
                                     size="md"
@@ -81,7 +81,7 @@ export const DatePicker = ({ value: valueProp, defaultValue, onChange, onApply, 
                                         close();
                                     }}
                                 >
-                                    Apply
+                                    Tasdiqlash
                                 </Button>
                             </div>
                         </>

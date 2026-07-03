@@ -61,8 +61,7 @@ export function PageHeaderPro({
     <div
       className={cx(
         "overflow-hidden rounded-xl bg-primary",
-        "shadow-[0_4px_20px_-2px_rgba(16,24,40,0.14),0_2px_6px_-2px_rgba(16,24,40,0.08)]",
-        "dark:shadow-[0_4px_20px_-2px_rgba(0,0,0,0.45),0_2px_6px_-2px_rgba(0,0,0,0.28)]",
+        "shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15),0_4px_12px_-2px_rgba(0,0,0,0.1)]",
         "ring-1 ring-secondary",
         className
       )}

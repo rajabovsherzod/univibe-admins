@@ -10,6 +10,7 @@ import { useUpdateStudentStatus } from "@/hooks/api/use-students";
 import { toHttps } from "@/utils/cx";
 import { toast } from "sonner";
 import { useState } from "react";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface StudentDetailsModalProps {
   isOpen: boolean;
@@ -20,6 +21,8 @@ interface StudentDetailsModalProps {
 
 export function StudentDetailsModal({ isOpen, onClose, student, onSuccess }: StudentDetailsModalProps) {
   const { mutateAsync: updateStatus } = useUpdateStudentStatus();
+  const { can } = usePermissions();
+  const canReview = can("students.applications.review");
   const [loadingAction, setLoadingAction] = useState<"approve" | "reject" | null>(null);
 
   const handleStatusChange = async (status: "approved" | "rejected") => {
@@ -62,25 +65,30 @@ export function StudentDetailsModal({ isOpen, onClose, student, onSuccess }: Stu
           >
             Yopish
           </Button>
-          <Button
-            color="primary-destructive"
-            iconLeading={XCircle}
-            onClick={() => handleStatusChange("rejected")}
-            isLoading={loadingAction === "reject"}
-            isDisabled={loadingAction !== null}
-          >
-            Rad etish
-          </Button>
-          <Button
-            color="primary"
-            iconLeading={CheckCircle}
-            onClick={() => handleStatusChange("approved")}
-            isLoading={loadingAction === "approve"}
-            isDisabled={loadingAction !== null}
-            className="bg-success-solid hover:bg-success-solid_hover text-white ring-0 shadow-xs"
-          >
-            Tasdiqlash
-          </Button>
+          {canReview && (
+            <>
+              <Button
+                color="primary-destructive"
+                iconLeading={XCircle}
+                onClick={() => handleStatusChange("rejected")}
+                isLoading={loadingAction === "reject"}
+                isDisabled={loadingAction !== null}
+                className="*:data-icon:!text-white"
+              >
+                Rad etish
+              </Button>
+              <Button
+                color="primary"
+                iconLeading={CheckCircle}
+                onClick={() => handleStatusChange("approved")}
+                isLoading={loadingAction === "approve"}
+                isDisabled={loadingAction !== null}
+                className="bg-success-600 hover:bg-success-700 text-white ring-0 shadow-xs *:data-icon:!text-white"
+              >
+                Tasdiqlash
+              </Button>
+            </>
+          )}
         </div>
       }
     >

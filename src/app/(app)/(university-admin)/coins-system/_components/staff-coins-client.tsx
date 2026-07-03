@@ -1,59 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { DataTable } from "@/components/application/table/data-table";
-import type { DataTableColumn } from "@/components/application/table/data-table";
-import { useCoinRules } from "@/hooks/api/use-coins";
-import type { CoinRule } from "@/lib/api/types";
+import { Fragment, useState, Suspense } from "react";
 import { PageHeaderPro } from "@/components/application/page-header/page-header-pro";
 import { CoinOutlineIcon } from "@/components/custom-icons/brand-icon";
+import { cx } from "@/utils/cx";
+import { PremiumTableSkeleton } from "@/components/application/skeleton/premium-table-skeleton";
+
+import { RulesTab } from "./rules-tab";
 
 export function StaffCoinsClient() {
-  const [page, setPage] = useState(1);
-
-  const { data, isLoading } = useCoinRules({
-    page,
-    page_size: 10,
-    search: undefined,
-    status: "active",
-  });
-
-  const columns: DataTableColumn<CoinRule>[] = [
-    {
-      id: "index",
-      header: "№",
-      headClassName: "w-[50px]",
-      cell: (row, i) => (
-        <span className="text-sm tabular-nums text-tertiary">
-          {(page - 1) * 10 + (i ?? 0) + 1}
-        </span>
-      ),
-    },
-    {
-      id: "name",
-      header: "Qoida nomi",
-      isRowHeader: true,
-      cell: (row) => (
-        <div className="flex flex-col">
-          <span className="text-sm font-medium text-primary">{row.name}</span>
-          <span className="text-xs text-tertiary truncate max-w-[200px]">
-            {row.description}
-          </span>
-        </div>
-      ),
-    },
-    {
-      id: "amount",
-      header: "Miqdori",
-      cell: (row) => (
-        <div className="flex items-center gap-1.5 text-brand-solid">
-          <span className="text-sm font-semibold">{row.coin_amount}</span>
-          <CoinOutlineIcon size={18} color="currentColor" strokeWidth={22} />
-        </div>
-      ),
-    },
-  ];
-
   return (
     <div className="flex flex-col gap-6">
       <PageHeaderPro
@@ -62,24 +17,17 @@ export function StaffCoinsClient() {
           { label: "Ballar tizimi" },
         ]}
         title="Ballar tizimi"
-        subtitle="Siz amalga oshirishingiz mumkin bo'lgan mavjud ball berish qoidalari."
+        subtitle="Siz amalga oshirishingiz mumkin bo'lgan mavjud ball berish qoidalari va tranzaksiyalar."
         icon={CoinOutlineIcon}
       />
 
-      <DataTable
-        ariaLabel="Coin qoidalari"
-        data={data?.results || []}
-        columns={columns}
-        rowKey="public_id"
-        isLoading={isLoading || !data}
-        emptyTitle="Qoidalar topilmadi"
-        emptyDescription="Hozircha hech qanday coin qoidasi mavjud emas."
-        pagination={{
-          page: page,
-          total: Math.ceil((data?.count || 0) / 10) || 1,
-          onPageChange: setPage,
-        }}
-      />
+      <div className="flex flex-col overflow-hidden rounded-2xl bg-primary shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15),0_4px_12px_-2px_rgba(0,0,0,0.1)] ring-1 ring-secondary">
+        <div className="p-5 min-h-[400px]">
+          <Suspense fallback={<PremiumTableSkeleton rows={5} />}>
+            <RulesTab />
+          </Suspense>
+        </div>
+      </div>
     </div>
   );
 }

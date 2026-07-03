@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { api } from '@/lib/api/api-client';
 import { API_CONFIG } from '@/lib/api/config';
 
@@ -51,7 +51,10 @@ export interface UpdateOrderStatusInput {
 
 // ── Hooks ──────────────────────────────────────────────────────────────────
 
-export function useAdminOrders(filters: OrdersFilters = {}) {
+export function useAdminOrders(
+  filters: OrdersFilters = {},
+  options?: { enabled?: boolean }
+) {
   return useQuery<OrdersResponse>({
     queryKey: ['market-orders-admin', filters],
     queryFn: async () => {
@@ -66,6 +69,12 @@ export function useAdminOrders(filters: OrdersFilters = {}) {
       );
       return data;
     },
+    // Callers that lack `market.order.view` (e.g. the sidebar badge for a staff
+    // member without that grant) pass `enabled: false` so the request is never
+    // fired — no needless 403, no toast, no crash. Defaults to on for the
+    // orders page itself, which is already permission-gated by the route.
+    enabled: options?.enabled ?? true,
+    placeholderData: keepPreviousData,
   });
 }
 

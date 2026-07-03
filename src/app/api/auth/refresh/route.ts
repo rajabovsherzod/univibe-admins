@@ -5,6 +5,9 @@ import { API_CONFIG } from "@/lib/api/config";
 
 // Must match auth.ts
 const ACCESS_TOKEN_LIFETIME_MS = 14 * 60 * 1000;
+// Must match the app-scoped cookie name in auth.ts.
+const IS_SECURE = process.env.NODE_ENV === "production";
+const COOKIE_NAME = IS_SECURE ? "__Secure-univibe-admin.session-token" : "univibe-admin.session-token";
 
 /**
  * POST /api/auth/refresh
@@ -20,7 +23,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
   }
 
-  const token = await getToken({ req: request, secret });
+  const token = await getToken({ req: request, secret, cookieName: COOKIE_NAME, secureCookie: IS_SECURE });
 
   if (!token?.refreshToken) {
     return NextResponse.json({ error: "No refresh token" }, { status: 401 });
@@ -52,11 +55,14 @@ export async function POST(request: NextRequest) {
       error: undefined,
     };
 
-    // JWT cookie nomini aniqlash (prod'da secure prefix bo'ladi)
+    // JWT cookie nomini aniqlash (prod'da secure prefix bo'ladi).
+    // MUHIM: auth.ts dagi app-scoped nom bilan bir xil bo'lishi shart
+    // (`univibe-admin.session-token`) — aks holda student app cookie'si bilan
+    // aralashib ketadi.
     const isSecure = process.env.NODE_ENV === "production";
     const cookieName = isSecure
-      ? "__Secure-next-auth.session-token"
-      : "next-auth.session-token";
+      ? "__Secure-univibe-admin.session-token"
+      : "univibe-admin.session-token";
 
     // Yangi JWT'ni encode qilish
     const encodedToken = await encode({

@@ -10,6 +10,7 @@ import { useAuditTransactions } from "@/hooks/api/use-coins";
 import type { AuditTransaction } from "@/lib/api/types";
 import { cx } from "@/utils/cx";
 import { Select } from "@/components/base/select/select";
+import { Tooltip, TooltipTrigger } from "@/components/base/tooltip/tooltip";
 import type { Key } from "react-aria-components";
 
 export function TransactionsTab() {
@@ -81,6 +82,15 @@ export function TransactionsTab() {
       ),
     },
     {
+      id: "student",
+      header: "Talaba",
+      cell: (row) => (
+        <div className="flex flex-col">
+          <span className="text-sm font-medium text-primary">{row.student_name || "—"}</span>
+        </div>
+      ),
+    },
+    {
       id: "staff",
       header: "Kim berdi (Xodim)",
       cell: (row) => (
@@ -91,9 +101,13 @@ export function TransactionsTab() {
       id: "rule",
       header: "Qoida",
       cell: (row) => (
-        <span className="text-sm text-secondary max-w-[200px] truncate block" title={row.coin_rule_name}>
-          {row.coin_rule_name || "—"}
-        </span>
+        <Tooltip title={row.coin_rule_name || ""} delay={200}>
+          <TooltipTrigger className="text-left">
+            <span className="text-sm text-secondary max-w-[200px] truncate block">
+              {row.coin_rule_name || "—"}
+            </span>
+          </TooltipTrigger>
+        </Tooltip>
       ),
     },
     {
@@ -137,8 +151,11 @@ export function TransactionsTab() {
         emptyDescription="Hozircha hech qanday coin amaliyoti bajarilmagan."
         pagination={{
           page: page,
-          total: Math.ceil((data?.count || 0) / 20) || 1,
+          total: Math.ceil((data?.count ?? data?.pagination?.total_items ?? 0) / 20) || 1,
           onPageChange: setPage,
+          showRange: true,
+          totalItems: data?.count ?? data?.pagination?.total_items ?? 0,
+          pageSize: 20,
         }}
       />
     </div>

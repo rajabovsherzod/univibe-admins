@@ -73,40 +73,37 @@ export function OrdersClient() {
         />
 
         {/* Table card with tabs */}
-        <div className="flex flex-col overflow-hidden rounded-2xl bg-primary shadow-xs ring-1 ring-secondary">
-          {/* Tabs header */}
-          <div className="border-b border-secondary bg-primary px-5 pt-4">
-            <div className="flex w-max items-center gap-4">
-              {tabs.map((tab, idx) => (
-                <Fragment key={String(tab.id)}>
-                  <button
-                    type="button"
-                    onClick={() => handleTabChange(tab.id)}
-                    className={cx(
-                      "flex items-center gap-1.5 pb-3 text-sm transition-all duration-200 outline-none border-b-2 whitespace-nowrap",
-                      activeTab === tab.id
-                        ? "border-brand-solid font-bold text-brand-solid"
-                        : "border-transparent font-medium text-secondary hover:border-border-secondary hover:text-primary"
-                    )}
-                  >
-                    {tab.label}
-                    {tab.id === "PENDING" && pendingCount > 0 && (
-                      <Badge color="brand" size="sm" className="!bg-brand-solid !text-white !ring-brand-solid shadow-sm ml-1">
-                        +{pendingCount}
-                      </Badge>
-                    )}
-                  </button>
-                  {idx < tabs.length - 1 && (
-                    <div className="mb-3 h-4 w-px bg-secondary" />
+        <div className="flex flex-col overflow-hidden rounded-2xl bg-primary shadow-xs ring-1 ring-secondary p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-5">
+            <div className="flex items-center gap-1 p-1 bg-secondary rounded-lg overflow-x-auto w-full sm:w-max">
+              {tabs.map((tab) => (
+                <button
+                  key={String(tab.id)}
+                  type="button"
+                  onClick={() => handleTabChange(tab.id)}
+                  className={cx(
+                    "px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-colors flex-1 sm:flex-none flex items-center justify-center gap-1.5",
+                    activeTab === tab.id
+                      ? "bg-brand-solid text-white shadow-sm"
+                      : "text-tertiary hover:text-secondary"
                   )}
-                </Fragment>
+                >
+                  {tab.label}
+                  {tab.id === "PENDING" && pendingCount > 0 && (
+                    <Badge color={activeTab === "PENDING" ? "gray" : "brand"} size="sm" className={cx(
+                      activeTab === "PENDING" ? "!bg-white/20 !text-white !ring-transparent" : "!bg-brand-solid !text-white !ring-brand-solid",
+                      "shadow-sm ml-1"
+                    )}>
+                      +{pendingCount}
+                    </Badge>
+                  )}
+                </button>
               ))}
             </div>
           </div>
 
           {/* DataTable */}
-          <div className="p-5">
-            <DataTable
+          <DataTable
               ariaLabel="Buyurtmalar jadvali"
               data={orders}
               columns={columns as any}
@@ -120,7 +117,6 @@ export function OrdersClient() {
                 onPageChange: setPage,
               }}
             />
-          </div>
         </div>
       </div>
 

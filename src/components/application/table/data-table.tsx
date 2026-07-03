@@ -181,6 +181,15 @@ export function DataTable<T extends object>({
     return [...data].sort((a, b) => dir * compareValues(getVal(a), getVal(b)));
   }, [data, columns, sortDescriptor]);
 
+  // O(1) row → index lookup, built once per data change. Replaces a per-row
+  // `sortedData.indexOf(row)` that made rendering O(n²) on every table.
+  // MUST live above the early returns below so the hook order stays stable.
+  const rowIndexMap = useMemo(() => {
+    const map = new Map<object, number>();
+    sortedData.forEach((r, i) => map.set(r as object, i));
+    return map;
+  }, [sortedData]);
+
   // Table header component (reusable)
   const TableHeader = () => (
     <Table.Header>
@@ -208,7 +217,7 @@ export function DataTable<T extends object>({
           size={size}
         >
           <TableHeader />
-          <Table.Body items={[]}>
+          <Table.Body items={[]} dependencies={[columns]}>
             {() => null}
           </Table.Body>
         </Table>
@@ -232,7 +241,7 @@ export function DataTable<T extends object>({
           size={size}
         >
           <TableHeader />
-          <Table.Body items={[]}>
+          <Table.Body items={[]} dependencies={[columns]}>
             {() => null}
           </Table.Body>
         </Table>
@@ -254,11 +263,16 @@ export function DataTable<T extends object>({
       >
         <TableHeader />
 
-        <Table.Body items={items}>
+        {/* `dependencies={[columns]}` forces react-aria to re-render every row
+            when the column definitions change. Cell renderers often close over
+            live state (e.g. permissions from usePermissions) — without this,
+            react-aria caches rows by id and a permission change wouldn't show
+            up in-place until the row data itself changed (i.e. a refetch). */}
+        <Table.Body items={items} dependencies={[columns]}>
           {(obj) => {
             const row = obj as T;
             const rawId = (row as any)[rowKey as string];
-            const rowIndex = sortedData.indexOf(row);
+            const rowIndex = rowIndexMap.get(row as object) ?? 0;
 
             // Xatoliklarni oldini olish uchun (masalan duplicate UUID yoki null kelsa, qator index qo'shiladi)
             // Lekin selection ishlatilganda ID lar unique deb faraz olinadi, aks holda selection buziladi

@@ -1,10 +1,20 @@
-import { NextAuthOptions } from "next-auth";
+import { NextAuthOptions, getServerSession, type Session } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { redirect } from "next/navigation";
 import { API_CONFIG } from "./api/config";
 
 const BASE_URL = API_CONFIG.baseURL;
 // Backend access token lives 15 min — refresh at 14 min proactively
 const ACCESS_TOKEN_LIFETIME_MS = 14 * 60 * 1000;
+
+// ── App-scoped cookies ──────────────────────────────────────────────────────
+// Admin and student apps share the same host in dev (localhost:3000 vs :3002);
+// cookies ignore the port, so the default `next-auth.session-token` name is
+// shared between them and their tokens clobber/leak into each other. A distinct
+// cookie name per app keeps the two sessions fully isolated.
+const USE_SECURE_COOKIES = (process.env.NEXTAUTH_URL || "").startsWith("https://");
+const COOKIE_PREFIX = "univibe-admin";
+const securePrefix = USE_SECURE_COOKIES ? "__Secure-" : "";
 
 // ── Type augmentation ──────────────────────────────────────────────────────
 
@@ -18,6 +28,9 @@ declare module "next-auth" {
       full_name: string;
       role: string;
       university_id: string;
+      /** Granted permission codes (staff). Present in the session so the UI
+       * can gate immediately with no fetch / no loading flicker. */
+      permissions: string[];
     };
   }
 
@@ -28,6 +41,7 @@ declare module "next-auth" {
     full_name: string;
     role: string;
     university_id: string;
+    permissions?: string[];
   }
 }
 
@@ -38,6 +52,7 @@ declare module "next-auth/jwt" {
     role: string;
     university_id: string;
     full_name: string;
+    permissions: string[];
     expiresAt?: number;
     error?: string;
   }
@@ -61,6 +76,21 @@ async function refreshAccessToken(
       accessToken: data.access as string,
       expiresAt: Date.now() + ACCESS_TOKEN_LIFETIME_MS,
     };
+  } catch {
+    return null;
+  }
+}
+
+/** Fetch the current staff member's granted permission codes. Used to keep the
+ * session's permissions in sync (on token refresh) without any UI flicker. */
+async function fetchStaffPermissions(accessToken: string): Promise<string[] | null> {
+  try {
+    const res = await fetch(`${BASE_URL}${API_CONFIG.endpoints.staff.me}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return Array.isArray(data?.permissions) ? (data.permissions as string[]) : null;
   } catch {
     return null;
   }
@@ -130,6 +160,7 @@ export const authOptions: NextAuthOptions = {
           role: user.role,
           university_id: user.university_id,
           full_name: user.full_name,
+          permissions: user.permissions ?? [],
           expiresAt: Date.now() + ACCESS_TOKEN_LIFETIME_MS,
           error: undefined,
         };
@@ -144,7 +175,14 @@ export const authOptions: NextAuthOptions = {
       if (token.refreshToken) {
         const refreshed = await refreshAccessToken(token.refreshToken);
         if (refreshed) {
-          return { ...token, ...refreshed, error: undefined };
+          // Re-sync staff permissions so grants/revocations take effect within
+          // one refresh cycle — done here (background) so the UI never flickers.
+          let permissions = token.permissions;
+          if (token.role === "staff") {
+            const fresh = await fetchStaffPermissions(refreshed.accessToken);
+            if (fresh) permissions = fresh;
+          }
+          return { ...token, ...refreshed, permissions, error: undefined };
         }
       }
 
@@ -159,6 +197,7 @@ export const authOptions: NextAuthOptions = {
       session.user.role = token.role;
       session.user.university_id = token.university_id;
       session.user.full_name = token.full_name;
+      session.user.permissions = token.permissions ?? [];
       return session;
     },
   },
@@ -173,5 +212,34 @@ export const authOptions: NextAuthOptions = {
     maxAge: 10 * 24 * 60 * 60, // 10 days — matches refresh token lifetime
   },
 
+  useSecureCookies: USE_SECURE_COOKIES,
+  cookies: {
+    sessionToken: {
+      name: `${securePrefix}${COOKIE_PREFIX}.session-token`,
+      options: { httpOnly: true, sameSite: "lax", path: "/", secure: USE_SECURE_COOKIES },
+    },
+    callbackUrl: {
+      name: `${securePrefix}${COOKIE_PREFIX}.callback-url`,
+      options: { sameSite: "lax", path: "/", secure: USE_SECURE_COOKIES },
+    },
+    csrfToken: {
+      name: `${USE_SECURE_COOKIES ? "__Host-" : ""}${COOKIE_PREFIX}.csrf-token`,
+      options: { httpOnly: true, sameSite: "lax", path: "/", secure: USE_SECURE_COOKIES },
+    },
+  },
+
   debug: false,
 };
+
+/** Server-component guard: returns a session with a live access token, or
+ * redirects to /login. A token refresh failure (e.g. a transient backend
+ * blip) sets `session.error` while leaving the now-dead old access token in
+ * place — checking only `accessToken` truthiness misses that case and lets
+ * pages fetch with a dead token, which surfaces as an opaque 401 downstream. */
+export async function requireSession(): Promise<Session & { accessToken: string }> {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.accessToken || session.error) {
+    redirect("/login");
+  }
+  return session as Session & { accessToken: string };
+}

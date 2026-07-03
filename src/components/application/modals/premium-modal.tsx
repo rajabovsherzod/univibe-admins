@@ -5,7 +5,7 @@ import { Dialog, DialogTrigger, Modal, ModalOverlay } from "@/components/applica
 import { XClose } from "@untitledui/icons";
 import { cx } from "@/utils/cx";
 
-type Size = "sm" | "md" | "lg";
+type Size = "sm" | "md" | "lg" | "xl";
 
 export type PremiumFormModalProps = {
   isOpen: boolean;
@@ -28,6 +28,7 @@ export type PremiumFormModalProps = {
 function sizeClass(size: Size) {
   if (size === "sm") return "sm:max-w-[420px]";
   if (size === "lg") return "sm:max-w-[760px]";
+  if (size === "xl") return "sm:max-w-[900px]";
   return "sm:max-w-[540px]";
 }
 

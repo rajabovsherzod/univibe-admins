@@ -13,8 +13,11 @@ import { getYearLevelColumns } from "./year-level-columns";
 import { CreateYearLevelModal } from "./create-year-level-modal";
 import { EditYearLevelModal } from "./edit-year-level-modal";
 import { DeleteYearLevelModal } from "./delete-year-level-modal";
+import { usePermissions } from "@/hooks/use-permissions";
 
 export default function YearLevelsClientPage() {
+  const { can } = usePermissions();
+  const canManage = can("org.year_levels.manage");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -37,8 +40,8 @@ export default function YearLevelsClientPage() {
   };
 
   const columns = getYearLevelColumns({
-    onEdit: handleEdit,
-    onDelete: handleDelete,
+    onEdit: canManage ? handleEdit : undefined,
+    onDelete: canManage ? handleDelete : undefined,
   });
 
   // Client-side filtering & pagination
@@ -69,14 +72,16 @@ export default function YearLevelsClientPage() {
         }}
         searchPlaceholder="Kurslarni qidirish..."
         actions={
-          <Button
-            color="primary"
-            size="md"
-            iconLeading={Plus}
-            onClick={() => setIsCreateOpen(true)}
-          >
-            Yangi kurs qo'shish
-          </Button>
+          canManage ? (
+            <Button
+              color="primary"
+              size="md"
+              iconLeading={Plus}
+              onClick={() => setIsCreateOpen(true)}
+            >
+              Yangi kurs qo'shish
+            </Button>
+          ) : undefined
         }
       />
 

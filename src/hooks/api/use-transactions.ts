@@ -1,30 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import axios from "axios";
 import { API_CONFIG } from "@/lib/api/config";
+import { apiFetch } from "@/lib/api/query-fetch";
 import type { PaginatedResponse } from "@/lib/api/types";
 
 const ENDPOINTS = API_CONFIG.endpoints.coins;
-
-// Default API Fetcher with Auth
-async function apiFetch(url: string, token: string, options?: { method?: string; body?: any }) {
-  try {
-    const res = await axios({
-      url,
-      method: options?.method || "GET",
-      data: options?.body ? options.body : undefined,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-    return res.data;
-  } catch (error: any) {
-    const errData = error.response?.data || {};
-    const msg = Object.values(errData).flat().join(" ") || `API Xatosi: ${error.response?.status || error.message}`;
-    throw new Error(msg as string);
-  }
-}
 
 // ── 1. Coin Transactions (Staff & Admin) ──────────────────────────────────
 
@@ -93,6 +73,10 @@ export function useIssueCoins() {
       });
       // Also potentially refresh audits
       qc.invalidateQueries({ queryKey: ["audit-transactions"] });
+      qc.invalidateQueries({ queryKey: ["admin-transactions"] });
+      qc.invalidateQueries({ queryKey: ["students"] });
+      qc.invalidateQueries({ queryKey: ["student", variables.student_public_id] });
+      qc.invalidateQueries({ queryKey: ["leaderboard"] });
     },
   });
 }
@@ -120,6 +104,48 @@ export function useDeleteTransaction() {
       qc.invalidateQueries({ queryKey: ["coin-transactions"] });
       qc.invalidateQueries({ queryKey: ["deletion-audits"] });
       qc.invalidateQueries({ queryKey: ["audit-transactions"] });
+      qc.invalidateQueries({ queryKey: ["admin-transactions"] });
+      qc.invalidateQueries({ queryKey: ["students"] });
+      qc.invalidateQueries({ queryKey: ["leaderboard"] });
     },
+  });
+}
+
+// ── 4. Admin Transactions (Staff & Admin) ─────────────────────────────────
+
+export interface AdminTransactionsParams {
+  staff_public_id?: string;
+  student_public_id?: string;
+  coin_rule_public_id?: string;
+  date_from?: string;
+  date_to?: string;
+  transaction_type?: string;
+  page?: number;
+  page_size?: number;
+}
+
+export function useAdminTransactions(params: AdminTransactionsParams) {
+  const { data: session } = useSession();
+
+  const queryParams = new URLSearchParams();
+  if (params.staff_public_id) queryParams.set("staff_public_id", params.staff_public_id);
+  if (params.student_public_id) queryParams.set("student_public_id", params.student_public_id);
+  if (params.coin_rule_public_id) queryParams.set("coin_rule_public_id", params.coin_rule_public_id);
+  if (params.date_from) queryParams.set("date_from", params.date_from);
+  if (params.date_to) queryParams.set("date_to", params.date_to);
+  if (params.transaction_type) queryParams.set("transaction_type", params.transaction_type);
+  if (params.page) queryParams.set("page", params.page.toString());
+  if (params.page_size) queryParams.set("page_size", params.page_size.toString());
+
+  const queryString = `?${queryParams.toString()}`;
+
+  return useQuery<PaginatedResponse<Transaction>>({
+    queryKey: ["admin-transactions", params],
+    queryFn: () =>
+      apiFetch(
+        `${API_CONFIG.baseURL}${ENDPOINTS.auditTransactions}${queryString}`,
+        session?.accessToken as string
+      ),
+    enabled: !!session?.accessToken,
   });
 }

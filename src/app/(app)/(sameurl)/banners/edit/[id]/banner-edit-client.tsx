@@ -15,6 +15,8 @@ import * as z from "zod";
 
 import { BannerImageSection } from "../../create/BannerImageSection";
 import { BannerFormFields } from "../../create/BannerFormFields";
+import { usePermissions } from "@/hooks/use-permissions";
+import { NoPermissionState } from "@/components/application/no-permission-state/no-permission-state";
 
 // Validation schema
 const bannerSchema = z.object({
@@ -39,6 +41,7 @@ interface BannerEditClientProps {
 export default function BannerEditClient({ publicId, initialBanner }: BannerEditClientProps) {
   const router = useRouter();
   const updateMutation = useUpdateBanner();
+  const { can, isLoading: permissionsLoading } = usePermissions();
 
   // Client-side fallback: fetch if SSR returned null
   const { data: clientBanner, isLoading: isClientLoading } = useBannerDetail(publicId);
@@ -122,6 +125,14 @@ export default function BannerEditClient({ publicId, initialBanner }: BannerEdit
   };
 
   const isPending = isSubmitting || updateMutation.isPending;
+
+  if (permissionsLoading) return null;
+  // Creators may edit their own banners; managers may edit all. The backend
+  // enforces per-banner ownership on save; here we only block staff with no
+  // banner-management permission at all.
+  if (!can('banners.create') && !can('banners.manage')) {
+    return <NoPermissionState description="Bannerlarni boshqarish uchun sizda ruxsat yo'q." />;
+  }
 
   // Loading state (only if SSR returned null and client is still loading)
   if (!banner && isClientLoading) {

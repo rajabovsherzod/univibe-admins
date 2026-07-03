@@ -6,7 +6,7 @@ import { cx } from "@/utils/cx";
 import { Button } from "@/components/base/buttons/button";
 import { ModalOverlay, Modal, Dialog } from "react-aria-components";
 
-type Size = "sm" | "md" | "lg";
+type Size = "sm" | "md" | "lg" | "xl";
 
 export type PremiumFormModalProps = {
   isOpen: boolean;
@@ -37,6 +37,7 @@ const sizes: Record<Size, string> = {
   sm: "max-w-[440px]",
   md: "max-w-[520px]",
   lg: "max-w-[640px]",
+  xl: "max-w-[800px]",
 };
 
 export function PremiumFormModal({

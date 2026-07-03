@@ -14,8 +14,8 @@ export function getDegreeLevelColumns({
 }: {
   page: number;
   pageSize: number;
-  onEdit: (item: DegreeLevel) => void;
-  onDelete: (item: DegreeLevel) => void;
+  onEdit?: (item: DegreeLevel) => void;
+  onDelete?: (item: DegreeLevel) => void;
 }): DataTableColumn<DegreeLevel>[] {
   return [
     {
@@ -51,20 +51,24 @@ export function getDegreeLevelColumns({
       cellClassName: "px-3 py-3.5",
       cell: (row) => (
         <div className="flex items-center justify-end gap-1">
-          <Button
-            color="tertiary"
-            size="sm"
-            iconLeading={Edit05}
-            onClick={() => onEdit(row)}
-            aria-label="Tahrirlash"
-          />
-          <Button
-            color="tertiary-destructive"
-            size="sm"
-            iconLeading={Trash01}
-            onClick={() => onDelete(row)}
-            aria-label="O'chirish"
-          />
+          {onEdit && (
+            <Button
+              color="tertiary"
+              size="sm"
+              iconLeading={Edit05}
+              onClick={() => onEdit(row)}
+              aria-label="Tahrirlash"
+            />
+          )}
+          {onDelete && (
+            <Button
+              color="tertiary-destructive"
+              size="sm"
+              iconLeading={Trash01}
+              onClick={() => onDelete(row)}
+              aria-label="O'chirish"
+            />
+          )}
         </div>
       ),
     },

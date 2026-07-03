@@ -1,33 +1,18 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { API_CONFIG } from "@/lib/api/config";
+import { apiFetch } from "@/lib/api/query-fetch";
 import type { Student, PaginatedResponse } from "@/lib/api/types";
 
 const ENDPOINTS = API_CONFIG.endpoints.students;
 
-async function apiFetch(url: string, token: string, options?: { method?: string; body?: any }) {
-  try {
-    const res = await axios({
-      url,
-      method: options?.method || "GET",
-      data: options?.body ? options.body : undefined,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-    return res.data;
-  } catch (error: any) {
-    const errData = error.response?.data || {};
-    const msg = Object.values(errData).flat().join(" ") || `API Xatosi: ${error.response?.status || error.message}`;
-    throw new Error(msg as string);
-  }
-}
-
 interface StudentsParams {
   status?: string;
   search?: string;
+  faculty_id?: string;
+  year_level_id?: string;
+  gender?: string;
   page?: number;
   page_size?: number;
 }
@@ -38,6 +23,9 @@ export function useStudents(params: StudentsParams = {}) {
   const queryParams = new URLSearchParams();
   if (params.status) queryParams.set("status", params.status);
   if (params.search) queryParams.set("search", params.search);
+  if (params.faculty_id) queryParams.set("faculty_id", params.faculty_id);
+  if (params.year_level_id) queryParams.set("year_level_id", params.year_level_id);
+  if (params.gender) queryParams.set("gender", params.gender);
   if (params.page) queryParams.set("page", params.page.toString());
   if (params.page_size) queryParams.set("page_size", params.page_size.toString());
 
@@ -51,6 +39,41 @@ export function useStudents(params: StudentsParams = {}) {
         session?.accessToken as string
       ),
     enabled: !!session?.accessToken,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useInfiniteStudents(params: StudentsParams = {}) {
+  const { data: session } = useSession();
+
+  return useInfiniteQuery<PaginatedResponse<Student>>({
+    queryKey: ["infinite-students", params],
+    queryFn: async ({ pageParam = 1 }) => {
+      const queryParams = new URLSearchParams();
+      if (params.status) queryParams.set("status", params.status);
+      if (params.search) queryParams.set("search", params.search);
+      if (params.faculty_id) queryParams.set("faculty_id", params.faculty_id);
+      if (params.year_level_id) queryParams.set("year_level_id", params.year_level_id);
+      if (params.gender) queryParams.set("gender", params.gender);
+      if (params.page_size) queryParams.set("page_size", params.page_size.toString());
+      queryParams.set("page", (pageParam as number).toString());
+
+      const queryString = queryParams.toString() ? `?${queryParams.toString()}` : "";
+      
+      return apiFetch(
+        `${API_CONFIG.baseURL}${ENDPOINTS.list}${queryString}`,
+        session?.accessToken as string
+      );
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      // Assuming lastPage.pagination exists if there's more, or lastPage.next is a URL
+      if (lastPage.pagination && lastPage.pagination.page < lastPage.pagination.total_pages) {
+        return lastPage.pagination.page + 1;
+      }
+      return undefined;
+    },
+    enabled: !!session?.accessToken,
+    initialPageParam: 1,
   });
 }
 

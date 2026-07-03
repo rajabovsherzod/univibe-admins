@@ -79,7 +79,7 @@ export function KpiStatCard({
   const gradientId = `kpi-gradient-${gid}`;
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden rounded-xl bg-secondary_subtle shadow-md ring-1 ring-secondary ring-inset md:min-w-[280px]">
+    <div className="flex flex-1 flex-col overflow-hidden rounded-xl bg-secondary_subtle shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15),0_4px_12px_-2px_rgba(0,0,0,0.1)] ring-1 ring-secondary ring-inset md:min-w-[280px]">
       {/* title bar — brand-solid in BOTH light & dark */}
       <div className="mb-0.5 rounded-t-xl bg-brand-solid px-4 pb-2 pt-3 md:px-5">
         <h3 className="text-sm font-semibold text-white">{title}</h3>
@@ -133,7 +133,7 @@ export function KpiStatCard({
                 fill={`url(#${gradientId})`}
                 fillOpacity={0.2}
                 dot={false}
-                activeDot={{ r: 4, strokeWidth: 2, stroke: "#fff", fill: "currentColor" }}
+                activeDot={{ r: 4, strokeWidth: 2, stroke: "var(--bg-primary, #fff)", fill: "currentColor" }}
               />
             </AreaChart>
           </ResponsiveContainer>

@@ -2,7 +2,7 @@
 // CSS-only animation version — no framer-motion required
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { X, ChevronRight } from "@untitledui/icons";
 import Image from "next/image";
@@ -11,21 +11,26 @@ import { NavAccountCard } from "@/components/application/app-navigation/base-com
 import { cx } from "@/utils/cx";
 import {
   HomeLine,
-  Settings01,
   Users01,
-  Shield01,
   Grid01,
   FileCheck02,
-  PieChart03,
   GraduationHat01,
   Building03,
   LayersThree01,
+  Briefcase01,
   ShoppingBag02,
+  Share04,
+  Trophy01,
+  ClockRefresh,
+  BarChartSquare02,
 } from "@untitledui/icons";
 
 import { useWaitedStudentsCount } from "@/hooks/api/use-students";
 import { useAdminOrders } from "@/app/(app)/(university-admin)/market/orders/_hooks/use-orders-admin";
+import { useAdminPendingEventsCount } from "@/hooks/api/use-events-admin";
 import { Badge } from "@/components/base/badges/badges";
+import { usePermissions } from "@/hooks/use-permissions";
+import { filterStaffNavItems } from "./nav-permissions";
 
 interface MobileSidebarProps {
   isOpen: boolean;
@@ -54,40 +59,70 @@ type NavItemOrDivider = NavItem | NavDivider;
 
 export function MobileSidebar({ isOpen, onClose, role }: MobileSidebarProps) {
   const pathname = usePathname();
-  const { data: waitedData } = useWaitedStudentsCount();
-  const { data: pendingOrdersData } = useAdminOrders({ status: 'PENDING', page_size: 1 });
+  const { can } = usePermissions();
+
+  // Gate badge queries by the same permission as their nav item (see the
+  // desktop sidebar for the rationale) — no fetch when the item is hidden.
+  const canViewOrders = can("market.order.view");
+  const canReviewApplications = can("students.applications.review");
+  const canPublishEvents = can("events.publish");
+
+  const { data: waitedData } = useWaitedStudentsCount({
+    enabled: role === "staff" && canReviewApplications,
+  });
+  const { data: pendingOrdersData } = useAdminOrders(
+    { status: "PENDING", page_size: 1 },
+    { enabled: canViewOrders }
+  );
+  const { data: pendingEventsCount = 0 } = useAdminPendingEventsCount({
+    enabled: canPublishEvents,
+  });
 
   const pendingOrderCount = pendingOrdersData?.count ?? 0;
+  const waitedCount = waitedData?.waited_students_count ?? 0;
 
-  const badgeContent = waitedData?.waited_students_count ? (
-    <Badge color="brand" size="sm" className="!bg-brand-solid !text-white !ring-brand-solid shadow-sm">+{waitedData.waited_students_count}</Badge>
-  ) : undefined;
+  // Rebuilt only when role/permissions/badge-counts change — not on every render.
+  const navItems = useMemo(() => {
+    const badgeContent = waitedCount ? (
+      <Badge color="brand" size="sm" className="!bg-brand-solid !text-white !ring-brand-solid shadow-sm">+{waitedCount}</Badge>
+    ) : undefined;
 
-  const pendingOrderBadge = pendingOrderCount > 0 ? (
-    <Badge color="brand" size="sm" className="!bg-brand-solid !text-white !ring-brand-solid shadow-sm">
-      {pendingOrderCount}
-    </Badge>
-  ) : undefined;
+    const pendingOrderBadge = pendingOrderCount > 0 ? (
+      <Badge color="brand" size="sm" className="!bg-brand-solid !text-white !ring-brand-solid shadow-sm">
+        {pendingOrderCount}
+      </Badge>
+    ) : undefined;
 
-  // Specific Staff Items
+    const pendingEventsBadge = pendingEventsCount > 0 ? (
+      <Badge color="brand" size="sm" className="!bg-brand-solid !text-white !ring-brand-solid shadow-sm">
+        {pendingEventsCount}
+      </Badge>
+    ) : undefined;
+
+  // Specific Staff Items — a flat list (this menu doesn't render nested
+  // sub-items, unlike the desktop sidebar), filtered by granted permissions
+  // so the mobile menu never shows a link that would 403 on click.
   const staffItems: NavItemOrDivider[] = [
     { label: "Dashboard", href: "/dashboard", icon: HomeLine },
     { divider: true },
     { label: "Talabalar ro'yxati", href: "/students", icon: Users01 },
     { label: "Yangi talabalar", href: "/applications", icon: FileCheck02, badge: badgeContent },
+    { label: "Statistika", href: "/coins/statistics", icon: BarChartSquare02 },
+    { label: "Reytinglar", href: "/coins/leaderboard", icon: Trophy01 },
+    { label: "Coin tarixi", href: "/coins/history", icon: ClockRefresh },
     { label: "Ballar tizimi", href: "/coins-system", icon: Grid01 },
-    {
-      label: "Market",
-      icon: ShoppingBag02,
-      href: "/market",
-      badge: pendingOrderBadge,
-      items: [
-        { label: "Mukofotlar", href: "/market" },
-        { label: "Buyurtmalar", href: "/market/orders", badge: pendingOrderBadge },
-        { label: "Audit", href: "/market/audit" },
-      ],
-    },
+    { label: "Mukofotlar", href: "/market", icon: ShoppingBag02 },
+    { label: "Buyurtmalar", href: "/market/orders", icon: ShoppingBag02, badge: pendingOrderBadge },
+    { label: "Klublar", href: "/clubs", icon: Users01 },
+    { label: "Tadbirlar", href: "/events", icon: Grid01, badge: pendingEventsBadge },
+    { label: "Bannerlar", href: "/banners", icon: Share04 },
+    { label: "Fakultetlar", href: "/faculties", icon: Building03 },
+    { label: "Kurslar", href: "/year-levels", icon: LayersThree01 },
+    { label: "Darajalar", href: "/degree-levels", icon: GraduationHat01 },
+    // NOTE: "Lavozimlar" (/job-positions) intentionally NOT included — job
+    // positions are a pure admin function, never staff-reachable.
   ];
+  const filteredStaffItems = filterStaffNavItems(staffItems, can);
 
   // Specific Admin Items
   const adminItems: NavItemOrDivider[] = [
@@ -96,29 +131,26 @@ export function MobileSidebar({ isOpen, onClose, role }: MobileSidebarProps) {
     { label: "Xodimlar", href: "/staff", icon: Users01 },
     { label: "Fakultetlar", href: "/faculties", icon: Building03 },
     { label: "Kurslar", href: "/year-levels", icon: LayersThree01 },
+    { label: "Lavozimlar", href: "/job-positions", icon: Briefcase01 },
     { label: "Darajalar", href: "/degree-levels", icon: GraduationHat01 },
     { divider: true },
     { label: "Talabalar ro'yxati", href: "/students", icon: Users01 },
-    { label: "Yangi talabalar", href: "/applications", icon: FileCheck02, badge: badgeContent },
+    { label: "Yangi talabalar", href: "/applications", icon: FileCheck02 },
+    { label: "Statistika", href: "/coins/statistics", icon: BarChartSquare02 },
+    { label: "Reytinglar", href: "/coins/leaderboard", icon: Trophy01 },
+    { label: "Coin tarixi", href: "/coins/history", icon: ClockRefresh },
     { label: "Ballar tizimi", href: "/coins-system", icon: Grid01 },
-    {
-      label: "Market",
-      icon: ShoppingBag02,
-      href: "/market",
-      badge: pendingOrderBadge,
-      items: [
-        { label: "Mukofotlar", href: "/market" },
-        { label: "Buyurtmalar", href: "/market/orders", badge: pendingOrderBadge },
-        { label: "Audit", href: "/market/audit" },
-      ],
-    },
-    { label: "Statistika", href: "/statistics", icon: PieChart03 },
-    { divider: true },
-    { label: "Tizim", href: "/system", icon: Shield01 },
-    { label: "Sozlamalar", href: "/settings", icon: Settings01 },
+    { label: "Mukofotlar", href: "/market", icon: ShoppingBag02 },
+    { label: "Buyurtmalar", href: "/market/orders", icon: ShoppingBag02, badge: pendingOrderBadge },
+    { label: "Market Audit", href: "/market/audit", icon: ShoppingBag02 },
+    { label: "Klublar", href: "/clubs", icon: Users01 },
+    { label: "Tadbirlar", href: "/events", icon: Grid01, badge: pendingEventsBadge },
+    { label: "Bannerlar", href: "/banners", icon: Share04 },
   ];
 
-  const navItems = role === "staff" ? staffItems : adminItems;
+    return role === "staff" ? filterStaffNavItems(staffItems, can) : adminItems;
+  }, [role, can, waitedCount, pendingOrderCount, pendingEventsCount]);
+
   const panelLabel = role === "staff" ? "Xodim Paneli" : "Admin Panel";
 
   // Lock body scroll when open

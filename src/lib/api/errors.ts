@@ -100,3 +100,23 @@ export class NetworkError extends AppError {
     this.name = 'NetworkError';
   }
 }
+
+/** True when `error` represents an HTTP 403 — whether it's one of our typed
+ * AppError instances (client-side query errors, which keep their prototype),
+ * a raw axios/fetch response object, or a server-thrown Error whose message
+ * embeds the status code (Server Components lose the error's prototype and
+ * custom fields crossing the RSC boundary, so only `message` survives there —
+ * our SSR fetchers throw `new Error(\`...: ${res.status}\`)`, hence the regex
+ * fallback). Used to route 403s to <ForbiddenState /> instead of a generic
+ * error message. */
+export function isForbiddenError(error: unknown): boolean {
+  if (!error) return false;
+  if (error instanceof AppError) return error.statusCode === 403;
+  if (typeof error === 'object') {
+    const anyErr = error as { response?: { status?: number }; status?: number };
+    if (anyErr.response?.status === 403) return true;
+    if (anyErr.status === 403) return true;
+  }
+  if (error instanceof Error) return /(^|\D)403(\D|$)/.test(error.message);
+  return false;
+}

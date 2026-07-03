@@ -37,6 +37,7 @@ export const API_CONFIG = {
 
     // Staff Management
     staff: {
+      me: '/api/v1/university-staff/me/',
       list: '/api/v1/university-staff/list/',
       create: '/api/v1/university-staff/create/',
       delete: (id: string) => `/api/v1/university-staff/delete/${id}/`,
@@ -48,6 +49,11 @@ export const API_CONFIG = {
       jobPositionDelete: (id: string) => `/api/v1/university-staff/job-positions/${id}/delete/`,
       jobPositionUpdate: (id: string) => `/api/v1/university-staff/job-positions/${id}/update/`,
       jobPositionCreate: '/api/v1/university-staff/job-positions/create/',
+    },
+
+    // RBAC – Permission catalog
+    rbac: {
+      catalog: '/api/v1/rbac/catalog/',
     },
 
     // Student Management (Admin View)
@@ -69,6 +75,7 @@ export const API_CONFIG = {
       ruleUpdate: (id: string) => `/api/v1/coins/rules/${id}/update/`,
       ruleActivate: (id: string) => `/api/v1/coins/rules/${id}/activate/`,
       ruleArchive: (id: string) => `/api/v1/coins/rules/${id}/archive/`,
+      ruleHistory: (id: string) => `/api/v1/coins/rules/${id}/history/`,
 
       // Transactions
       transactions: '/api/v1/coins/transactions/',
@@ -79,12 +86,16 @@ export const API_CONFIG = {
       deletionAudits: '/api/v1/coins/admin/deletion-audits/',
       deletionAuditDetail: (id: string) => `/api/v1/coins/admin/deletion-audits/${id}/`,
       auditTransactions: '/api/v1/coins/admin/transactions/audit/',
+      leaderboard: '/api/v1/coins/leaderboard/',
+      activityStats: '/api/v1/coins/admin/statistics/activity/',
+      statistics: '/api/v1/coins/admin/statistics/',
     },
 
     // Market – Products
     market: {
       products: '/api/v1/market/products/',
       productCreate: '/api/v1/market/products/create/',
+      productUpdate: (id: string) => `/api/v1/market/products/${id}/update/`,
       productArchive: (id: string) => `/api/v1/market/products/${id}/archive/`,
       productStock: (id: string) => `/api/v1/market/products/${id}/stock/`,
       auditRedemptions: '/api/v1/market/admin/redemptions/audit/',
@@ -109,6 +120,34 @@ export const API_CONFIG = {
         delete: (publicId: string) => `/api/v1/banners/manage/${publicId}/`,
         changeStatus: (publicId: string) => `/api/v1/banners/manage/${publicId}/status/`,
       },
+    },
+
+    // Clubs Management (Admin)
+    clubs: {
+      admin: {
+        list: '/api/v1/admin/clubs/',
+        create: '/api/v1/admin/clubs/',
+        detail: (id: string) => `/api/v1/admin/clubs/${id}/`,
+        status: (id: string) => `/api/v1/admin/clubs/${id}/status/`,
+        owner: (id: string) => `/api/v1/admin/clubs/${id}/owner/`,
+      }
+    },
+    
+    // Events Management (Admin)
+    events: {
+      admin: {
+        list: '/api/v1/university-admin/events/',
+        create: '/api/v1/university-admin/events/',
+        detail: (id: string) => `/api/v1/university-admin/events/${id}/`,
+        changeStatus: (id: string) => `/api/v1/university-admin/events/${id}/change-status/`,
+        approve: (id: string) => `/api/v1/university-admin/events/${id}/approve/`,
+        reject: (id: string) => `/api/v1/university-admin/events/${id}/reject/`,
+        addCollaborator: (id: string) => `/api/v1/university-admin/events/${id}/add-collaborator/`,
+        removeCollaborator: (id: string, collabId: string) => `/api/v1/university-admin/events/${id}/remove-collaborator/${collabId}/`,
+        participants: (id: string) => `/api/v1/university-admin/events/${id}/participants/`,
+        attendance: (id: string, studentId: string) => `/api/v1/university-admin/events/${id}/attendance/${studentId}/`,
+        scanQr: (id: string) => `/api/v1/university-admin/events/${id}/scan-qr/`,
+      }
     },
   },
 } as const;

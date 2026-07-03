@@ -1,23 +1,22 @@
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Plus } from "@untitledui/icons";
+import { Plus, Minus } from "@untitledui/icons";
 
 import { useCreateCoinRule } from "@/hooks/api/use-coins";
-import { useJobPositions } from "@/hooks/api/use-job-positions";
 import { createCoinRuleSchema } from "@/lib/validations/coins";
 import type { CreateCoinRuleInput } from "@/lib/validations/coins";
 
 import { PremiumFormModal } from "@/components/application/modals/premium-modal";
-import { MultiSelect } from "@/components/base/select/multi-select";
 import { Input } from "@/components/base/input/input";
 import { TextArea } from "@/components/base/textarea/textarea";
 import { Button } from "@/components/base/buttons/button";
-import type { Key } from "react-aria-components";
+import { CoinOutlineIcon } from "@/components/custom-icons/brand-icon";
 
-export function CreateRuleModal({ onClose }: { onClose: () => void }) {
+export function CreateRuleModal({ onClose, ruleType = "reward" }: { onClose: () => void, ruleType?: "reward" | "penalty" }) {
   const createMutation = useCreateCoinRule();
-  const { data: jobPositions, isLoading: jobsLoading } = useJobPositions();
+
+  const isPenalty = ruleType === "penalty";
 
   const {
     handleSubmit,
@@ -30,7 +29,6 @@ export function CreateRuleModal({ onClose }: { onClose: () => void }) {
       name: "",
       description: "",
       coin_amount: 0,
-      allowed_job_position_public_ids: [],
       status: "ACTIVE",
     },
   });
@@ -38,17 +36,12 @@ export function CreateRuleModal({ onClose }: { onClose: () => void }) {
   const onSubmit = async (data: CreateCoinRuleInput) => {
     try {
       await createMutation.mutateAsync(data);
-      toast.success("Ball qoidasi muvaffaqiyatli yaratildi");
+      toast.success(isPenalty ? "Jarima qoidasi muvaffaqiyatli yaratildi" : "Rag'batlantirish qoidasi muvaffaqiyatli yaratildi");
       onClose();
     } catch (e: any) {
       toast.error("Xatolik yuz berdi", { description: e.message });
     }
   };
-
-  const jobPositionItems = (jobPositions || []).map((pos) => ({
-    id: pos.public_id,
-    label: pos.name,
-  }));
 
   const isFormLoading = isSubmitting || createMutation.isPending;
 
@@ -58,11 +51,11 @@ export function CreateRuleModal({ onClose }: { onClose: () => void }) {
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
-      title="Yangi coin qoidasi"
-      description="Talabalarga qaysi holatda coin berish bo'yicha qoida yarating."
+      title={isPenalty ? "Yangi jarima qoidasi" : "Yangi rag'batlantirish qoidasi"}
+      description={isPenalty ? "Talabalarga qanday qoidabuzarlik uchun jarima (minus ball) yozilishini belgilang." : "Talabalarga qaysi holatda ball (rag'bat) berish bo'yicha qoida yarating."}
       icon={Plus}
-      iconBgClassName="bg-brand-soft"
-      iconClassName="text-brand-solid"
+      iconBgClassName={isPenalty ? "bg-error-soft" : "bg-brand-soft"}
+      iconClassName={isPenalty ? "text-error-solid" : "text-brand-solid"}
       size="md"
       footer={
         <div className="flex w-full items-center justify-end gap-3">
@@ -77,7 +70,7 @@ export function CreateRuleModal({ onClose }: { onClose: () => void }) {
           <Button
             type="submit"
             form="create-rule-form"
-            color="primary"
+            color={isPenalty ? "primary-destructive" : "primary"}
             size="md"
             isLoading={isFormLoading}
           >
@@ -93,7 +86,7 @@ export function CreateRuleModal({ onClose }: { onClose: () => void }) {
           render={({ field }) => (
             <Input
               label="Qoida nomi"
-              placeholder="Masalan: Faol qatnashganlik uchun"
+              placeholder={isPenalty ? "Masalan: Darsga asossiz kechikkanlik uchun" : "Masalan: Faol qatnashganlik uchun"}
               value={field.value}
               onChange={field.onChange}
               onBlur={field.onBlur}
@@ -127,11 +120,20 @@ export function CreateRuleModal({ onClose }: { onClose: () => void }) {
           name="coin_amount"
           render={({ field }) => (
             <Input
-              label="Coin miqdori"
+              label={isPenalty ? "Jarima miqdori (Ball)" : "Ball miqdori"}
               placeholder="100"
               type="number"
-              value={String(field.value || "")}
-              onChange={(v) => field.onChange(Number(v) || 0)}
+              icon={isPenalty ? Minus : Plus}
+              iconClassName={isPenalty ? "text-error-solid" : "text-brand-solid"}
+              value={field.value === 0 ? "" : Math.abs(field.value).toString()}
+              onChange={(v) => {
+                if (v === "") {
+                  field.onChange(0);
+                  return;
+                }
+                const val = Math.abs(Number(v));
+                field.onChange(isPenalty ? -val : val);
+              }}
               onBlur={field.onBlur}
               isInvalid={!!errors.coin_amount}
               hint={errors.coin_amount?.message}
@@ -140,37 +142,6 @@ export function CreateRuleModal({ onClose }: { onClose: () => void }) {
           )}
         />
 
-        <div className="flex flex-col gap-1.5">
-          <Controller
-            control={control}
-            name="allowed_job_position_public_ids"
-            render={({ field: { value } }) => (
-              <MultiSelect
-                id="job_positions"
-                label="Ruxsat etilgan lavozimlar"
-                selectedKeys={new Set(value)}
-                onSelectionChange={(keys) => {
-                  const arr = Array.from(keys as Iterable<Key>).map(String);
-                  setValue("allowed_job_position_public_ids", arr, {
-                    shouldValidate: true,
-                  });
-                }}
-                items={jobPositionItems}
-                isInvalid={!!errors.allowed_job_position_public_ids}
-                isDisabled={jobsLoading || isFormLoading}
-                placeholder={jobsLoading ? "Lavozimlar yuklanmoqda..." : "Lavozimni tanlang"}
-              >
-                {(item) => <MultiSelect.Item id={item.id} label={item.label} />}
-              </MultiSelect>
-            )}
-          />
-          {errors.allowed_job_position_public_ids && (
-            <p className="text-xs text-error-primary">{errors.allowed_job_position_public_ids.message}</p>
-          )}
-          <p className="text-xs text-tertiary">
-            Ushbu qoida bo'yicha faqat shu lavozimdagi xodimlar talabaga coin bera oladi.
-          </p>
-        </div>
       </form>
     </PremiumFormModal>
   );

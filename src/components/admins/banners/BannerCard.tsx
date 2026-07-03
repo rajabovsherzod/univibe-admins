@@ -4,6 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { Banner } from '@/types/banners';
 
+import { toHttps } from '@/utils/cx';
+
 interface BannerCardProps {
   banner: Banner;
   isMobile?: boolean;
@@ -14,9 +16,11 @@ interface BannerCardProps {
  */
 export function BannerCard({ banner, isMobile = false }: BannerCardProps) {
   // Mobile image priority, fallback to desktop image
-  const imageSrc = isMobile && banner.mobile_image 
+  const rawImageSrc = isMobile && banner.mobile_image 
     ? banner.mobile_image 
     : banner.image;
+    
+  const imageSrc = toHttps(rawImageSrc) || '';
   
   return (
     <div className="relative w-full h-[200px] sm:h-[300px] md:h-[350px] overflow-hidden rounded-xl bg-bg-primary">

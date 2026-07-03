@@ -12,10 +12,12 @@ import { Input } from "@/components/base/input/input";
 import { TextArea } from "@/components/base/textarea/textarea";
 import { PremiumFormModal } from "@/components/application/modals/premium-modal";
 import { Select } from "@/components/base/select/select";
+import { CoinOutlineIcon } from "@/components/custom-icons/brand-icon";
 
 import { useIssueCoins } from "@/hooks/api/use-transactions";
 import { useStudents } from "@/hooks/api/use-students";
 import { useCoinRules } from "@/hooks/api/use-coins";
+import { useDebounce } from "@/hooks/use-debounce";
 
 const IssueCoinSchema = z.object({
   student_public_id: z.string().min(1, "Talabani tanlang"),
@@ -31,23 +33,29 @@ interface IssueCoinModalProps {
   preselectedStudent?: {
     id: string;
     name: string;
+    balance?: number;
   };
+  ruleType?: "reward" | "penalty";
 }
 
-export function IssueCoinModal({ isOpen, onClose, preselectedStudent }: IssueCoinModalProps) {
+export function IssueCoinModal({ isOpen, onClose, preselectedStudent, ruleType = "reward" }: IssueCoinModalProps) {
   const { mutateAsync: issueCoins, isPending } = useIssueCoins();
 
   // Real apps might use debounced async Selects for students because there might be thousands
   // We'll use a basic search + dropdown combo to simulate the UX here.
   const [studentSearch, setStudentSearch] = useState("");
+  const debouncedStudentSearch = useDebounce(studentSearch, 500);
+
   const { data: studentsData, isLoading: studentsLoading } = useStudents({
-    search: studentSearch,
-    page_size: 10
+    search: debouncedStudentSearch,
+    page_size: 10,
+    status: "approved"
   });
 
   const { data: rulesData, isLoading: rulesLoading } = useCoinRules({
     status: "active",
-    page_size: 50
+    page_size: 50,
+    rule_type: ruleType
   });
 
   const {
@@ -68,28 +76,30 @@ export function IssueCoinModal({ isOpen, onClose, preselectedStudent }: IssueCoi
       reset();
       setStudentSearch("");
     }
-  }, [isOpen, reset]);
+  }, [isOpen, reset, ruleType]);
 
   const onSubmit = async (data: IssueCoinInputForm) => {
     try {
       await issueCoins(data);
-      toast.success("Ball Muvaffaqiyatli Berildi", {
-        description: "Talaba hisobiga joriy qoida asosida coin qo'shildi.",
+      toast.success(ruleType === "penalty" ? "Jarima muvaffaqiyatli belgilandi" : "Ball Muvaffaqiyatli Berildi", {
+        description: `Talaba hisobiga joriy qoida asosida ball ${ruleType === "penalty" ? "ayirildi" : "qo'shildi"}.`,
       });
       onClose();
     } catch (error: any) {
-      toast.error("Ball berishda xatolik", {
+      toast.error("Amaliyotda xatolik", {
         description: error.message || "Tizimli xatolik.",
       });
     }
   };
 
+  const isPenalty = ruleType === "penalty";
+
   return (
     <PremiumFormModal
       isOpen={isOpen}
       onOpenChange={(open) => !open && onClose()}
-      title="Talabaga Ball Berish"
-      description="Faoliyati uchun talabani tanlab unga coin taqdim eting."
+      title={isPenalty ? "Talabaga Jarima Belgilash" : "Talabaga Ball Berish"}
+      description={isPenalty ? "Qoidabuzarlik uchun talabaga jazo (manfiy ball) belgilang." : "Faoliyati uchun talabani tanlab unga ball taqdim eting."}
       icon={Coins01}
       size="md"
       footer={
@@ -100,10 +110,11 @@ export function IssueCoinModal({ isOpen, onClose, preselectedStudent }: IssueCoi
           <Button
             type="submit"
             form="issue-coin-form"
+            color={isPenalty ? "primary-destructive" : "primary"}
             isDisabled={isPending}
             isLoading={isPending}
           >
-            Berish
+            {isPenalty ? "Jarima belgilash" : "Berish"}
           </Button>
         </div>
       }
@@ -112,12 +123,25 @@ export function IssueCoinModal({ isOpen, onClose, preselectedStudent }: IssueCoi
 
         <div className="space-y-1">
           {preselectedStudent ? (
-            <Input
-              label="Talaba"
-              value={preselectedStudent.name}
-              isDisabled
-              isReadOnly
-            />
+            <div className="space-y-1.5 mb-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-secondary">Talaba</span>
+                {preselectedStudent.balance !== undefined && (
+                  <div className="flex items-center gap-1.5 text-[13px] font-semibold bg-secondary px-2.5 py-1 rounded-full">
+                    <span className="text-tertiary">Joriy balans:</span>
+                    <span className={preselectedStudent.balance < 0 ? "text-error-500" : "text-brand-solid"}>
+                      {preselectedStudent.balance > 0 ? `+${preselectedStudent.balance}` : preselectedStudent.balance}
+                    </span>
+                    <CoinOutlineIcon className={preselectedStudent.balance < 0 ? "text-error-500" : "text-brand-solid"} size={16} strokeWidth={24} />
+                  </div>
+                )}
+              </div>
+              <Input
+                value={preselectedStudent.name}
+                isDisabled
+                isReadOnly
+              />
+            </div>
           ) : (
             <>
               {/* Pseudo-autocomplete UX since UntitedUI Select with raw typing isn't native */}
@@ -155,14 +179,14 @@ export function IssueCoinModal({ isOpen, onClose, preselectedStudent }: IssueCoi
           control={control}
           render={({ field, fieldState }) => (
             <Select
-              items={rulesData?.results?.map((r: any) => ({ id: r.public_id, label: `${r.name} (${r.coin_amount} Coin)` })) || []}
+              items={rulesData?.results?.map((r: any) => ({ id: r.public_id, label: `${r.name} (${r.coin_amount > 0 ? '+' : ''}${r.coin_amount} Ball)` })) || []}
               selectedKey={field.value || null}
               onSelectionChange={(key) => field.onChange(String(key))}
               placeholder={rulesLoading ? "Yuklanmoqda..." : "Qoidani tanlang"}
               isDisabled={isPending || rulesLoading}
               isInvalid={!!fieldState.error}
               hint={fieldState.error?.message}
-              label="Coin Qoidasi"
+              label="Ball Qoidasi"
               className="w-full"
             >
               {(item) => <Select.Item id={item.id} label={item.label} />}

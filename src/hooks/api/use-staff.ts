@@ -4,7 +4,31 @@ import { useSession } from "next-auth/react";
 import axios from "axios";
 import { API_CONFIG } from "@/lib/api/config";
 import type { CreateStaffInput, UpdateStaffInput } from "@/lib/validations/staff";
-import type { JobPosition } from "@/lib/api/types";
+import type { JobPosition, StaffProfile } from "@/lib/api/types";
+
+// ── Fetch staff me ───────────────────────────────────────────────────────────
+async function fetchStaffMe(token: string): Promise<StaffProfile> {
+  try {
+    const res = await axios.get<StaffProfile>(
+      `${API_CONFIG.baseURL}${API_CONFIG.endpoints.staff.me}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return res.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.detail || "Profilni yuklashda xatolik");
+  }
+}
+
+export function useStaffMe() {
+  const { data: session } = useSession();
+  return useQuery({
+    queryKey: ["staff-me"],
+    queryFn: () => fetchStaffMe(session?.accessToken as string),
+    enabled: !!session?.accessToken && session?.user?.role === "staff",
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 
 // ── Fetch job positions ──────────────────────────────────────────────────────
 async function fetchJobPositions(token: string): Promise<JobPosition[]> {
@@ -32,7 +56,7 @@ export function useJobPositions() {
 // ── Create staff mutation ────────────────────────────────────────────────────
 async function createStaff(
   token: string,
-  input: CreateStaffInput
+  input: CreateStaffInput & { permissions?: string[] }
 ): Promise<void> {
   const form = new FormData();
   form.append("name", input.name);
@@ -42,6 +66,11 @@ async function createStaff(
   if (input.password) form.append("password", input.password);
   if (input.profile_photo instanceof File) {
     form.append("profile_photo", input.profile_photo);
+  }
+  // Sent as a JSON string (not repeated form fields) so an empty selection
+  // is distinguishable from "not provided".
+  if (input.permissions !== undefined) {
+    form.append("permissions", JSON.stringify(input.permissions));
   }
 
   try {
@@ -62,7 +91,7 @@ export function useCreateStaff() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: CreateStaffInput) =>
+    mutationFn: (input: CreateStaffInput & { permissions?: string[] }) =>
       createStaff(session?.accessToken as string, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff-list"] });
@@ -99,7 +128,7 @@ export function useDeleteStaff() {
 // ── Update staff profile ─────────────────────────────────────────────────────
 async function updateStaffProfile(
   token: string,
-  input: UpdateStaffInput & { user_public_id: string }
+  input: UpdateStaffInput & { user_public_id: string; permissions?: string[] }
 ): Promise<void> {
   const form = new FormData();
   form.append("name", input.name);
@@ -107,6 +136,11 @@ async function updateStaffProfile(
   form.append("job_position_public_id", input.job_position_public_id);
   if (input.profile_photo instanceof File) {
     form.append("profile_photo", input.profile_photo);
+  }
+  // Sent as a JSON string (not repeated form fields) so an empty selection
+  // ("clear all permissions") is distinguishable from "not provided".
+  if (input.permissions !== undefined) {
+    form.append("permissions", JSON.stringify(input.permissions));
   }
 
   try {
@@ -127,7 +161,7 @@ export function useUpdateStaffProfile() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (input: UpdateStaffInput & { user_public_id: string }) =>
+    mutationFn: (input: UpdateStaffInput & { user_public_id: string; permissions?: string[] }) =>
       updateStaffProfile(session?.accessToken as string, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["staff-list"] });

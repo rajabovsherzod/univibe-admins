@@ -92,6 +92,27 @@ export interface JobPosition {
   updated_at: ISO8601Date;
 }
 
+// --- RBAC PERMISSION CATALOG ---
+
+export interface RbacPermission {
+  code: string;
+  label: string;
+  default_on: boolean;
+  scoped: boolean;
+  all_code: string | null;
+}
+
+export interface RbacPermissionGroup {
+  key: string;
+  label: string;
+  permissions: RbacPermission[];
+}
+
+export interface RbacCatalog {
+  groups: RbacPermissionGroup[];
+  default_on: string[];
+}
+
 export interface UniversityStaff {
   public_id: UUID;
   user_public_id: UUID;
@@ -110,7 +131,26 @@ export interface StaffListResponseItem {
   profile_photo_url: string | null;
   job_position: string | null;
   job_position_public_id: UUID | null;
+  /** Granted permission codes (RBAC), bound to this staff member directly. */
+  permissions: string[];
   email: string;
+}
+
+export interface StaffProfile {
+  user_id: number;
+  email: string;
+  name: string;
+  surname: string;
+  full_name: string;
+  job_position: string;
+  job_position_public_id: UUID;
+  /** Granted permission codes (RBAC). Excludes implicit BASE codes. */
+  permissions: string[];
+  profile_photo_url: string | null;
+  university_name: string;
+  university_public_id: UUID;
+  created_at: ISO8601Date;
+  updated_at: ISO8601Date;
 }
 
 // --- STUDENT ---
@@ -141,6 +181,7 @@ export interface Student {
   year_level_name?: string;
 
   status: StudentStatus;
+  coins_balance?: number;
 
   created_at: ISO8601Date;
   updated_at: ISO8601Date;
@@ -175,6 +216,11 @@ export interface CoinRule {
 
   created_by_public_id: UUID;
   created_by_name: string;
+  created_by_role?: string;
+
+  /** Whether the current user may edit/archive THIS rule (create+manage model:
+   * admin, manage-all, or create+own). Computed by the backend. */
+  can_manage?: boolean;
 
   // This field comes as a string representation in GET list/detail in your example
   // but might be an array of IDs in POST/UPDATE.
@@ -184,6 +230,15 @@ export interface CoinRule {
   first_used_at: ISO8601Date | null;
   created_at: ISO8601Date;
   updated_at: ISO8601Date;
+}
+
+export interface CoinRuleHistory {
+  public_id: UUID;
+  action: "CREATE" | "UPDATE" | "ARCHIVE" | "ACTIVATE";
+  changes: Record<string, { old: any; new: any }>;
+  user_name: string;
+  user_role: string;
+  created_at: ISO8601Date;
 }
 
 export interface CoinRuleCreatePayload {
@@ -242,6 +297,8 @@ export interface AuditTransaction {
   amount: number;
   comment: string;
   created_at: ISO8601Date;
+  student_name?: string;
+  student_public_id?: string;
 }
 
 export interface DeletionAudit {

@@ -18,6 +18,8 @@ import { DatePicker } from "@/components/application/date-picker/date-picker";
 import { parseDate } from "@internationalized/date";
 import Image from "next/image";
 import { toHttps } from "@/utils/cx";
+import { usePermissions } from "@/hooks/use-permissions";
+import { NoPermissionState } from "@/components/application/no-permission-state/no-permission-state";
 
 interface StudentEditClientProps {
   studentData: {
@@ -59,6 +61,7 @@ export default function StudentEditClient({
 }: StudentEditClientProps) {
   const router = useRouter();
   const updateStudent = useUpdateStudentProfile();
+  const { can, isLoading: permissionsLoading } = usePermissions();
   const {
     handleSubmit,
     control,
@@ -104,6 +107,11 @@ export default function StudentEditClient({
   };
 
   const isPending = isSubmitting || updateStudent.isPending;
+
+  if (permissionsLoading) return null;
+  if (!can('students.manage')) {
+    return <NoPermissionState description="Talaba ma'lumotlarini tahrirlash uchun sizda ruxsat yo'q." />;
+  }
 
   return (
     <div className="flex flex-col gap-6">

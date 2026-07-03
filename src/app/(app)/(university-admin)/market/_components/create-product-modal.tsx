@@ -7,6 +7,7 @@ import { Button } from "@/components/base/buttons/button";
 import { Input } from "@/components/base/input/input";
 import { Select } from "@/components/base/select/select";
 import { SelectItem } from "@/components/base/select/select-item";
+import { PremiumFormModal } from "@/components/application/modals/premium-modal";
 import { useCreateProduct } from "../_hooks/use-products";
 
 interface CreateProductModalProps {
@@ -68,17 +69,21 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg mx-4 rounded-2xl bg-primary border border-secondary shadow-xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-secondary">
-          <h2 className="text-lg font-semibold text-primary">Yangi mahsulot</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-tertiary hover:bg-secondary transition-colors">
-            <X className="size-5" />
-          </button>
+    <PremiumFormModal
+      isOpen={isOpen}
+      onOpenChange={(open) => { if (!open) onClose(); }}
+      title="Yangi mahsulot"
+      description="Marketda yangi mahsulot yarating."
+      icon={Plus}
+      size="md"
+      footer={
+        <div className="flex justify-end gap-3 pt-2">
+          <Button type="button" color="secondary" size="md" onClick={onClose}>Bekor qilish</Button>
+          <Button type="submit" form="create-product-form" color="primary" size="md" iconLeading={Plus} isLoading={isPending}>Yaratish</Button>
         </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+      }
+    >
+        <form id="create-product-form" onSubmit={handleSubmit} className="space-y-4">
           {/* Image upload */}
           <div>
             <label className="text-sm font-medium text-secondary mb-1.5 block">Rasm</label>
@@ -96,28 +101,31 @@ export function CreateProductModal({ isOpen, onClose }: CreateProductModalProps)
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
           </div>
 
-          <Input label="Nomi *" placeholder="Futbolka, kitob, ..." value={name} onChange={(v) => setName(v)} />
-          <Input label="Tavsif" placeholder="Qo'shimcha ma'lumot" value={description} onChange={(v) => setDescription(v)} />
-          <Input label="Narx (ball) *" placeholder="100" type="number" value={priceCoins} onChange={(v) => setPriceCoins(v)} />
-
-          <Select label="Ombor turi" size="md"
-            selectedKey={stockType}
-            onSelectionChange={(k) => setStockType(k as "UNLIMITED" | "LIMITED")}
-            items={[{ id: "UNLIMITED", label: "Cheksiz" }, { id: "LIMITED", label: "Cheklangan" }]}
-          >
-            {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
-          </Select>
-
-          {stockType === "LIMITED" && (
-            <Input label="Soni" placeholder="50" type="number" value={stockQuantity} onChange={(v) => setStockQuantity(v)} />
-          )}
-
-          <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" color="secondary" size="md" onClick={onClose}>Bekor qilish</Button>
-            <Button type="submit" color="primary" size="md" iconLeading={Plus} isLoading={isPending}>Yaratish</Button>
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Nomi *" placeholder="Futbolka, kitob, ..." value={name} onChange={(v) => setName(v)} />
+            <Input label="Narx (ball) *" placeholder="100" type="number" value={priceCoins} onChange={(v) => setPriceCoins(v)} />
           </div>
+
+          <Input label="Tavsif" placeholder="Qo'shimcha ma'lumot" value={description} onChange={(v) => setDescription(v)} />
+
+          <div className="grid grid-cols-2 gap-4 items-start">
+            <div className={stockType === "UNLIMITED" ? "col-span-2" : "col-span-1"}>
+              <Select label="Ombor turi" size="md"
+                selectedKey={stockType}
+                onSelectionChange={(k) => setStockType(k as "UNLIMITED" | "LIMITED")}
+                items={[{ id: "UNLIMITED", label: "Cheksiz" }, { id: "LIMITED", label: "Cheklangan" }]}
+              >
+                {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
+              </Select>
+            </div>
+            {stockType === "LIMITED" && (
+              <div className="col-span-1">
+                <Input label="Soni" placeholder="50" type="number" value={stockQuantity} onChange={(v) => setStockQuantity(v)} />
+              </div>
+            )}
+          </div>
+
         </form>
-      </div>
-    </div>
+    </PremiumFormModal>
   );
 }

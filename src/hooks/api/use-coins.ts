@@ -1,9 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import axios from "axios";
 import { API_CONFIG } from "@/lib/api/config";
+import { apiFetch } from "@/lib/api/query-fetch";
 import type {
   CoinRule,
+  CoinRuleHistory,
   AuditTransaction,
   DeletionAudit,
   PaginatedResponse
@@ -12,31 +13,12 @@ import type { CreateCoinRuleInput, UpdateCoinRuleInput } from "@/lib/validations
 
 const ENDPOINTS = API_CONFIG.endpoints.coins;
 
-// Default API Fetcher with Auth
-async function apiFetch(url: string, token: string, options?: { method?: string; body?: string }) {
-  try {
-    const res = await axios({
-      url,
-      method: options?.method || "GET",
-      data: options?.body ? JSON.parse(options.body) : undefined,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-    return res.data;
-  } catch (error: any) {
-    const errData = error.response?.data || {};
-    const msg = Object.values(errData).flat().join(" ") || `API Xatosi: ${error.response?.status || error.message}`;
-    throw new Error(msg as string);
-  }
-}
-
 // ── 1. Coin Rules Hooks ──────────────────────────────────────────────────
 
 interface RulesParams {
   status?: "active" | "archived";
   search?: string;
+  rule_type?: "reward" | "penalty";
   page?: number;
   page_size?: number;
 }
@@ -47,6 +29,7 @@ export function useCoinRules(params: RulesParams = {}) {
   const queryParams = new URLSearchParams();
   if (params.status) queryParams.set("status", params.status);
   if (params.search) queryParams.set("search", params.search);
+  if (params.rule_type) queryParams.set("rule_type", params.rule_type);
   if (params.page) queryParams.set("page", params.page.toString());
   if (params.page_size) queryParams.set("page_size", params.page_size.toString());
 
@@ -60,8 +43,24 @@ export function useCoinRules(params: RulesParams = {}) {
         session?.accessToken as string
       ),
     enabled: !!session?.accessToken,
+    placeholderData: keepPreviousData,
   });
 }
+
+export function useCoinRuleDetail(id: string) {
+  const { data: session } = useSession();
+
+  return useQuery<CoinRule>({
+    queryKey: ["coin-rule-detail", id],
+    queryFn: () =>
+      apiFetch(
+        `${API_CONFIG.baseURL}${ENDPOINTS.ruleDetail(id)}`,
+        session?.accessToken as string
+      ),
+    enabled: !!session?.accessToken && !!id,
+  });
+}
+
 
 export function useCreateCoinRule() {
   const { data: session } = useSession();
@@ -89,7 +88,10 @@ export function useUpdateCoinRule() {
         session?.accessToken as string,
         { method: "PATCH", body: JSON.stringify(data) }
       ),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["coin-rules"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["coin-rules"] });
+      qc.invalidateQueries({ queryKey: ["coin-rule-history"] });
+    },
   });
 }
 
@@ -104,7 +106,24 @@ export function useToggleRuleStatus() {
         session?.accessToken as string,
         { method: "PATCH" }
       ),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["coin-rules"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["coin-rules"] });
+      qc.invalidateQueries({ queryKey: ["coin-rule-history"] });
+    },
+  });
+}
+
+export function useCoinRuleHistory(id: string) {
+  const { data: session } = useSession();
+
+  return useQuery<CoinRuleHistory[]>({
+    queryKey: ["coin-rule-history", id],
+    queryFn: () =>
+      apiFetch(
+        `${API_CONFIG.baseURL}${ENDPOINTS.ruleHistory(id)}`,
+        session?.accessToken as string
+      ),
+    enabled: !!session?.accessToken && !!id,
   });
 }
 

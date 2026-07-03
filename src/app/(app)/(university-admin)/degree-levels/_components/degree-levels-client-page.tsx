@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { Plus } from "@untitledui/icons";
+import { usePermissions } from "@/hooks/use-permissions";
 
 import { PageHeaderPro } from "@/components/application/page-header/page-header-pro";
 import { DataTable, type DataTableColumn } from "@/components/application/table/data-table";
@@ -18,6 +19,8 @@ import { DeleteDegreeLevelModal } from "./delete-degree-level-modal";
 type Modal = "create" | { type: "edit"; item: DegreeLevel } | { type: "delete"; item: DegreeLevel } | null;
 
 export default function DegreeLevelsClientPage() {
+  const { can } = usePermissions();
+  const canManage = can("org.degree_levels.manage");
   const { data, isLoading } = useDegreeLevels();
   const [modal, setModal] = useState<Modal>(null);
   const [search, setSearch] = useState("");
@@ -34,8 +37,8 @@ export default function DegreeLevelsClientPage() {
   const columns = getDegreeLevelColumns({
     page,
     pageSize,
-    onEdit: (item) => setModal({ type: "edit", item }),
-    onDelete: (item) => setModal({ type: "delete", item }),
+    onEdit: canManage ? (item) => setModal({ type: "edit", item }) : undefined,
+    onDelete: canManage ? (item) => setModal({ type: "delete", item }) : undefined,
   });
 
   return (
@@ -57,14 +60,16 @@ export default function DegreeLevelsClientPage() {
         }}
         searchPlaceholder="Darajani qidirish..."
         actions={
-          <Button
-            color="primary"
-            size="md"
-            iconLeading={Plus}
-            onClick={() => setModal("create")}
-          >
-            Yangi daraja
-          </Button>
+          canManage ? (
+            <Button
+              color="primary"
+              size="md"
+              iconLeading={Plus}
+              onClick={() => setModal("create")}
+            >
+              Yangi daraja
+            </Button>
+          ) : undefined
         }
       />
 

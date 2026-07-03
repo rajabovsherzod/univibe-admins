@@ -3,6 +3,11 @@ import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 
 const secret = process.env.NEXTAUTH_SECRET;
+// Must match the app-scoped cookie name set in src/lib/auth.ts. getToken()
+// defaults to `next-auth.session-token`; with our renamed cookie it would never
+// find the token, bounce to /login, and loop against the client redirect.
+const USE_SECURE_COOKIES = (process.env.NEXTAUTH_URL || "").startsWith("https://");
+const COOKIE_NAME = `${USE_SECURE_COOKIES ? "__Secure-" : ""}univibe-admin.session-token`;
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -19,7 +24,7 @@ export async function middleware(request: NextRequest) {
     isBot;
 
   // Decode JWT token from cookie
-  const token = await getToken({ req: request, secret });
+  const token = await getToken({ req: request, secret, cookieName: COOKIE_NAME, secureCookie: USE_SECURE_COOKIES });
   const isAuthenticated = !!token && token.error !== "RefreshAccessTokenError";
 
   // 1. Unauthenticated → redirect to login
@@ -48,6 +53,12 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.gif$|.*\\.svg$).*)',
+    /*
+     * Match all paths except:
+     * - api routes
+     * - Next.js internals (_next/static, _next/image, _next/data)
+     * - Static files (images, fonts, manifests, etc.)
+     */
+    '/((?!api|_next/static|_next/image|_next/data|favicon.ico|manifest.json|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot)$).*)',
   ],
 };

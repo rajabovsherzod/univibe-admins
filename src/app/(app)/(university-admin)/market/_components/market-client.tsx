@@ -3,28 +3,33 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Plus } from "@untitledui/icons";
-import { useSession } from "next-auth/react";
 import { Button } from "@/components/base/buttons/button";
 import { PageHeaderPro } from "@/components/application/page-header/page-header-pro";
 import { DataTable } from "@/components/application/table/data-table";
+import { cn } from "@/lib/utils";
 import { productColumns } from "./product-columns";
-import { useProducts, useArchiveProduct } from "../_hooks/use-products";
+import { useProducts, useArchiveProduct, Product } from "../_hooks/use-products";
 import { CreateProductModal } from "./create-product-modal";
+import { EditProductModal } from "./edit-product-modal";
+import { usePermissions } from "@/hooks/use-permissions";
 
 const PAGE_SIZE = 20;
 
 export function MarketClient() {
-  const { data: session } = useSession();
-  const isAdmin = session?.user?.role === "university_admin";
+  const { can } = usePermissions();
+  const canCreate = can("market.product.create");
+  // Editing / archiving / stock are all covered by a single "manage" permission.
+  const canManage = can("market.product.manage");
 
   const [search, setSearch] = useState("");
-  const [includeArchived, setIncludeArchived] = useState(false);
+  const [tab, setTab] = useState<"ACTIVE" | "ARCHIVED">("ACTIVE");
   const [page, setPage] = useState(1);
   const [showCreate, setShowCreate] = useState(false);
+  const [editTarget, setEditTarget] = useState<Product | null>(null);
   const [archiveTarget, setArchiveTarget] = useState<{ id: string; name: string } | null>(null);
   const { data, isPending } = useProducts({
     search: search || undefined,
-    include_archived: includeArchived,
+    include_archived: tab === "ARCHIVED",
     page,
     page_size: PAGE_SIZE,
   });
@@ -34,22 +39,34 @@ export function MarketClient() {
   const totalCount = data?.count || 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
 
-  // Add actions column (admin only — staff can only view)
+  // Add actions column (admin and staff)
   const columns = [
     ...productColumns,
-    ...(isAdmin ? [{
+    ...(canManage ? [{
       id: "actions",
       header: "",
-      headClassName: "w-20",
-      cellClassName: "w-20 text-right",
+      headClassName: "w-32",
+      cellClassName: "w-32 text-right space-x-3",
       cell: (row: any) =>
         row.is_active ? (
-          <button
-            onClick={() => setArchiveTarget({ id: row.public_id, name: row.name })}
-            className="text-xs font-medium text-error-600 dark:text-error-400 hover:underline"
-          >
-            Arxiv
-          </button>
+          <>
+            {canManage && (
+              <button
+                onClick={() => setEditTarget(row)}
+                className="text-xs font-medium text-brand-600 dark:text-brand-400 hover:underline"
+              >
+                Tahrirlash
+              </button>
+            )}
+            {canManage && (
+              <button
+                onClick={() => setArchiveTarget({ id: row.public_id, name: row.name })}
+                className="text-xs font-medium text-error-600 dark:text-error-400 hover:underline"
+              >
+                Arxiv
+              </button>
+            )}
+          </>
         ) : null,
     }] : []),
   ];
@@ -71,52 +88,61 @@ export function MarketClient() {
           setPage(1);
         }}
         searchPlaceholder="Mahsulotlarni qidirish..."
-        actions={isAdmin ? (
+        actions={canCreate ? (
           <Button color="primary" size="md" iconLeading={Plus} onClick={() => setShowCreate(true)}>
             Yangi mahsulot
           </Button>
         ) : undefined}
       />
 
-      {/* Archive filter */}
-      <div className="flex items-center gap-2 -mt-2">
-        <label className="flex items-center gap-2 text-sm text-secondary cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={includeArchived}
-            onChange={(e) => {
-              setIncludeArchived(e.target.checked);
-              setPage(1);
-            }}
-            className="rounded border-secondary size-4"
-          />
-          Arxivlanganlarni ko'rsatish
-        </label>
+      <div className="flex flex-col overflow-hidden rounded-2xl bg-primary shadow-xs ring-1 ring-secondary p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-5">
+          <div className="flex items-center gap-1 p-1 bg-secondary rounded-lg overflow-x-auto w-full sm:w-max">
+            {[
+              { id: "ACTIVE", label: "Faol" },
+              { id: "ARCHIVED", label: "Arxivlangan" }
+            ].map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => { setTab(t.id as any); setPage(1); }}
+                className={cn(
+                  "px-3 py-1.5 text-sm font-medium rounded-md whitespace-nowrap transition-colors flex-1 sm:flex-none",
+                  tab === t.id
+                    ? "bg-brand-solid text-white shadow-sm"
+                    : "text-tertiary hover:text-secondary"
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <DataTable
+          ariaLabel="Mahsulotlar jadvali"
+          data={products}
+          columns={columns as any}
+          rowKey="public_id"
+          isLoading={isPending}
+          emptyTitle="Mahsulot topilmadi"
+          emptyDescription="Hozircha hech qanday mahsulot yaratilmagan."
+          pagination={{
+            page,
+            total: totalPages,
+            onPageChange: setPage,
+          }}
+        />
       </div>
 
-      {/* DataTable */}
-      <DataTable
-        ariaLabel="Mahsulotlar jadvali"
-        data={products}
-        columns={columns as any}
-        rowKey="public_id"
-        isLoading={isPending}
-        emptyTitle="Mahsulot topilmadi"
-        emptyDescription="Hozircha hech qanday mahsulot yaratilmagan."
-        pagination={{
-          page,
-          total: totalPages,
-          onPageChange: setPage,
-        }}
-      />
+      {/* Create modal */}
+      {canCreate && <CreateProductModal isOpen={showCreate} onClose={() => setShowCreate(false)} />}
 
-      {/* Create modal — admin only */}
-      {isAdmin && (
-        <CreateProductModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
-      )}
+      {/* Edit modal */}
+      {canManage && <EditProductModal isOpen={!!editTarget} onClose={() => setEditTarget(null)} product={editTarget} />}
 
-      {/* Archive confirm modal — admin only */}
-      {isAdmin && archiveTarget && (
+      {/* Archive confirm modal */}
+      {canManage && archiveTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setArchiveTarget(null)} />
           <div className="relative w-full max-w-sm rounded-2xl bg-primary border border-secondary shadow-xl overflow-hidden">

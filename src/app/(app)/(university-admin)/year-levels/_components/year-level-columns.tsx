@@ -48,20 +48,24 @@ export function getYearLevelColumns(opts?: {
       cellClassName: "px-3 py-3",
       cell: (row) => (
         <div className="flex items-center justify-end gap-1">
-          <Button
-            color="tertiary"
-            size="sm"
-            iconLeading={Edit05}
-            onClick={() => opts?.onEdit?.(row.public_id, row.name, row.year_number)}
-            aria-label="Tahrirlash"
-          />
-          <Button
-            color="tertiary-destructive"
-            size="sm"
-            iconLeading={Trash01}
-            onClick={() => opts?.onDelete?.(row.public_id, row.name)}
-            aria-label="O'chirish"
-          />
+          {opts?.onEdit && (
+            <Button
+              color="tertiary"
+              size="sm"
+              iconLeading={Edit05}
+              onClick={() => opts.onEdit!(row.public_id, row.name, row.year_number)}
+              aria-label="Tahrirlash"
+            />
+          )}
+          {opts?.onDelete && (
+            <Button
+              color="tertiary-destructive"
+              size="sm"
+              iconLeading={Trash01}
+              onClick={() => opts.onDelete!(row.public_id, row.name)}
+              aria-label="O'chirish"
+            />
+          )}
         </div>
       ),
     },

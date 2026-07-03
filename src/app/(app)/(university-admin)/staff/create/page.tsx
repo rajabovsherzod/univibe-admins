@@ -1,28 +1,40 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Eye, EyeOff, ArrowLeft, User01 } from "@untitledui/icons";
+import { Eye, EyeOff, ArrowLeft, User01, Shield01 } from "@untitledui/icons";
 
 import { PageHeaderPro } from "@/components/application/page-header/page-header-pro";
 import { Select } from "@/components/base/select/select";
 import { Input } from "@/components/base/input/input";
 import { Button } from "@/components/base/buttons/button";
-import { FileUpload } from "@/components/application/file-upload/file-upload-base";
+import { ProfilePhotoUploader } from "@/components/application/profile-photo-uploader/profile-photo-uploader";
+import { PermissionMatrix } from "@/components/application/rbac/permission-matrix";
 import { createStaffSchema, type CreateStaffInput } from "@/lib/validations/staff";
 import { useCreateStaff } from "@/hooks/api/use-staff";
 import { useJobPositions } from "@/hooks/api/use-job-positions";
+import { useRbacCatalog } from "@/hooks/api/use-rbac-catalog";
+import { cx } from "@/utils/cx";
+
+const CARD_SHADOW = "shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15),0_4px_12px_-2px_rgba(0,0,0,0.1)]";
 
 export default function StaffCreatePage() {
   const router = useRouter();
   const createStaff = useCreateStaff();
   const { data: jobPositions, isLoading: jobsLoading } = useJobPositions();
+  const { data: catalog, isLoading: catalogLoading } = useRbacCatalog();
 
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [permissions, setPermissions] = useState<string[]>([]);
+
+  // Pre-check the recommended default-on (read-only) permissions for a new staff member.
+  useEffect(() => {
+    if (catalog) setPermissions(catalog.default_on);
+  }, [catalog]);
 
   const {
     handleSubmit,
@@ -43,14 +55,16 @@ export default function StaffCreatePage() {
   });
 
   const selectedJobId = watch("job_position_public_id");
+  const nameValue = watch("name");
+  const surnameValue = watch("surname");
 
   const jobPositionItems =
     jobPositions?.map((p) => ({ id: p.public_id, label: p.name })) ?? [];
 
   const onSubmit = async (data: CreateStaffInput) => {
     try {
-      await createStaff.mutateAsync(data);
-      toast.success("Xodim muvaffaqiyatli yaratildi!");
+      await createStaff.mutateAsync({ ...data, permissions });
+      toast.success("Xodim va uning ruxsatlari muvaffaqiyatli yaratildi!");
       router.push("/staff");
     } catch (err: any) {
       toast.error("Xatolik yuz berdi", { description: err.message });
@@ -69,65 +83,39 @@ export default function StaffCreatePage() {
           { label: "Yangi xodim" },
         ]}
         title="Yangi xodim qo'shish"
-        subtitle="Yangi xodim ma'lumotlarini kiriting. * bilan belgilangan maydonlar majburiy."
+        subtitle="Yangi xodim ma'lumotlarini va nima qila olishini kiriting. * bilan belgilangan maydonlar majburiy."
         icon={User01}
       />
 
       {/* ── Form card ── */}
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-6">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-          {/* LEFT: Photo upload */}
+          {/* LEFT: Profile avatar */}
           <div className="lg:col-span-1">
-            <div className="overflow-hidden rounded-2xl bg-primary shadow-sm ring-1 ring-secondary">
+            <div className={cx("overflow-hidden rounded-2xl bg-primary ring-1 ring-secondary", CARD_SHADOW)}>
               <div className="bg-brand-solid px-5 py-3.5">
                 <h2 className="text-sm font-semibold text-white">Profil rasmi</h2>
               </div>
-              <div className="flex flex-col gap-4 p-6">
-                <FileUpload.Root>
-                  <FileUpload.DropZone
-                    accept="image/png, image/jpeg, image/webp"
-                    allowsMultiple={false}
-                    maxSize={5 * 1024 * 1024} // 5 MB
-                    onDropFiles={(files: FileList | File[]) => {
-                      const file = files[0];
-                      if (!file) return;
-                      setValue("profile_photo", file as any, { shouldValidate: true });
-                      setPhotoPreview(URL.createObjectURL(file));
-                    }}
-                    onSizeLimitExceed={() => toast.error("Kechirasiz, rasm hajmi 5 MB dan oshmasligi kerak")}
-                    hint="PNG, JPG yoki WebP (Maks. 5 MB)"
-                  />
-
-                  {watch("profile_photo") && (
-                    <FileUpload.List>
-                      <FileUpload.ListItemProgressBar
-                        name={(watch("profile_photo") as any)?.name || "Rasm"}
-                        size={(watch("profile_photo") as void | any)?.size || 0}
-                        progress={100}
-                        onDelete={() => {
-                          setValue("profile_photo", null, { shouldValidate: true });
-                          setPhotoPreview(null);
-                        }}
-                      />
-                    </FileUpload.List>
-                  )}
-
-                  {/* Profile preview if uploaded */}
-                  {photoPreview && (
-                    <div className="mx-auto mt-2 flex size-32 items-center justify-center overflow-hidden rounded-full bg-secondary ring-4 ring-brand-solid/20">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={photoPreview} alt="Preview" className="size-full object-cover" />
-                    </div>
-                  )}
-                </FileUpload.Root>
-              </div>
+              <ProfilePhotoUploader
+                photoPreview={photoPreview}
+                fullName={[nameValue, surnameValue].filter(Boolean).join(" ")}
+                isDisabled={isPending}
+                onSelect={(file) => {
+                  setValue("profile_photo", file as any, { shouldValidate: true });
+                  setPhotoPreview(URL.createObjectURL(file));
+                }}
+                onRemove={() => {
+                  setValue("profile_photo", null, { shouldValidate: true });
+                  setPhotoPreview(null);
+                }}
+              />
             </div>
           </div>
 
           {/* RIGHT: Main fields */}
           <div className="lg:col-span-2">
-            <div className="overflow-hidden rounded-2xl bg-primary shadow-sm ring-1 ring-secondary">
+            <div className={cx("overflow-hidden rounded-2xl bg-primary ring-1 ring-secondary", CARD_SHADOW)}>
               <div className="bg-brand-solid px-5 py-3.5">
                 <h2 className="text-sm font-semibold text-white">Asosiy ma&apos;lumotlar</h2>
               </div>
@@ -243,8 +231,32 @@ export default function StaffCreatePage() {
           </div>
         </div>
 
+        {/* Permissions — full width, below the grid */}
+        <div className={cx("overflow-hidden rounded-2xl bg-primary ring-1 ring-secondary", CARD_SHADOW)}>
+          <div className="flex items-center gap-2 bg-brand-solid px-5 py-3.5">
+            <Shield01 className="size-4 text-white" />
+            <h2 className="text-sm font-semibold text-white">Ruxsatlar</h2>
+          </div>
+          <div className="p-6">
+            <p className="mb-4 text-sm text-tertiary">
+              Bu xodim tizimda nima qila olishini belgilang. Ruxsatlar aynan shu xodimga
+              biriktiriladi va istalgan vaqt tahrirlash sahifasidan o'zgartirilishi mumkin.
+            </p>
+            {catalogLoading || !catalog ? (
+              <p className="py-8 text-center text-sm text-tertiary">Yuklanmoqda...</p>
+            ) : (
+              <PermissionMatrix
+                catalog={catalog}
+                value={permissions}
+                onChange={setPermissions}
+                isDisabled={isPending}
+              />
+            )}
+          </div>
+        </div>
+
         {/* ── Actions ── */}
-        <div className="mt-6 flex items-center justify-between">
+        <div className="flex items-center justify-between">
           <Button
             color="secondary"
             size="md"

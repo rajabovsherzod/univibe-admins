@@ -19,18 +19,20 @@ const screens = {
  * @returns A boolean indicating whether the viewport size applies.
  */
 export const useBreakpoint = (size: "sm" | "md" | "lg" | "xl" | "2xl") => {
-    const [matches, setMatches] = useState(typeof window !== "undefined" ? window.matchMedia(`(min-width: ${screens[size]})`).matches : true);
+    // Start with undefined to avoid hydration mismatches
+    const [matches, setMatches] = useState<boolean | undefined>(undefined);
 
     useEffect(() => {
+        // Initial check on mount
         const breakpoint = window.matchMedia(`(min-width: ${screens[size]})`);
-
         setMatches(breakpoint.matches);
 
+        // Listen for changes
         const handleChange = (value: MediaQueryListEvent) => setMatches(value.matches);
-
         breakpoint.addEventListener("change", handleChange);
         return () => breakpoint.removeEventListener("change", handleChange);
     }, [size]);
 
-    return matches;
+    // Return false until hydration is complete to guarantee matching server render
+    return matches === undefined ? false : matches;
 };

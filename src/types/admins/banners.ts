@@ -21,6 +21,8 @@ export interface BannerManagement {
   end_at?: string | null;
   created_at: string;
   updated_at: string;
+  /** Whether the current user may edit/delete THIS banner (create+manage model). */
+  can_manage?: boolean;
 }
 
 export interface CreateBannerInput {

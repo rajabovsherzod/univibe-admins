@@ -13,8 +13,11 @@ import { getFacultyColumns } from "./faculty-columns";
 import { CreateFacultyModal } from "./create-faculty-modal";
 import { EditFacultyModal } from "./edit-faculty-modal";
 import { DeleteFacultyModal } from "./delete-faculty-modal";
+import { usePermissions } from "@/hooks/use-permissions";
 
 export function FacultiesClientPage() {
+  const { can } = usePermissions();
+  const canManage = can("org.faculties.manage");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -37,8 +40,8 @@ export function FacultiesClientPage() {
   };
 
   const columns = getFacultyColumns({
-    onEdit: handleEdit,
-    onDelete: handleDelete,
+    onEdit: canManage ? handleEdit : undefined,
+    onDelete: canManage ? handleDelete : undefined,
   });
 
   // Client-side filtering & pagination
@@ -68,14 +71,16 @@ export function FacultiesClientPage() {
         }}
         searchPlaceholder="Fakultet nomini qidirish..."
         actions={
-          <Button
-            color="primary"
-            size="md"
-            iconLeading={Plus}
-            onClick={() => setIsCreateOpen(true)}
-          >
-            Yangi fakultet qo'shish
-          </Button>
+          canManage ? (
+            <Button
+              color="primary"
+              size="md"
+              iconLeading={Plus}
+              onClick={() => setIsCreateOpen(true)}
+            >
+              Yangi fakultet qo'shish
+            </Button>
+          ) : undefined
         }
       />
 

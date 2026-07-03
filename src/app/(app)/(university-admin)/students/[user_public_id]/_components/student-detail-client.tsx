@@ -31,6 +31,7 @@ import { FeaturedIcon } from "@/components/foundations/featured-icon/featured-ic
 import { Trash01 as TrashIcon } from "@untitledui/icons";
 import { Input } from "@/components/base/input/input";
 import { PremiumFormModal } from "@/components/application/modals/premium-modal";
+import { usePermissions } from "@/hooks/use-permissions";
 
 interface Props {
   userId: string;
@@ -83,6 +84,9 @@ function InfoRow({
 export function StudentDetailClient({ userId }: Props) {
   const { data: student, isPending, isError } = useStudentDetail(userId);
   const router = useRouter();
+  const { can } = usePermissions();
+  const canEdit = can("students.manage");
+  const canDelete = can("students.manage");
 
   const fullName = student
     ? [student.name, student.middle_name, student.surname].filter(Boolean).join(" ")
@@ -232,32 +236,38 @@ export function StudentDetailClient({ userId }: Props) {
           </SectionCard>
 
           {/* Harakatlar section - Always render, buttons disabled when loading */}
+          {(canEdit || canDelete) && (
           <SectionCard title="Harakatlar" className="shadow-md">
             <div className="px-5 py-4 flex flex-col sm:flex-row gap-3">
-              <Button
-                color="primary"
-                size="md"
-                iconLeading={Pencil01}
-                onClick={handleEdit}
-                isDisabled={!student || isPending}
-                isLoading={isPending}
-                className="flex-1 sm:flex-none"
-              >
-                Tahrirlash
-              </Button>
-              <Button
-                color="primary-destructive"
-                size="md"
-                iconLeading={Trash01}
-                onClick={handleDelete}
-                isDisabled={!student || isPending}
-                isLoading={isPending}
-                className="flex-1 sm:flex-none"
-              >
-                O'chirish
-              </Button>
+              {canEdit && (
+                <Button
+                  color="primary"
+                  size="md"
+                  iconLeading={Pencil01}
+                  onClick={handleEdit}
+                  isDisabled={!student || isPending}
+                  isLoading={isPending}
+                  className="flex-1 sm:flex-none"
+                >
+                  Tahrirlash
+                </Button>
+              )}
+              {canDelete && (
+                <Button
+                  color="primary-destructive"
+                  size="md"
+                  iconLeading={Trash01}
+                  onClick={handleDelete}
+                  isDisabled={!student || isPending}
+                  isLoading={isPending}
+                  className="flex-1 sm:flex-none"
+                >
+                  O'chirish
+                </Button>
+              )}
             </div>
           </SectionCard>
+          )}
         </div>
 
         {/* Right column */}

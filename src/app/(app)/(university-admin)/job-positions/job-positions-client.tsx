@@ -14,13 +14,14 @@ import { PageHeaderPro } from "@/components/application/page-header/page-header-
 import { DataTable } from "@/components/application/table/data-table";
 import type { DataTableColumn } from "@/components/application/table/data-table";
 import type { JobPosition } from "@/lib/api/types";
-import { Tooltip } from "@/components/base/tooltip/tooltip";
 import {
   useJobPositions,
   useCreateJobPosition,
   useUpdateJobPosition,
   useDeleteJobPosition,
 } from "@/hooks/api/use-job-positions";
+import { usePermissions } from "@/hooks/use-permissions";
+import { NoPermissionState } from "@/components/application/no-permission-state/no-permission-state";
 
 // ── Schemas ────────────────────────────────────────────────────────────────
 const nameSchema = z.object({
@@ -39,7 +40,7 @@ function CreateModal({ onClose }: { onClose: () => void }) {
 
   const onSubmit = async (data: NameInput) => {
     try {
-      await create.mutateAsync(data.name);
+      await create.mutateAsync({ name: data.name });
       toast.success("Lavozim muvaffaqiyatli yaratildi!");
       onClose();
     } catch (e: any) {
@@ -241,6 +242,7 @@ function DeleteModal({ item, onClose }: { item: JobPosition; onClose: () => void
 type Modal = "create" | { type: "edit"; item: JobPosition } | { type: "delete"; item: JobPosition } | null;
 
 export default function JobPositionsClientPage() {
+  const { isAdmin } = usePermissions();
   const { data, isLoading } = useJobPositions();
   const [modal, setModal] = useState<Modal>(null);
   const [search, setSearch] = useState("");
@@ -290,31 +292,42 @@ export default function JobPositionsClientPage() {
         <span className="text-sm text-secondary">{(row as any).university_name || "—"}</span>
       ),
     },
-    {
-      id: "actions",
-      header: "",
-      headClassName: "w-[100px]",
-      cellClassName: "py-3.5 px-3",
-      cell: (row) => (
-        <div className="flex items-center justify-end gap-1">
-          <Button
-            color="tertiary"
-            size="sm"
-            iconLeading={Edit05}
-            onClick={() => setModal({ type: "edit", item: row })}
-            aria-label="Tahrirlash"
-          />
-          <Button
-            color="tertiary-destructive"
-            size="sm"
-            iconLeading={Trash01}
-            onClick={() => setModal({ type: "delete", item: row })}
-            aria-label="O'chirish"
-          />
-        </div>
-      ),
-    },
+    // Create/edit/delete has no staff-grantable permission — admin only.
+    ...(isAdmin
+      ? [
+          {
+            id: "actions",
+            header: "",
+            headClassName: "w-[100px]",
+            cellClassName: "py-3.5 px-3",
+            cell: (row: JobPosition) => (
+              <div className="flex items-center justify-end gap-1">
+                <Button
+                  color="tertiary"
+                  size="sm"
+                  iconLeading={Edit05}
+                  onClick={() => setModal({ type: "edit", item: row })}
+                  aria-label="Tahrirlash"
+                />
+                <Button
+                  color="tertiary-destructive"
+                  size="sm"
+                  iconLeading={Trash01}
+                  onClick={() => setModal({ type: "delete", item: row })}
+                  aria-label="O'chirish"
+                />
+              </div>
+            ),
+          },
+        ]
+      : []),
   ];
+
+  // Job positions are a pure admin function — staff never reach this page,
+  // no matter what's granted, even via a direct URL.
+  if (!isAdmin) {
+    return <NoPermissionState description="Lavozimlarni boshqarish uchun sizda ruxsat yo'q." />;
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -324,7 +337,7 @@ export default function JobPositionsClientPage() {
           { label: "Lavozimlar" },
         ]}
         title="Lavozimlar"
-        subtitle="Universitet xodimlari uchun lavozimlarni boshqarish."
+        subtitle="Universitet xodimlari uchun lavozimlarni boshqarish. Ruxsatlar har bir xodimga alohida, Xodimlar sahifasida beriladi."
         count={filtered.length}
         countLabel="Jami"
         showSearch
@@ -335,14 +348,16 @@ export default function JobPositionsClientPage() {
         }}
         searchPlaceholder="Lavozimni qidirish..."
         actions={
-          <Button
-            color="primary"
-            size="md"
-            iconLeading={Plus}
-            onClick={() => setModal("create")}
-          >
-            Yangi lavozim
-          </Button>
+          isAdmin ? (
+            <Button
+              color="primary"
+              size="md"
+              iconLeading={Plus}
+              onClick={() => setModal("create")}
+            >
+              Yangi lavozim
+            </Button>
+          ) : undefined
         }
       />
 

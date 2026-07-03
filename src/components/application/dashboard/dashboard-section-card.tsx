@@ -24,7 +24,7 @@ export function DashboardSectionCard({
   return (
     <section
       className={cx(
-        "overflow-hidden rounded-2xl shadow-md ring-1 ring-secondary",
+        "overflow-hidden rounded-2xl ring-1 ring-secondary shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15),0_4px_12px_-2px_rgba(0,0,0,0.1)]",
         className
       )}
     >

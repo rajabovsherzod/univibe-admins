@@ -14,6 +14,8 @@ import * as z from "zod";
 
 import { BannerImageSection } from "./BannerImageSection";
 import { BannerFormFields } from "./BannerFormFields";
+import { usePermissions } from "@/hooks/use-permissions";
+import { NoPermissionState } from "@/components/application/no-permission-state/no-permission-state";
 
 // Validation schema
 const bannerSchema = z.object({
@@ -33,7 +35,8 @@ type BannerFormData = z.infer<typeof bannerSchema>;
 export default function BannerCreatePage() {
   const router = useRouter();
   const createMutation = useCreateBanner();
-  
+  const { can, isLoading: permissionsLoading } = usePermissions();
+
   const [desktopImageFile, setDesktopImageFile] = useState<File | null>(null);
   const [mobileImageFile, setMobileImageFile] = useState<File | null>(null);
   const [desktopPreview, setDesktopPreview] = useState<string | null>(null);
@@ -84,6 +87,11 @@ export default function BannerCreatePage() {
   };
 
   const isPending = isSubmitting || createMutation.isPending;
+
+  if (permissionsLoading) return null;
+  if (!can('banners.create')) {
+    return <NoPermissionState description="Banner yaratish uchun sizda ruxsat yo'q." />;
+  }
 
   return (
     <div className="flex flex-col gap-6">

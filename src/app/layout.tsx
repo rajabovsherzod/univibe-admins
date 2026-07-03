@@ -5,7 +5,9 @@ import { Theme } from "@/providers/theme";
 import "@/styles/globals.css";
 import { cx } from "@/utils/cx";
 import { Toaster } from "sonner";
-import { NProgressProvider } from "@/providers/nprogress-provider";
+import NextTopLoader from "nextjs-toploader";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -119,8 +121,6 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 
 export default async function RootLayout({
   children,
@@ -137,17 +137,42 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* DNS prefetch for API */}
         <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_API_URL ?? "https://api.univibe.uz"} />
+        {/* ─── Anti-FOUC: runs synchronously before first paint ─────────────────
+            next-themes stores the chosen theme under the key "theme" with values
+            "light" | "dark" | "system".  Our ThemeProvider maps them to the CSS
+            classes "light-mode" / "dark-mode" on <html>.  We replicate that
+            mapping here so the correct class is present before ANY stylesheet or
+            React code runs — completely eliminating the white flash on refresh.  */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){
+  try {
+    var stored = localStorage.getItem('theme');
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var isDark = stored === 'dark' || (!stored && prefersDark) || (stored === 'system' && prefersDark);
+    document.documentElement.classList.add(isDark ? 'dark-mode' : 'light-mode');
+  } catch(e) {}
+})();`,
+          }}
+        />
       </head>
-      <body className={cx(inter.variable, "bg-primary antialiased")}>
-        <AppProvider session={session}>
-          <NProgressProvider options={{ color: "#006ab0" }} />
-          <Theme>
+      <body className={cx(inter.variable, "bg-primary antialiased")} suppressHydrationWarning>
+        <Theme>
+          <AppProvider session={session}>
+            <NextTopLoader
+              color="#0072b0"
+              height={3}
+              showSpinner={false}
+              easing="ease"
+              speed={200}
+              shadow="0 0 10px #0072b0,0 0 5px #0072b0"
+            />
             <Toaster position="top-right" richColors closeButton />
-            <div id="app-shell" className="min-h-dvh">
+            <div id="app-shell" className="min-h-dvh" suppressHydrationWarning>
               {children}
             </div>
-          </Theme>
-        </AppProvider>
+          </AppProvider>
+        </Theme>
       </body>
     </html>
   );

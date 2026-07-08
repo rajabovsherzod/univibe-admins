@@ -14,9 +14,12 @@ import {
   approvedStudentColumns,
   waitedStudentColumns,
   rejectedStudentColumns,
+  archivedStudentColumns,
   type ApprovedStudentRow,
   type WaitedStudentRow,
+  type ArchivedStudentRow,
 } from "./student-columns";
+import { ArchiveStudentModal, UnarchiveStudentModal, type ArchiveTarget } from "./archive-student-modal";
 import { Select } from "@/components/base/select/select";
 import { SelectItem } from "@/components/base/select/select-item";
 import { Button } from "@/components/base/buttons/button";
@@ -30,12 +33,13 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { useSession } from "next-auth/react";
 
 // ── Tab config ─────────────────────────────────────────────────────────────
-type TabId = "approved" | "waited" | "rejected";
+type TabId = "approved" | "waited" | "rejected" | "archived";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "approved", label: "Tasdiqlangan" },
   { id: "waited", label: "Kutilmoqda" },
   { id: "rejected", label: "Rad qilingan" },
+  { id: "archived", label: "Arxiv" },
 ];
 
 // ── Component ─────────────────────────────────────────────────────────────
@@ -44,6 +48,7 @@ export function StudentsClient() {
   const { can } = usePermissions();
   const canAward = can("coins.award");
   const canPenalty = can("coins.penalty");
+  const canArchive = can("students.archive");
   const [activeTab, setActiveTab] = useState<TabId>("approved");
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -55,6 +60,8 @@ export function StudentsClient() {
   const [issueCoinStudent, setIssueCoinStudent] = useState<{ student: { id: string; name: string; balance?: number }, type: "reward" | "penalty" } | null>(null);
 
   const { data: waitedMeta } = useWaitedStudentsCount();
+  const [archiveTarget, setArchiveTarget] = useState<ArchiveTarget | null>(null);
+  const [unarchiveTarget, setUnarchiveTarget] = useState<ArchiveTarget | null>(null);
   const { data: faculties } = useFaculties();
   const { data: yearLevels } = useYearLevels();
 
@@ -94,6 +101,17 @@ export function StudentsClient() {
         canPenalty,
         onIssueCoin: () => setIssueCoinStudent({ student: { id: s.user_public_id, name: s.full_name || "Ism yo'q", balance: s.coins_balance }, type: "reward" }),
         onIssuePenalty: () => setIssueCoinStudent({ student: { id: s.user_public_id, name: s.full_name || "Ism yo'q", balance: s.coins_balance }, type: "penalty" }),
+        canArchive,
+        onArchive: () => setArchiveTarget({ id: s.user_public_id, name: s.full_name || "Ism yo'q" }),
+      }))
+      : [];
+
+  const archivedRows: ArchivedStudentRow[] =
+    activeTab === "archived"
+      ? (data?.results || []).map((s) => ({
+        ...(s as ArchivedStudentRow),
+        canArchive,
+        onUnarchive: () => setUnarchiveTarget({ id: s.user_public_id, name: s.full_name || "Ism yo'q" }),
       }))
       : [];
 
@@ -107,12 +125,14 @@ export function StudentsClient() {
   const currentColumns =
     activeTab === "approved" ? approvedStudentColumns :
       activeTab === "waited" ? waitedStudentColumns :
-        rejectedStudentColumns;
+        activeTab === "archived" ? archivedStudentColumns :
+          rejectedStudentColumns;
 
   const currentData =
     activeTab === "approved" ? approvedRows :
       activeTab === "waited" ? waitedRows :
-        rejectedRows;
+        activeTab === "archived" ? archivedRows :
+          rejectedRows;
 
   const waitedCount = waitedMeta?.waited_students_count ?? 0;
 
@@ -233,7 +253,9 @@ export function StudentsClient() {
                   ? "Tasdiqlangan talabalar yo'q"
                   : activeTab === "waited"
                     ? "Kutilayotgan arizalar yo'q"
-                    : "Rad qilingan talabalar yo'q"
+                    : activeTab === "archived"
+                      ? "Arxivlangan talabalar yo'q"
+                      : "Rad qilingan talabalar yo'q"
             }
             emptyDescription={
               searchTerm
@@ -264,6 +286,22 @@ export function StudentsClient() {
           onClose={() => setIssueCoinStudent(null)}
           preselectedStudent={issueCoinStudent.student}
           ruleType={issueCoinStudent.type}
+        />
+      )}
+
+      {archiveTarget && (
+        <ArchiveStudentModal
+          target={archiveTarget}
+          isOpen={!!archiveTarget}
+          onClose={() => setArchiveTarget(null)}
+        />
+      )}
+
+      {unarchiveTarget && (
+        <UnarchiveStudentModal
+          target={unarchiveTarget}
+          isOpen={!!unarchiveTarget}
+          onClose={() => setUnarchiveTarget(null)}
         />
       )}
 

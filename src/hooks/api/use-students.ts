@@ -243,3 +243,52 @@ export function useDeleteStudent() {
     },
   });
 }
+
+
+// ── Archive / unarchive (graduated, academic leave, dropped out …) ─────────
+
+export function useArchiveStudent() {
+  const { data: session } = useSession();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, reason, note }: { id: string; reason: string; note?: string }) => {
+      const res = await axios.post(
+        `${API_CONFIG.baseURL}${ENDPOINTS.archive(id)}`,
+        { reason, note },
+        { headers: { Authorization: `Bearer ${session?.accessToken}`, "Content-Type": "application/json" } }
+      );
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+    },
+    onError: (error: any) => {
+      const errData = error.response?.data || {};
+      const msg = Object.values(errData).flat().join(" ") || `Arxivlash xatosi: ${error.response?.status || error.message}`;
+      throw new Error(msg as string);
+    },
+  });
+}
+
+export function useUnarchiveStudent() {
+  const { data: session } = useSession();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await axios.post(
+        `${API_CONFIG.baseURL}${ENDPOINTS.unarchive(id)}`,
+        {},
+        { headers: { Authorization: `Bearer ${session?.accessToken}`, "Content-Type": "application/json" } }
+      );
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+    },
+    onError: (error: any) => {
+      const errData = error.response?.data || {};
+      const msg = Object.values(errData).flat().join(" ") || `Tiklash xatosi: ${error.response?.status || error.message}`;
+      throw new Error(msg as string);
+    },
+  });
+}

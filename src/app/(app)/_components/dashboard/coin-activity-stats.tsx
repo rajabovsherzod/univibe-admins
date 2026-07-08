@@ -150,20 +150,26 @@ export function CoinActivityStats() {
           isLoading={isLoading}
         />
         
-        {/* Placeholder cards for future stats */}
+        {/* TODO: wire to real endpoints; static values until the API lands */}
         <StatCard
           label="Faol talabalar"
-          caption="Universitet bo'yicha faol talabalar"
+          value={<>36</>}
+          caption="So'nggi 30 kunda faollik ko'rsatganlar"
           icon={Users01}
           accent="success"
-          isComingSoon
+          isPositive
+          percentageChange="12.5"
+          isLoading={isLoading}
         />
         <StatCard
           label="Ishlatilgan qoidalar"
+          value={<>8</>}
           caption="Jami qoidalar kesimida"
           icon={Settings01}
           accent="warning"
-          isComingSoon
+          isPositive
+          percentageChange="4.2"
+          isLoading={isLoading}
         />
       </div>
 

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { Plus, Edit05, Trash01, ClockRefresh, RefreshCcw01 } from "@untitledui/icons";
+import { Plus, Edit05, Trash01, ClockRefresh, RefreshCcw01, QrCode01 } from "@untitledui/icons";
 import { CoinOutlineIcon } from "@/components/custom-icons/brand-icon";
 
 import { DataTable } from "@/components/application/table/data-table";
@@ -24,16 +24,19 @@ import { RuleHistoryModal } from "./rule-history-modal";
 
 import { Tooltip } from "@/components/base/tooltip/tooltip";
 import { PermissionsTab } from "./permissions-tab";
+import { QrIssueModal } from "./qr-issue-modal";
+import { QrRequestsTab } from "./qr-requests-tab";
 
 export function RulesTab() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState<"all" | "reward" | "penalty" | "archived" | "permissions">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "reward" | "penalty" | "archived" | "permissions" | "qr">("all");
   const debouncedSearch = useDebounce(search, 500);
   const router = useRouter();
 
   const { can, isAdmin } = usePermissions();
   const canCreate = can("coins.rule.create");
+  const canQr = can("coins.qr_award");
   // Per-row edit/archive visibility comes from each rule's `can_manage` flag
   // (backend: admin, manage-all, or create+own).
 
@@ -66,6 +69,7 @@ export function RulesTab() {
     | { type: "create"; ruleType: "reward" | "penalty" }
     | { type: "edit"; item: CoinRule }
     | { type: "history"; item: CoinRule }
+    | { type: "qr"; item: CoinRule }
     | null
   >(null);
 
@@ -158,6 +162,17 @@ export function RulesTab() {
         const isToggling = toggleStatusMutation.isPending && toggleStatusMutation.variables?.id === row.public_id;
         return (
           <div className="flex items-center justify-end gap-1">
+            {canQr && isActive && (
+              <Tooltip title="QR orqali berish" delay={0}>
+                <Button
+                  color="tertiary"
+                  size="sm"
+                  iconLeading={QrCode01}
+                  onClick={() => setModal({ type: "qr", item: row })}
+                  aria-label="QR orqali berish"
+                />
+              </Tooltip>
+            )}
             <Tooltip title="Tarix" delay={0}>
               <Button
                 color="tertiary"
@@ -227,6 +242,14 @@ export function RulesTab() {
             >
               Arxivlangan
             </button>
+            {canQr && (
+              <button
+                className={cx("px-3 py-1.5 text-sm font-medium rounded-md transition-colors", activeTab === "qr" ? "bg-brand-solid text-white shadow-sm" : "text-tertiary hover:text-secondary")}
+                onClick={() => { setActiveTab("qr"); setPage(1); }}
+              >
+                QR so&apos;rovlar
+              </button>
+            )}
             {isAdmin && (
               <button
                 className={cx("px-3 py-1.5 text-sm font-medium rounded-md transition-colors", activeTab === "permissions" ? "bg-brand-solid text-white shadow-sm" : "text-tertiary hover:text-secondary")}
@@ -237,7 +260,7 @@ export function RulesTab() {
             )}
           </div>
 
-          {activeTab !== "permissions" && (
+          {activeTab !== "permissions" && activeTab !== "qr" && (
             <Input
               placeholder="Qidirish..."
               value={search}
@@ -250,7 +273,7 @@ export function RulesTab() {
           )}
         </div>
 
-        {activeTab !== "archived" && activeTab !== "permissions" && canCreate && (
+        {activeTab !== "archived" && activeTab !== "permissions" && activeTab !== "qr" && canCreate && (
           <div className="flex items-center gap-2">
             <Button
               color="primary"
@@ -258,7 +281,7 @@ export function RulesTab() {
               iconLeading={Plus}
               onClick={() => setModal({ type: "create", ruleType: "reward" })}
             >
-              Yangi rag'bat
+              Rag&apos;bat
             </Button>
             <Button
               color="primary-destructive"
@@ -267,7 +290,7 @@ export function RulesTab() {
               className="ring-1 ring-error-300 dark:ring-error-700 shadow-xs"
               onClick={() => setModal({ type: "create", ruleType: "penalty" })}
             >
-              Yangi jarima
+              Jarima
             </Button>
           </div>
         )}
@@ -276,6 +299,8 @@ export function RulesTab() {
       {/* ── Table ── */}
       {activeTab === "permissions" ? (
         <PermissionsTab />
+      ) : activeTab === "qr" ? (
+        <QrRequestsTab />
       ) : (
         <DataTable
           ariaLabel="Ball qoidalari"
@@ -300,6 +325,7 @@ export function RulesTab() {
       {modal?.type === "create" && <CreateRuleModal onClose={() => setModal(null)} ruleType={modal.ruleType} />}
       {modal?.type === "edit" && <EditRuleModal item={modal.item} onClose={() => setModal(null)} />}
       {modal?.type === "history" && <RuleHistoryModal item={modal.item} onClose={() => setModal(null)} />}
+      <QrIssueModal isOpen={modal?.type === "qr"} rule={modal?.type === "qr" ? modal.item : null} onClose={() => setModal(null)} />
     </div>
   );
 }

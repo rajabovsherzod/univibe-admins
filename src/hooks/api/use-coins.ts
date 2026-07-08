@@ -190,3 +190,63 @@ export function useDeletionAudits(params: DeletionAuditsParams = {}) {
     enabled: !!session?.accessToken,
   });
 }
+
+// ── QR-based bulk issuance ───────────────────────────────────────────────
+
+export interface QrIssueRequest {
+  public_id: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  created_at: string;
+  decided_at: string | null;
+  student_name: string;
+  student_public_id: string;
+  student_photo_url: string | null;
+  university_student_id: string | null;
+  rule_name: string;
+  rule_public_id: string;
+  coin_amount: number;
+}
+
+export function useRuleQrToken() {
+  const { data: session } = useSession();
+  return useMutation({
+    mutationFn: (ruleId: string) =>
+      apiFetch(
+        `${API_CONFIG.baseURL}${ENDPOINTS.ruleQrToken(ruleId)}`,
+        session?.accessToken as string,
+        { method: "POST" }
+      ) as Promise<{ token: string; expires_in: number; rule_name: string; coin_amount: number }>,
+  });
+}
+
+export function useQrRequests(params: { status?: string; rule?: string; enabled?: boolean; refetchInterval?: number } = {}) {
+  const { data: session } = useSession();
+  const qp = new URLSearchParams();
+  if (params.status) qp.set("status", params.status);
+  if (params.rule) qp.set("rule", params.rule);
+  const qs = qp.toString() ? `?${qp.toString()}` : "";
+  return useQuery<QrIssueRequest[]>({
+    queryKey: ["qr-requests", params.status ?? "", params.rule ?? ""],
+    queryFn: () =>
+      apiFetch(`${API_CONFIG.baseURL}${ENDPOINTS.qrRequests}${qs}`, session?.accessToken as string),
+    enabled: (params.enabled ?? true) && !!session?.accessToken,
+    refetchInterval: params.refetchInterval,
+  });
+}
+
+export function useDecideQrRequest() {
+  const { data: session } = useSession();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, action }: { id: string; action: "approve" | "reject" }) =>
+      apiFetch(
+        `${API_CONFIG.baseURL}${action === "approve" ? ENDPOINTS.qrRequestApprove(id) : ENDPOINTS.qrRequestReject(id)}`,
+        session?.accessToken as string,
+        { method: "POST" }
+      ) as Promise<QrIssueRequest>,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["qr-requests"] });
+      qc.invalidateQueries({ queryKey: ["coin-rules"] });
+    },
+  });
+}

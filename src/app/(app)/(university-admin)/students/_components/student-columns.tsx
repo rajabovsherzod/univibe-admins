@@ -5,10 +5,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { DataTableColumn } from "@/components/application/table/data-table";
 import type { Student } from "@/lib/api/types";
-import { Tooltip } from "@/components/base/tooltip/tooltip";
+import { Tooltip, TooltipTrigger } from "@/components/base/tooltip/tooltip";
 import { Button } from "@/components/base/buttons/button";
 import { Avatar } from "@/components/base/avatar/avatar";
-import { Eye, CheckCircle, XCircle, ClockRefresh } from "@untitledui/icons";
+import { Eye, CheckCircle, XCircle, ClockRefresh, Archive, FlipBackward } from "@untitledui/icons";
 import { CoinOutlineIcon } from "@/components/custom-icons/brand-icon";
 import { useUpdateStudentStatus } from "@/hooks/api/use-students";
 import { toHttps } from "@/utils/cx";
@@ -17,11 +17,28 @@ import { toHttps } from "@/utils/cx";
 export type ApprovedStudentRow = Student & {
   onIssueCoin?: () => void;
   onIssuePenalty?: () => void;
+  onArchive?: () => void;
   canAward?: boolean;
   canPenalty?: boolean;
+  canArchive?: boolean;
 };
 export type WaitedStudentRow = Student & { onSuccess?: () => void };
 export type RejectedStudentRow = Student;
+export type ArchivedStudentRow = Student & {
+  archive_reason?: string | null;
+  archive_note?: string;
+  archived_at?: string | null;
+  canArchive?: boolean;
+  onUnarchive?: () => void;
+};
+
+export const ARCHIVE_REASON_LABELS: Record<string, string> = {
+  GRADUATED: "Bitirgan",
+  ACADEMIC_LEAVE: "Akademik ta'til",
+  DROPPED_OUT: "O'qishni tashlagan",
+  TRANSFERRED: "Boshqa OTMga o'tgan",
+  OTHER: "Boshqa",
+};
 
 // ── Coin icon wrapper (matches Button's iconLeading FC<{className?:string}>) ──
 function CoinIconBtn({ className }: { className?: string }) {
@@ -158,6 +175,80 @@ export const approvedStudentColumns: DataTableColumn<ApprovedStudentRow>[] = [
             </button>
           </Link>
         </Tooltip>
+        {row.canArchive && (
+          <Tooltip title="Arxivlash" delay={200}>
+            <TooltipTrigger
+              onPress={() => row.onArchive?.()}
+              className="rounded-full p-1.5 text-fg-quaternary hover:bg-secondary hover:text-fg-secondary transition-colors cursor-pointer"
+              aria-label="Arxivlash"
+            >
+              <Archive className="size-6" />
+            </TooltipTrigger>
+          </Tooltip>
+        )}
+      </div>
+    ),
+  },
+];
+
+// ── ARCHIVED columns ──────────────────────────────────────────────────────
+export const archivedStudentColumns: DataTableColumn<ArchivedStudentRow>[] = [
+  {
+    id: "index",
+    header: "№",
+    headClassName: "w-[50px]",
+    cell: (_, i) => <span className="text-sm tabular-nums text-tertiary">{(i ?? 0) + 1}</span>,
+  },
+  {
+    id: "student",
+    header: "Talaba",
+    isRowHeader: true,
+    cell: (row) => <StudentCell row={row} />,
+  },
+  {
+    id: "reason",
+    header: "Sabab",
+    cell: (row) => (
+      <div className="flex flex-col">
+        <span className="inline-flex w-fit items-center rounded-md bg-secondary px-2 py-1 text-xs font-medium text-secondary ring-1 ring-inset ring-border-secondary">
+          {ARCHIVE_REASON_LABELS[row.archive_reason || ""] || row.archive_reason || "—"}
+        </span>
+        {row.archive_note && (
+          <span className="mt-1 max-w-[240px] truncate text-xs text-tertiary" title={row.archive_note}>
+            {row.archive_note}
+          </span>
+        )}
+      </div>
+    ),
+  },
+  {
+    id: "archived_at",
+    header: "Arxivlangan sana",
+    cell: (row) => (
+      <span className="text-sm text-secondary">
+        {row.archived_at ? new Date(row.archived_at).toLocaleDateString("uz-UZ") : "—"}
+      </span>
+    ),
+  },
+  {
+    id: "actions",
+    header: "",
+    headClassName: "w-[190px]",
+    cell: (row) => (
+      <div className="flex items-center justify-end gap-2">
+        <Link href={`/students/${row.user_public_id}`}>
+          <Button color="secondary" size="sm" iconLeading={Eye}
+            className="ring-1 ring-secondary shadow-xs">
+            Ko&apos;rish
+          </Button>
+        </Link>
+        {row.canArchive && (
+          <Button color="secondary" size="sm" iconLeading={FlipBackward}
+            onClick={() => row.onUnarchive?.()}
+            className="ring-1 ring-secondary shadow-xs">
+            Tiklash
+          </Button>
+        )}
       </div>
     ),
   },

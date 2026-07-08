@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Plus } from "@untitledui/icons";
+import { Plus, Edit01, Archive } from "@untitledui/icons";
 import { Button } from "@/components/base/buttons/button";
 import { PageHeaderPro } from "@/components/application/page-header/page-header-pro";
 import { DataTable } from "@/components/application/table/data-table";
@@ -45,28 +45,18 @@ export function MarketClient() {
     ...(canManage ? [{
       id: "actions",
       header: "",
-      headClassName: "w-32",
-      cellClassName: "w-32 text-right space-x-3",
+      headClassName: "w-48",
+      cellClassName: "w-48 text-right",
       cell: (row: any) =>
         row.is_active ? (
-          <>
-            {canManage && (
-              <button
-                onClick={() => setEditTarget(row)}
-                className="text-xs font-medium text-brand-600 dark:text-brand-400 hover:underline"
-              >
-                Tahrirlash
-              </button>
-            )}
-            {canManage && (
-              <button
-                onClick={() => setArchiveTarget({ id: row.public_id, name: row.name })}
-                className="text-xs font-medium text-error-600 dark:text-error-400 hover:underline"
-              >
-                Arxiv
-              </button>
-            )}
-          </>
+          <div className="flex items-center justify-end gap-2">
+            <Button size="sm" color="secondary" iconLeading={Edit01} onClick={() => setEditTarget(row)}>
+              Tahrirlash
+            </Button>
+            <Button size="sm" color="secondary-destructive" iconLeading={Archive} onClick={() => setArchiveTarget({ id: row.public_id, name: row.name })}>
+              Arxiv
+            </Button>
+          </div>
         ) : null,
     }] : []),
   ];

@@ -76,8 +76,8 @@ export const AvatarProfilePhoto = ({
 
         if (initials) {
             return (
-                <div className={cx("flex size-full items-center justify-center rounded-full bg-tertiary ring-1 ring-secondary_alt", styles[size].content)}>
-                    <span className={cx("text-quaternary", styles[size].initials)}>{initials}</span>
+                <div className={cx("flex size-full items-center justify-center rounded-full bg-brand-solid ring-1 ring-brand-solid", styles[size].content)}>
+                    <span className={cx("text-white", styles[size].initials)}>{initials}</span>
                 </div>
             );
         }

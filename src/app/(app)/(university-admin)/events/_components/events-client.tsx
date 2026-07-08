@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { useAdminEvents, useAdminPendingEventsCount } from '@/hooks/api/use-events-admin';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { useAdminEvents, useAdminPendingEventsCount, useAdminChangeEventStatus } from '@/hooks/api/use-events-admin';
 import { EventDetail } from '@/types/events';
 import { DataTable, DataTableColumn } from '@/components/application/table/data-table';
 import { PageHeaderPro } from '@/components/application/page-header/page-header-pro';
 import { Button } from '@/components/base/buttons/button';
 import { Badge } from '@/components/base/badges/badges';
-import { Calendar, Eye, Plus, Edit05 } from '@untitledui/icons';
+import { Calendar, Eye, Plus, Edit05, SwitchHorizontal01 } from '@untitledui/icons';
 import { CoinOutlineIcon } from "@/components/custom-icons/brand-icon";
 import { useRouter } from 'next/navigation';
 import { Tooltip } from '@/components/base/tooltip/tooltip';
@@ -15,9 +16,90 @@ import { cx, toHttps } from '@/utils/cx';
 import Image from 'next/image';
 import { usePermissions } from '@/hooks/use-permissions';
 
+// Statuses an admin can switch an event to directly from the table.
+const STATUS_OPTIONS: { value: EventDetail['status']; label: string; dot: string }[] = [
+  { value: 'PUBLISHED', label: 'Faol', dot: 'bg-emerald-500' },
+  { value: 'DRAFT', label: 'Qoralama', dot: 'bg-gray-400' },
+  { value: 'COMPLETED', label: 'Yakunlangan', dot: 'bg-blue-500' },
+  { value: 'CANCELLED', label: 'Bekor qilingan', dot: 'bg-red-500' },
+];
+
+/** Green switch button → portalled menu anchored to it (escapes table overflow,
+ *  positions correctly under the button). */
+function StatusMenu({ current, onChange }: { current: EventDetail['status']; onChange: (s: EventDetail['status']) => void }) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  const toggle = () => {
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 6, right: window.innerWidth - r.right });
+    }
+    setOpen((o) => !o);
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const close = () => setOpen(false);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [open]);
+
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={toggle}
+        aria-label="Holatni o'zgartirish"
+        className="inline-flex size-8 items-center justify-center rounded-lg text-emerald-600 transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-500/10"
+      >
+        <SwitchHorizontal01 className="size-5" />
+      </button>
+
+      {open && pos && createPortal(
+        <>
+          <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
+          <div
+            style={{ position: 'fixed', top: pos.top, right: pos.right }}
+            className="z-[9999] w-44 overflow-hidden rounded-xl bg-primary p-1 shadow-lg ring-1 ring-secondary"
+          >
+            <p className="px-3 pb-1 pt-1.5 text-[11px] font-semibold uppercase tracking-wider text-tertiary">
+              Holatni o&apos;zgartirish
+            </p>
+            {STATUS_OPTIONS.map((opt) => {
+              const isCurrent = opt.value === current;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  disabled={isCurrent}
+                  onClick={() => { onChange(opt.value); setOpen(false); }}
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-semibold text-secondary transition-colors hover:bg-secondary disabled:cursor-default disabled:opacity-45"
+                >
+                  <span className={cx('size-2 shrink-0 rounded-full', opt.dot)} />
+                  {opt.label}
+                  {isCurrent && <span className="ml-auto text-[11px] font-normal text-tertiary">joriy</span>}
+                </button>
+              );
+            })}
+          </div>
+        </>,
+        document.body
+      )}
+    </>
+  );
+}
+
 export function EventsClient() {
   const router = useRouter();
   const { can } = usePermissions();
+  const { mutate: changeStatus } = useAdminChangeEventStatus();
 
   const [page, setPage] = useState(1);
   const pageSize = 20;
@@ -121,8 +203,8 @@ export function EventsClient() {
     {
       id: 'actions',
       header: 'Amallar',
-      headClassName: 'w-24',
-      cellClassName: 'w-24',
+      headClassName: 'w-32',
+      cellClassName: 'w-32',
       cell: (row) => (
         <div className="flex items-center gap-1">
           <Tooltip title="Batafsil ko'rish" placement="top" delay={200}>
@@ -144,6 +226,12 @@ export function EventsClient() {
                 aria-label="Tahrirlash"
               />
             </Tooltip>
+          )}
+          {(canManageAll || row.can_manage) && (
+            <StatusMenu
+              current={row.status}
+              onChange={(status) => changeStatus({ eventId: row.public_id, status })}
+            />
           )}
         </div>
       ),

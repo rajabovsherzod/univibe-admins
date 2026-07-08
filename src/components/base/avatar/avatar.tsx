@@ -78,6 +78,7 @@ export const Avatar = ({
     className,
 }: AvatarProps) => {
     const [isFailed, setIsFailed] = useState(false);
+    const showInitials = !!initials && (!src || isFailed);
 
     const renderMainContent = () => {
         if (src && !isFailed) {
@@ -85,7 +86,7 @@ export const Avatar = ({
         }
 
         if (initials) {
-            return <span className={cx("text-quaternary", styles[size].initials)}>{initials}</span>;
+            return <span className={cx("text-white", styles[size].initials)}>{initials}</span>;
         }
 
         if (PlaceholderIcon) {
@@ -116,7 +117,8 @@ export const Avatar = ({
         <div
             data-avatar
             className={cx(
-                "relative inline-flex shrink-0 items-center justify-center rounded-full bg-avatar-bg outline-transparent",
+                "relative inline-flex shrink-0 items-center justify-center rounded-full outline-transparent",
+                showInitials ? "bg-brand-solid" : "bg-avatar-bg",
                 // Focus styles
                 focusable && "group-outline-focus-ring group-focus-visible:outline-2 group-focus-visible:outline-offset-2",
                 contrastBorder && "outline outline-avatar-contrast-border",

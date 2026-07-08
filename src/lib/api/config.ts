@@ -64,6 +64,8 @@ export const API_CONFIG = {
       updateProfile: (id: string) => `/api/v1/student/students/${id}/`, // PUT
       delete: (id: string) => `/api/v1/student/students/${id}/`, // DELETE
       waitedCount: '/api/v1/student/waited/',
+      archive: (id: string) => `/api/v1/student/students/${id}/archive/`,
+      unarchive: (id: string) => `/api/v1/student/students/${id}/unarchive/`,
     },
 
     // Coins System
@@ -87,6 +89,12 @@ export const API_CONFIG = {
       deletionAuditDetail: (id: string) => `/api/v1/coins/admin/deletion-audits/${id}/`,
       auditTransactions: '/api/v1/coins/admin/transactions/audit/',
       leaderboard: '/api/v1/coins/leaderboard/',
+
+      // QR-based bulk issuance
+      ruleQrToken: (id: string) => `/api/v1/coins/rules/${id}/qr-token/`,
+      qrRequests: '/api/v1/coins/qr-requests/',
+      qrRequestApprove: (id: string) => `/api/v1/coins/qr-requests/${id}/approve/`,
+      qrRequestReject: (id: string) => `/api/v1/coins/qr-requests/${id}/reject/`,
       activityStats: '/api/v1/coins/admin/statistics/activity/',
       statistics: '/api/v1/coins/admin/statistics/',
     },

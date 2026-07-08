@@ -7,6 +7,7 @@ import { QrCode01, Check, X as XIcon } from "@untitledui/icons";
 
 import { Button } from "@/components/base/buttons/button";
 import { Avatar } from "@/components/base/avatar/avatar";
+import { Badge } from "@/components/base/badges/badges";
 import { PremiumFormModal } from "@/components/application/modals/premium-modal";
 import { useRuleQrToken, useQrRequests, useDecideQrRequest, type QrIssueRequest } from "@/hooks/api/use-coins";
 import type { CoinRule } from "@/lib/api/types";

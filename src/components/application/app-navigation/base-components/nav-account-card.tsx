@@ -83,9 +83,10 @@ export const NavAccountMenu = ({
     localStorage.removeItem('user-profile-storage');
     sessionStorage.clear();
     
-    // Use production API URL for logout
-    const apiUrl = process.env.NextPublic_API_URL || window.location.origin;
-    await signOut({ callbackUrl: `${apiUrl}/login` });
+    // Use production APP URL for logout
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+    await signOut({ redirect: false });
+    window.location.href = `${appUrl}/login`;
   };
 
   return (

@@ -156,7 +156,10 @@ class ApiClient {
               localStorage.removeItem("user-storage");
               localStorage.removeItem("user-profile-storage");
               sessionStorage.clear();
-              signOut({ redirect: true, callbackUrl: "/login" });
+              const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+              signOut({ redirect: false }).then(() => {
+                window.location.href = `${appUrl}/login`;
+              });
             }
 
             return Promise.reject(authError);

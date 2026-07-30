@@ -23,7 +23,10 @@ export function AppLayoutClient({
 
   useEffect(() => {
     if (session?.error === "RefreshAccessTokenError") {
-      signOut({ callbackUrl: "/login" });
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+      signOut({ redirect: false }).then(() => {
+        window.location.href = `${appUrl}/login`;
+      });
     }
   }, [session]);
 
